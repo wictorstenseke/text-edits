@@ -1,4 +1,11 @@
-import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Fragment,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 
 import {
   Plus,
@@ -10,6 +17,7 @@ import {
   PlusCircle,
   Maximize2,
   Minimize2,
+  Download,
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
@@ -31,6 +39,7 @@ import {
   saveDocument,
   getSampleTemplates,
 } from "@/lib/documentStorage";
+import { exportToPDF } from "@/lib/pdfExport";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -50,6 +59,7 @@ interface TipTapNode {
 }
 
 export const DocumentEditor = () => {
+  const documentContainerRef = useRef<HTMLDivElement>(null);
   const [document, setDocument] = useState<Document>(loadDocument());
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     document.sections[0]?.id || null
@@ -302,6 +312,20 @@ export const DocumentEditor = () => {
     }
   };
 
+  const handleExportPDF = useCallback(async () => {
+    if (!documentContainerRef.current) return;
+
+    try {
+      await exportToPDF(document, documentContainerRef.current);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to export PDF. Please try again."
+      );
+    }
+  }, [document]);
+
   const renderNode = (
     node: TipTapNode,
     tagValues: Record<string, string>
@@ -551,6 +575,10 @@ export const DocumentEditor = () => {
                 <Maximize2 className="h-4 w-4" />
               </Button>
             </div>
+            <Button onClick={handleExportPDF} variant="default">
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
             <Button onClick={() => setResetDialogOpen(true)} variant="outline">
               Återställ
             </Button>
@@ -652,6 +680,7 @@ export const DocumentEditor = () => {
         {/* CENTER - Document Preview with Inline Editing */}
         <div className="flex-1 overflow-y-auto bg-muted/30">
           <div
+            ref={documentContainerRef}
             className={cn(
               "mx-auto p-8 bg-background my-8 shadow-sm rounded-lg",
               pageWidth === "narrow" && "max-w-2xl",
