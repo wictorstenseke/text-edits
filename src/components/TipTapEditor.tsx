@@ -21,7 +21,7 @@ import {
   Minus,
   Trash2,
   FileSpreadsheet,
-  FileBreak,
+  SeparatorHorizontal,
 } from "lucide-react";
 
 import {
@@ -300,7 +300,7 @@ const EditorMenuBar = ({
         onClick={() => editor.chain().focus().insertPageBreak().run()}
         title="Insert Page Break"
       >
-        <FileBreak className="h-4 w-4" />
+        <SeparatorHorizontal className="h-4 w-4" />
       </MenuButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />

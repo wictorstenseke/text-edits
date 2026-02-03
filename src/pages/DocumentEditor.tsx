@@ -108,7 +108,7 @@ export const DocumentEditor = () => {
     setSelectedSectionId(sectionId);
 
     // Scroll to the section in the document
-    const sectionElement = document.querySelector(
+    const sectionElement = window.document.querySelector(
       `[data-section-id="${sectionId}"]`
     );
     if (sectionElement) {
