@@ -124,13 +124,15 @@ export const DocumentEditor = () => {
   };
 
   const handleSaveInlineEdit = useCallback(
-    (content: string) => {
+    (content: string, title?: string) => {
       if (!editingSectionId) return;
 
       setDocument((prev) => ({
         ...prev,
         sections: prev.sections.map((section) =>
-          section.id === editingSectionId ? { ...section, content } : section
+          section.id === editingSectionId
+            ? { ...section, content, ...(title && { title }) }
+            : section
         ),
       }));
       setEditingSectionId(null);
@@ -585,18 +587,16 @@ export const DocumentEditor = () => {
                 <Maximize2 className="h-4 w-4" />
               </Button>
             </div>
-            <Button onClick={handleExportPDF} variant="default">
+            <Button onClick={handleExportPDF} variant="default" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export PDF
             </Button>
-            <Button onClick={() => setResetDialogOpen(true)} variant="outline">
-              Återställ
-            </Button>
             <Button
-              onClick={() => setTemplateDialogOpen(true)}
+              onClick={() => setResetDialogOpen(true)}
               variant="outline"
+              size="sm"
             >
-              New from Template
+              Återställ
             </Button>
           </div>
         </div>
@@ -625,7 +625,7 @@ export const DocumentEditor = () => {
                     "group rounded-lg p-2 cursor-pointer transition-colors border",
                     selectedSectionId === section.id
                       ? "bg-primary/10 border-primary/30 hover:bg-primary/15"
-                      : "border-transparent hover:border-accent/50 hover:bg-accent/50"
+                      : "border-transparent hover:border-accent/50"
                   )}
                   onClick={() => handleSectionClick(section.id)}
                   onKeyDown={(e) => {

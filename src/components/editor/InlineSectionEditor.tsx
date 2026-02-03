@@ -15,9 +15,11 @@ import {
   Heading3,
   Link2,
   Table as TableIcon,
-  Rows2,
-  Columns2,
-  Minus,
+  ArrowUpFromLine,
+  ArrowDownFromLine,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
+  CircleMinus,
   Trash2,
   FileSpreadsheet,
   SeparatorHorizontal,
@@ -56,7 +58,7 @@ interface InlineSectionEditorProps {
   content: string;
   tags: TagItem[];
   title: string;
-  onSave: (content: string) => void;
+  onSave: (content: string, title?: string) => void;
   onCancel: () => void;
   className?: string;
 }
@@ -107,6 +109,7 @@ export const InlineSectionEditor = ({
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
   const [tableHeaderRow, setTableHeaderRow] = useState(true);
+  const [editableTitle, setEditableTitle] = useState(title);
   const tagMentionExtension = useMemo(
     () => createTagMentionExtension(tags),
     [tags]
@@ -188,9 +191,9 @@ export const InlineSectionEditor = ({
 
   const handleSave = useCallback(() => {
     if (editor) {
-      onSave(JSON.stringify(editor.getJSON()));
+      onSave(JSON.stringify(editor.getJSON()), editableTitle);
     }
-  }, [editor, onSave]);
+  }, [editor, onSave, editableTitle]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -370,19 +373,19 @@ export const InlineSectionEditor = ({
                     onClick={() => editor.chain().focus().addRowBefore().run()}
                     title="Add Row Above"
                   >
-                    <Rows2 className="h-4 w-4" />
+                    <ArrowUpFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().addRowAfter().run()}
                     title="Add Row Below"
                   >
-                    <Rows2 className="h-4 w-4" />
+                    <ArrowDownFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteRow().run()}
                     title="Delete Row"
                   >
-                    <Minus className="h-4 w-4" />
+                    <CircleMinus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() =>
@@ -390,7 +393,7 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column Before"
                   >
-                    <Columns2 className="h-4 w-4" />
+                    <ArrowLeftFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() =>
@@ -398,13 +401,13 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column After"
                   >
-                    <Columns2 className="h-4 w-4" />
+                    <ArrowRightFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteColumn().run()}
                     title="Delete Column"
                   >
-                    <Minus className="h-4 w-4" />
+                    <CircleMinus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteTable().run()}
@@ -426,7 +429,13 @@ export const InlineSectionEditor = ({
           </div>
         </div>
       )}
-      <h2 className="text-xl font-semibold mb-3">{title}</h2>
+      <Input
+        value={editableTitle}
+        onChange={(e) => setEditableTitle(e.target.value)}
+        className="text-xl font-semibold mb-3 border-0 px-0 focus-visible:ring-0"
+        placeholder="Section title"
+        aria-label="Section title"
+      />
       <EditorContent editor={editor} />
       <Dialog open={tableDialogOpen} onOpenChange={setTableDialogOpen}>
         <DialogContent className="sm:max-w-xs">
