@@ -114,7 +114,10 @@ export const createTagMentionExtension = (tags: TagItem[]) => {
     HTMLAttributes: {
       class: "tag-mention",
     },
-    renderLabel({ node }) {
+    renderText({ node }) {
+      return node.attrs.label ?? node.attrs.id;
+    },
+    renderHTML({ node }) {
       return node.attrs.label ?? node.attrs.id;
     },
     suggestion: {

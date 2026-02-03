@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 
 import {
   Plus,
@@ -25,13 +25,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  getSampleDocument,
   loadDocument,
   saveDocument,
   getSampleTemplates,
 } from "@/lib/documentStorage";
 import { cn } from "@/lib/utils";
 
-import type { Document, Section, Template, FinancialReportColumn, FinancialReportRow } from "@/types/document";
+import type {
+  Document,
+  Section,
+  Template,
+  FinancialReportColumn,
+  FinancialReportRow,
+} from "@/types/document";
 
 interface TipTapNode {
   type: string;
@@ -59,6 +66,7 @@ export const DocumentEditor = () => {
   const [newTagDialogOpen, setNewTagDialogOpen] = useState(false);
   const [newTagKey, setNewTagKey] = useState("");
   const [newTagValue, setNewTagValue] = useState("");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   // Convert tagValues to TagItem array for the editor
   const tags: TagItem[] = useMemo(
@@ -148,6 +156,14 @@ export const DocumentEditor = () => {
     setSelectedSectionId(newSection.id);
   };
 
+  const handleResetDocument = useCallback(() => {
+    const resetDocument = getSampleDocument();
+    setDocument(resetDocument);
+    setSelectedSectionId(resetDocument.sections[0]?.id || null);
+    setEditingSectionId(null);
+    setResetDialogOpen(false);
+  }, []);
+
   const handleDeleteSection = (sectionId: string) => {
     setSectionToDelete(sectionId);
     setDeleteDialogOpen(true);
@@ -173,7 +189,10 @@ export const DocumentEditor = () => {
     setSectionToDelete(null);
   };
 
-  const handleReorderSection = (sectionId: string, direction: "up" | "down") => {
+  const handleReorderSection = (
+    sectionId: string,
+    direction: "up" | "down"
+  ) => {
     const currentIndex = document.sections.findIndex((s) => s.id === sectionId);
     if (currentIndex === -1) return;
 
@@ -282,7 +301,10 @@ export const DocumentEditor = () => {
     });
   };
 
-  const renderContent = (content: string, tagValues: Record<string, string>) => {
+  const renderContent = (
+    content: string,
+    tagValues: Record<string, string>
+  ) => {
     try {
       const json = JSON.parse(content);
       return renderNode(json, tagValues);
@@ -337,7 +359,7 @@ export const DocumentEditor = () => {
     }
 
     const children = node.content?.map((child, index: number) => (
-      <span key={index}>{renderNode(child, tagValues)}</span>
+      <Fragment key={index}>{renderNode(child, tagValues)}</Fragment>
     ));
 
     switch (node.type) {
@@ -363,9 +385,11 @@ export const DocumentEditor = () => {
         }
       }
       case "bulletList":
-        return <ul className="list-disc list-inside mb-2">{children}</ul>;
+        return <ul className="list-disc list-outside pl-6 mb-2">{children}</ul>;
       case "orderedList":
-        return <ol className="list-decimal list-inside mb-2">{children}</ol>;
+        return (
+          <ol className="list-decimal list-outside pl-6 mb-2">{children}</ol>
+        );
       case "listItem":
         return <li>{children}</li>;
       case "table":
@@ -387,7 +411,8 @@ export const DocumentEditor = () => {
       case "mention": {
         // Render tag pill
         const tagKey = node.attrs?.id as string;
-        const resolvedValue = tagValues[tagKey] || (node.attrs?.label as string) || tagKey;
+        const resolvedValue =
+          tagValues[tagKey] || (node.attrs?.label as string) || tagKey;
         return (
           <span className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-primary/10 text-primary text-sm font-medium border border-primary/20">
             {resolvedValue}
@@ -402,7 +427,9 @@ export const DocumentEditor = () => {
 
         const calculateTotal = (colId: string) => {
           return rows.reduce((sum, row) => {
-            const value = parseFloat(row.values[colId]?.replace(/[^\d.-]/g, "") || "0");
+            const value = parseFloat(
+              row.values[colId]?.replace(/[^\d.-]/g, "") || "0"
+            );
             return sum + (isNaN(value) ? 0 : value);
           }, 0);
         };
@@ -497,9 +524,17 @@ export const DocumentEditor = () => {
               className="text-lg font-semibold border-0 px-0 focus-visible:ring-0"
             />
           </div>
-          <Button onClick={() => setTemplateDialogOpen(true)} variant="outline">
-            New from Template
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setResetDialogOpen(true)} variant="outline">
+              Återställ
+            </Button>
+            <Button
+              onClick={() => setTemplateDialogOpen(true)}
+              variant="outline"
+            >
+              New from Template
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -598,7 +633,7 @@ export const DocumentEditor = () => {
                 className={cn(
                   "mb-8 p-4 rounded-lg transition-all",
                   editingSectionId === section.id
-                    ? "ring-2 ring-primary bg-primary/5"
+                    ? "ring-2 ring-primary bg-white"
                     : selectedSectionId === section.id
                       ? "ring-2 ring-primary/50 bg-accent/30 cursor-pointer"
                       : "hover:bg-accent/30 cursor-pointer"
@@ -621,20 +656,31 @@ export const DocumentEditor = () => {
                 role="button"
                 tabIndex={0}
               >
-                <h2 className="text-xl font-semibold mb-3">{section.title}</h2>
                 {editingSectionId === section.id ? (
-                  <InlineSectionEditor
-                    content={section.content}
-                    tags={tags}
-                    onSave={handleSaveInlineEdit}
-                    onCancel={handleCancelInlineEdit}
-                  />
+                  <>
+                    <InlineSectionEditor
+                      content={section.content}
+                      tags={tags}
+                      title={section.title}
+                      onSave={handleSaveInlineEdit}
+                      onCancel={handleCancelInlineEdit}
+                      className="mb-3"
+                    />
+                  </>
                 ) : (
+                  <>
+                    <h2 className="text-xl font-semibold mb-3">
+                      {section.title}
+                    </h2>
+                  </>
+                )}
+                {editingSectionId === section.id ? null : (
                   <div className="prose prose-sm max-w-none">
                     {renderContent(section.content, document.tagValues)}
                     {selectedSectionId === section.id && !editingSectionId && (
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Double-click to edit inline, or use the panel on the right
+                        Double-click to edit inline, or use the panel on the
+                        right
                       </div>
                     )}
                   </div>
@@ -734,8 +780,8 @@ export const DocumentEditor = () => {
           <DialogHeader>
             <DialogTitle>Delete Section</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this section? This action cannot be
-              undone.
+              Are you sure you want to delete this section? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -818,13 +864,33 @@ export const DocumentEditor = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground">
-                    Sections:{" "}
-                    {template.sections.map((s) => s.title).join(", ")}
+                    Sections: {template.sections.map((s) => s.title).join(", ")}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Document Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Återställ dokument</DialogTitle>
+            <DialogDescription>
+              Detta kommer återställa allt innehåll till startläget. Det går
+              inte att ångra.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetDialogOpen(false)}>
+              Avbryt
+            </Button>
+            <Button variant="destructive" onClick={handleResetDocument}>
+              Återställ
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -834,7 +900,8 @@ export const DocumentEditor = () => {
           <DialogHeader>
             <DialogTitle>Edit Tag Value</DialogTitle>
             <DialogDescription>
-              Update the value for <code className="font-mono">{editingTagKey}</code>
+              Update the value for{" "}
+              <code className="font-mono">{editingTagKey}</code>
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -896,7 +963,10 @@ export const DocumentEditor = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNewTagDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setNewTagDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleAddNewTag} disabled={!newTagKey.trim()}>
