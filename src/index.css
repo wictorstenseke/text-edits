@@ -202,3 +202,73 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* TipTap Editor Styles */
+.tiptap {
+  outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: oklch(0.556 0 0);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.tiptap table td,
+.tiptap table th {
+  min-width: 1em;
+  border: 1px solid oklch(0.922 0 0);
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.dark .tiptap table td,
+.dark .tiptap table th {
+  border-color: oklch(1 0 0 / 10%);
+}
+
+.tiptap table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: oklch(0.97 0 0);
+}
+
+.dark .tiptap table th {
+  background-color: oklch(0.269 0 0);
+}
+
+.tiptap table .selectedCell {
+  background-color: oklch(0.97 0 0);
+}
+
+.dark .tiptap table .selectedCell {
+  background-color: oklch(0.371 0 0);
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding: 0 1rem;
+  margin: 0.5rem 0;
+}
+
+.tiptap a {
+  color: oklch(0.546 0.245 262.881);
+  text-decoration: underline;
+}
+
+.tiptap a:hover {
+  text-decoration: none;
+}
+
