@@ -15,9 +15,10 @@ import {
   Heading3,
   Link2,
   Table as TableIcon,
-  Rows2,
-  Columns2,
-  Minus,
+  ArrowUpFromLine,
+  ArrowDownFromLine,
+  CirclePlus,
+  CircleMinus,
   Trash2,
   FileSpreadsheet,
   SeparatorHorizontal,
@@ -371,19 +372,19 @@ export const InlineSectionEditor = ({
                     onClick={() => editor.chain().focus().addRowBefore().run()}
                     title="Add Row Above"
                   >
-                    <Rows2 className="h-4 w-4" />
+                    <ArrowUpFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().addRowAfter().run()}
                     title="Add Row Below"
                   >
-                    <Rows2 className="h-4 w-4" />
+                    <ArrowDownFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteRow().run()}
                     title="Delete Row"
                   >
-                    <Minus className="h-4 w-4" />
+                    <CircleMinus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() =>
@@ -391,7 +392,7 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column Before"
                   >
-                    <Columns2 className="h-4 w-4" />
+                    <CirclePlus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() =>
@@ -399,13 +400,13 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column After"
                   >
-                    <Columns2 className="h-4 w-4" />
+                    <CirclePlus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteColumn().run()}
                     title="Delete Column"
                   >
-                    <Minus className="h-4 w-4" />
+                    <CircleMinus className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteTable().run()}
