@@ -1,17 +1,25 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/components/theme-provider";
 
-export const Route = createRootRoute({
-  component: () => (
-    <ThemeProvider
-      defaultMode="system"
-      storageKey="vite-ui-theme"
-    >
-      <AppShell>
+const RootComponent = () => {
+  const router = useRouterState();
+  const isEditorRoute = router.location.pathname === "/editor";
+
+  return (
+    <ThemeProvider defaultMode="system" storageKey="vite-ui-theme">
+      {isEditorRoute ? (
         <Outlet />
-      </AppShell>
+      ) : (
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      )}
     </ThemeProvider>
-  ),
+  );
+};
+
+export const Route = createRootRoute({
+  component: RootComponent,
 });

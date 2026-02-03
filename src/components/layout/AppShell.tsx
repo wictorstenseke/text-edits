@@ -43,6 +43,14 @@ export function AppShell({ children }: AppShellProps) {
               >
                 Query Demo
               </Link>
+              <Link
+                to="/editor"
+                className="transition-colors hover:text-foreground/80"
+                activeProps={{ className: "text-foreground" }}
+                inactiveProps={{ className: "text-foreground/60" }}
+              >
+                Editor
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-2">
