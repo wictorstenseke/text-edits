@@ -17,7 +17,8 @@ import {
   Table as TableIcon,
   ArrowUpFromLine,
   ArrowDownFromLine,
-  CirclePlus,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
   CircleMinus,
   Trash2,
   FileSpreadsheet,
@@ -392,7 +393,7 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column Before"
                   >
-                    <CirclePlus className="h-4 w-4" />
+                    <ArrowLeftFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() =>
@@ -400,7 +401,7 @@ export const InlineSectionEditor = ({
                     }
                     title="Add Column After"
                   >
-                    <CirclePlus className="h-4 w-4" />
+                    <ArrowRightFromLine className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
                     onClick={() => editor.chain().focus().deleteColumn().run()}
@@ -433,6 +434,7 @@ export const InlineSectionEditor = ({
         onChange={(e) => setEditableTitle(e.target.value)}
         className="text-xl font-semibold mb-3 border-0 px-0 focus-visible:ring-0"
         placeholder="Section title"
+        aria-label="Section title"
       />
       <EditorContent editor={editor} />
       <Dialog open={tableDialogOpen} onOpenChange={setTableDialogOpen}>
