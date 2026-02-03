@@ -20,6 +20,7 @@ import {
   Minus,
   Trash2,
   FileSpreadsheet,
+  SeparatorHorizontal,
   Undo,
   Redo,
   Check,
@@ -29,6 +30,7 @@ import {
 import {
   createTagMentionExtension,
   FinancialReportBlockExtension,
+  PageBreakExtension,
   type TagItem,
 } from "@/components/editor";
 import { Button } from "@/components/ui/button";
@@ -123,6 +125,7 @@ export const InlineSectionEditor = ({
       }),
       tagMentionExtension,
       FinancialReportBlockExtension,
+      PageBreakExtension,
     ],
     content: content ? JSON.parse(content) : "",
     editorProps: {
@@ -335,6 +338,12 @@ export const InlineSectionEditor = ({
                 title="Insert Financial Report"
               >
                 <FileSpreadsheet className="h-4 w-4" />
+              </MenuButton>
+              <MenuButton
+                onClick={() => editor.chain().focus().insertPageBreak().run()}
+                title="Insert Page Break"
+              >
+                <SeparatorHorizontal className="h-4 w-4" />
               </MenuButton>
 
               <Separator orientation="vertical" className="h-6 mx-1" />

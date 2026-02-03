@@ -13,3 +13,5 @@ export {
 } from "./FinancialReportBlock";
 
 export { InlineSectionEditor } from "./InlineSectionEditor";
+
+export { PageBreakExtension } from "./PageBreak";

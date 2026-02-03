@@ -1,4 +1,11 @@
-import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Fragment,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 
 import {
   Plus,
@@ -8,10 +15,12 @@ import {
   FileText,
   Tag as TagIcon,
   PlusCircle,
+  Maximize2,
+  Minimize2,
+  Download,
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
-import { TipTapEditor } from "@/components/TipTapEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,6 +39,7 @@ import {
   saveDocument,
   getSampleTemplates,
 } from "@/lib/documentStorage";
+import { exportToPDF } from "@/lib/pdfExport";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -49,6 +59,7 @@ interface TipTapNode {
 }
 
 export const DocumentEditor = () => {
+  const documentContainerRef = useRef<HTMLDivElement>(null);
   const [document, setDocument] = useState<Document>(loadDocument());
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     document.sections[0]?.id || null
@@ -67,6 +78,9 @@ export const DocumentEditor = () => {
   const [newTagKey, setNewTagKey] = useState("");
   const [newTagValue, setNewTagValue] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
+    "medium"
+  );
 
   // Convert tagValues to TagItem array for the editor
   const tags: TagItem[] = useMemo(
@@ -86,16 +100,22 @@ export const DocumentEditor = () => {
     return () => clearTimeout(timer);
   }, [document]);
 
-  const selectedSection = document.sections.find(
-    (s) => s.id === selectedSectionId
-  );
-
   const handleSectionClick = (sectionId: string) => {
     // If we're editing a different section, don't allow switching without saving
     if (editingSectionId && editingSectionId !== sectionId) {
       return;
     }
     setSelectedSectionId(sectionId);
+
+    // Scroll to the section in the document
+    // Sanitize the sectionId for use in CSS selector
+    const sanitizedId = CSS.escape(sectionId);
+    const sectionElement = window.document.querySelector(
+      `[data-section-id="${sanitizedId}"]`
+    );
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const handleStartEditing = (sectionId: string) => {
@@ -121,17 +141,6 @@ export const DocumentEditor = () => {
   const handleCancelInlineEdit = useCallback(() => {
     setEditingSectionId(null);
   }, []);
-
-  const handleContentChange = (content: string) => {
-    if (!selectedSectionId) return;
-
-    setDocument((prev) => ({
-      ...prev,
-      sections: prev.sections.map((section) =>
-        section.id === selectedSectionId ? { ...section, content } : section
-      ),
-    }));
-  };
 
   const handleAddSection = () => {
     if (!newSectionTitle.trim()) return;
@@ -312,6 +321,20 @@ export const DocumentEditor = () => {
       return null;
     }
   };
+
+  const handleExportPDF = useCallback(async () => {
+    if (!documentContainerRef.current) return;
+
+    try {
+      await exportToPDF(document, documentContainerRef.current);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to export PDF. Please try again."
+      );
+    }
+  }, [document]);
 
   const renderNode = (
     node: TipTapNode,
@@ -504,6 +527,16 @@ export const DocumentEditor = () => {
           </div>
         );
       }
+      case "pageBreak":
+        return (
+          <div className="page-break my-8 flex items-center justify-center">
+            <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
+            <span className="mx-4 text-xs font-medium text-muted-foreground bg-background px-2 py-1 rounded border border-muted-foreground/30">
+              Page Break
+            </span>
+            <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
+          </div>
+        );
       default:
         return children;
     }
@@ -525,6 +558,37 @@ export const DocumentEditor = () => {
             />
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 mr-2">
+              <span className="text-sm text-muted-foreground mr-1">Width:</span>
+              <Button
+                onClick={() => setPageWidth("narrow")}
+                variant={pageWidth === "narrow" ? "default" : "ghost"}
+                size="sm"
+                title="Narrow width"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setPageWidth("medium")}
+                variant={pageWidth === "medium" ? "default" : "ghost"}
+                size="sm"
+                title="Medium width"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setPageWidth("wide")}
+                variant={pageWidth === "wide" ? "default" : "ghost"}
+                size="sm"
+                title="Wide width"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button onClick={handleExportPDF} variant="default">
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
             <Button onClick={() => setResetDialogOpen(true)} variant="outline">
               Återställ
             </Button>
@@ -558,8 +622,10 @@ export const DocumentEditor = () => {
                 <div
                   key={section.id}
                   className={cn(
-                    "group rounded-lg p-2 cursor-pointer hover:bg-accent transition-colors",
-                    selectedSectionId === section.id && "bg-accent"
+                    "group rounded-lg p-2 cursor-pointer transition-colors border",
+                    selectedSectionId === section.id
+                      ? "bg-primary/10 border-primary/30 hover:bg-primary/15"
+                      : "border-transparent hover:border-accent/50 hover:bg-accent/50"
                   )}
                   onClick={() => handleSectionClick(section.id)}
                   onKeyDown={(e) => {
@@ -625,11 +691,20 @@ export const DocumentEditor = () => {
 
         {/* CENTER - Document Preview with Inline Editing */}
         <div className="flex-1 overflow-y-auto bg-muted/30">
-          <div className="max-w-4xl mx-auto p-8 bg-background my-8 shadow-sm rounded-lg">
+          <div
+            ref={documentContainerRef}
+            className={cn(
+              "mx-auto p-8 bg-background my-8 shadow-sm rounded-lg",
+              pageWidth === "narrow" && "max-w-2xl",
+              pageWidth === "medium" && "max-w-4xl",
+              pageWidth === "wide" && "max-w-6xl"
+            )}
+          >
             <h1 className="text-3xl font-bold mb-6">{document.title}</h1>
             {document.sections.map((section) => (
               <div
                 key={section.id}
+                data-section-id={section.id}
                 className={cn(
                   "mb-8 p-4 rounded-lg transition-all",
                   editingSectionId === section.id
@@ -644,7 +719,12 @@ export const DocumentEditor = () => {
                   }
                 }}
                 onDoubleClick={() => {
-                  if (!editingSectionId) {
+                  // If another section is being edited, close it first
+                  if (editingSectionId && editingSectionId !== section.id) {
+                    setEditingSectionId(null);
+                  }
+                  // Then start editing the clicked section
+                  if (editingSectionId !== section.id) {
                     handleStartEditing(section.id);
                   }
                 }}
@@ -679,8 +759,7 @@ export const DocumentEditor = () => {
                     {renderContent(section.content, document.tagValues)}
                     {selectedSectionId === section.id && !editingSectionId && (
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Double-click to edit inline, or use the panel on the
-                        right
+                        Double-click to edit inline
                       </div>
                     )}
                   </div>
@@ -690,87 +769,64 @@ export const DocumentEditor = () => {
           </div>
         </div>
 
-        {/* RIGHT PANEL - Editor */}
-        <div className="w-96 border-l bg-background flex flex-col overflow-hidden">
-          {selectedSection ? (
-            <>
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Edit Section</h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedSection.title}
-                </p>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4">
-                <TipTapEditor
-                  key={selectedSectionId}
-                  content={selectedSection.content}
-                  onChange={handleContentChange}
-                  tags={tags}
-                />
-              </div>
-
-              {/* Tag Library */}
-              <div className="border-t p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <TagIcon className="h-4 w-4" />
-                    Tag Library
-                  </Label>
+        {/* RIGHT PANEL - Tags Only */}
+        <div className="w-80 border-l bg-background flex flex-col overflow-hidden">
+          {/* Tag Library */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <TagIcon className="h-4 w-4" />
+                Tag Library
+              </Label>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setNewTagDialogOpen(true)}
+                title="Add new tag"
+              >
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Type @ in the editor to insert a tag
+            </p>
+            <div className="space-y-2">
+              {Object.entries(document.tagValues).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
+                >
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => handleEditTag(key)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleEditTag(key);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="text-xs font-mono font-semibold">
+                      {key}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {value}
+                    </div>
+                  </div>
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    onClick={() => setNewTagDialogOpen(true)}
-                    title="Add new tag"
+                    onClick={() => handleDeleteTag(key)}
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                    title="Delete tag"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Type @ in the editor to insert a tag
-                </p>
-                <div className="space-y-2">
-                  {Object.entries(document.tagValues).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
-                    >
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => handleEditTag(key)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleEditTag(key);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className="text-xs font-mono font-semibold">
-                          {key}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {value}
-                        </div>
-                      </div>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteTag(key)}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                        title="Delete tag"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <p>Select a section to edit</p>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
