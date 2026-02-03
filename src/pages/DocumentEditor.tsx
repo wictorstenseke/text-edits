@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 import {
   Plus,
@@ -7,8 +7,10 @@ import {
   ChevronDown,
   FileText,
   Tag as TagIcon,
+  PlusCircle,
 } from "lucide-react";
 
+import { InlineSectionEditor, type TagItem } from "@/components/editor";
 import { TipTapEditor } from "@/components/TipTapEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +31,7 @@ import {
 } from "@/lib/documentStorage";
 import { cn } from "@/lib/utils";
 
-import type { Document, Section, Template } from "@/types/document";
+import type { Document, Section, Template, FinancialReportColumn, FinancialReportRow } from "@/types/document";
 
 interface TipTapNode {
   type: string;
@@ -44,6 +46,7 @@ export const DocumentEditor = () => {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
     document.sections[0]?.id || null
   );
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
   const [newSectionDialogOpen, setNewSectionDialogOpen] = useState(false);
@@ -53,6 +56,19 @@ export const DocumentEditor = () => {
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [editingTagKey, setEditingTagKey] = useState<string | null>(null);
   const [tagValue, setTagValue] = useState("");
+  const [newTagDialogOpen, setNewTagDialogOpen] = useState(false);
+  const [newTagKey, setNewTagKey] = useState("");
+  const [newTagValue, setNewTagValue] = useState("");
+
+  // Convert tagValues to TagItem array for the editor
+  const tags: TagItem[] = useMemo(
+    () =>
+      Object.entries(document.tagValues).map(([key, value]) => ({
+        key,
+        value,
+      })),
+    [document.tagValues]
+  );
 
   // Auto-save whenever document changes
   useEffect(() => {
@@ -67,8 +83,36 @@ export const DocumentEditor = () => {
   );
 
   const handleSectionClick = (sectionId: string) => {
+    // If we're editing a different section, don't allow switching without saving
+    if (editingSectionId && editingSectionId !== sectionId) {
+      return;
+    }
     setSelectedSectionId(sectionId);
   };
+
+  const handleStartEditing = (sectionId: string) => {
+    setEditingSectionId(sectionId);
+    setSelectedSectionId(sectionId);
+  };
+
+  const handleSaveInlineEdit = useCallback(
+    (content: string) => {
+      if (!editingSectionId) return;
+
+      setDocument((prev) => ({
+        ...prev,
+        sections: prev.sections.map((section) =>
+          section.id === editingSectionId ? { ...section, content } : section
+        ),
+      }));
+      setEditingSectionId(null);
+    },
+    [editingSectionId]
+  );
+
+  const handleCancelInlineEdit = useCallback(() => {
+    setEditingSectionId(null);
+  }, []);
 
   const handleContentChange = (content: string) => {
     if (!selectedSectionId) return;
@@ -209,6 +253,33 @@ export const DocumentEditor = () => {
     setTagValue("");
   };
 
+  const handleAddNewTag = () => {
+    if (!newTagKey.trim()) return;
+
+    setDocument((prev) => ({
+      ...prev,
+      tagValues: {
+        ...prev.tagValues,
+        [newTagKey]: newTagValue,
+      },
+    }));
+
+    setNewTagDialogOpen(false);
+    setNewTagKey("");
+    setNewTagValue("");
+  };
+
+  const handleDeleteTag = (key: string) => {
+    setDocument((prev) => {
+      const { [key]: _unusedValue, ...rest } = prev.tagValues;
+      void _unusedValue;
+      return {
+        ...prev,
+        tagValues: rest,
+      };
+    });
+  };
+
   const renderContent = (content: string, tagValues: Record<string, string>) => {
     try {
       const json = JSON.parse(content);
@@ -311,6 +382,99 @@ export const DocumentEditor = () => {
         );
       case "tableCell":
         return <td className="border border-gray-300 px-2 py-1">{children}</td>;
+      case "mention": {
+        // Render tag pill
+        const tagKey = node.attrs?.id as string;
+        const resolvedValue = tagValues[tagKey] || (node.attrs?.label as string) || tagKey;
+        return (
+          <span className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-primary/10 text-primary text-sm font-medium border border-primary/20">
+            {resolvedValue}
+          </span>
+        );
+      }
+      case "financialReportBlock": {
+        // Render financial report block in read-only mode
+        const columns = (node.attrs?.columns as FinancialReportColumn[]) || [];
+        const rows = (node.attrs?.rows as FinancialReportRow[]) || [];
+        const showTotals = node.attrs?.showTotals as boolean;
+
+        const calculateTotal = (colId: string) => {
+          return rows.reduce((sum, row) => {
+            const value = parseFloat(row.values[colId]?.replace(/[^\d.-]/g, "") || "0");
+            return sum + (isNaN(value) ? 0 : value);
+          }, 0);
+        };
+
+        const formatNumber = (num: number) => {
+          return new Intl.NumberFormat("sv-SE", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+          }).format(num);
+        };
+
+        return (
+          <div className="border rounded-lg overflow-hidden my-4">
+            <div className="px-4 py-2 bg-muted border-b">
+              <span className="text-sm font-semibold">Financial Report</span>
+            </div>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="border-b px-3 py-2 text-left text-sm font-semibold">
+                    Account #
+                  </th>
+                  <th className="border-b px-3 py-2 text-left text-sm font-semibold">
+                    Account Name
+                  </th>
+                  {columns.map((col) => (
+                    <th
+                      key={col.id}
+                      className="border-b px-3 py-2 text-right text-sm font-semibold"
+                    >
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-accent/30">
+                    <td className="border-b px-3 py-2 text-sm font-mono">
+                      {row.accountNumber}
+                    </td>
+                    <td className="border-b px-3 py-2 text-sm">
+                      {row.accountName}
+                    </td>
+                    {columns.map((col) => (
+                      <td
+                        key={col.id}
+                        className="border-b px-3 py-2 text-sm text-right font-mono"
+                      >
+                        {row.values[col.id] || ""}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                {showTotals && rows.length > 0 && (
+                  <tr className="bg-muted/30 font-semibold">
+                    <td className="border-t-2 px-3 py-2 text-sm" colSpan={2}>
+                      Total
+                    </td>
+                    {columns.map((col) => (
+                      <td
+                        key={col.id}
+                        className="border-t-2 px-3 py-2 text-right text-sm font-mono"
+                      >
+                        {formatNumber(calculateTotal(col.id))}
+                      </td>
+                    ))}
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
       default:
         return children;
     }
@@ -422,7 +586,7 @@ export const DocumentEditor = () => {
           </div>
         </div>
 
-        {/* CENTER - Document Preview */}
+        {/* CENTER - Document Preview with Inline Editing */}
         <div className="flex-1 overflow-y-auto bg-muted/30">
           <div className="max-w-4xl mx-auto p-8 bg-background my-8 shadow-sm rounded-lg">
             <h1 className="text-3xl font-bold mb-6">{document.title}</h1>
@@ -430,24 +594,49 @@ export const DocumentEditor = () => {
               <div
                 key={section.id}
                 className={cn(
-                  "mb-8 p-4 rounded-lg cursor-pointer transition-all",
-                  selectedSectionId === section.id
-                    ? "ring-2 ring-primary bg-accent/50"
-                    : "hover:bg-accent/30"
+                  "mb-8 p-4 rounded-lg transition-all",
+                  editingSectionId === section.id
+                    ? "ring-2 ring-primary bg-primary/5"
+                    : selectedSectionId === section.id
+                      ? "ring-2 ring-primary/50 bg-accent/30 cursor-pointer"
+                      : "hover:bg-accent/30 cursor-pointer"
                 )}
-                onClick={() => handleSectionClick(section.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
+                onClick={() => {
+                  if (editingSectionId !== section.id) {
                     handleSectionClick(section.id);
+                  }
+                }}
+                onDoubleClick={() => {
+                  if (!editingSectionId) {
+                    handleStartEditing(section.id);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !editingSectionId) {
+                    handleStartEditing(section.id);
                   }
                 }}
                 role="button"
                 tabIndex={0}
               >
                 <h2 className="text-xl font-semibold mb-3">{section.title}</h2>
-                <div className="prose prose-sm max-w-none">
-                  {renderContent(section.content, document.tagValues)}
-                </div>
+                {editingSectionId === section.id ? (
+                  <InlineSectionEditor
+                    content={section.content}
+                    tags={tags}
+                    onSave={handleSaveInlineEdit}
+                    onCancel={handleCancelInlineEdit}
+                  />
+                ) : (
+                  <div className="prose prose-sm max-w-none">
+                    {renderContent(section.content, document.tagValues)}
+                    {selectedSectionId === section.id && !editingSectionId && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Double-click to edit inline, or use the panel on the right
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -468,6 +657,7 @@ export const DocumentEditor = () => {
                   key={selectedSectionId}
                   content={selectedSection.content}
                   onChange={handleContentChange}
+                  tags={tags}
                 />
               </div>
 
@@ -478,22 +668,35 @@ export const DocumentEditor = () => {
                     <TagIcon className="h-4 w-4" />
                     Tag Library
                   </Label>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => setNewTagDialogOpen(true)}
+                    title="Add new tag"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                  </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Type @ in the editor to insert a tag
+                </p>
                 <div className="space-y-2">
                   {Object.entries(document.tagValues).map(([key, value]) => (
                     <div
                       key={key}
-                      className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent cursor-pointer"
-                      onClick={() => handleEditTag(key)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          handleEditTag(key);
-                        }
-                      }}
-                      role="button"
-                      tabIndex={0}
+                      className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
                     >
-                      <div className="flex-1">
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => handleEditTag(key)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            handleEditTag(key);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <div className="text-xs font-mono font-semibold">
                           {key}
                         </div>
@@ -501,6 +704,15 @@ export const DocumentEditor = () => {
                           {value}
                         </div>
                       </div>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteTag(key)}
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                        title="Delete tag"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -642,6 +854,52 @@ export const DocumentEditor = () => {
               Cancel
             </Button>
             <Button onClick={handleSaveTag}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Tag Dialog */}
+      <Dialog open={newTagDialogOpen} onOpenChange={setNewTagDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Tag</DialogTitle>
+            <DialogDescription>
+              Create a new tag that can be inserted into your document.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="new-tag-key">Tag Name</Label>
+              <Input
+                id="new-tag-key"
+                value={newTagKey}
+                onChange={(e) => setNewTagKey(e.target.value)}
+                placeholder="e.g., CompanyName"
+                className="font-mono"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-tag-value">Value</Label>
+              <Input
+                id="new-tag-value"
+                value={newTagValue}
+                onChange={(e) => setNewTagValue(e.target.value)}
+                placeholder="e.g., Acme AB"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddNewTag();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewTagDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddNewTag} disabled={!newTagKey.trim()}>
+              Add Tag
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

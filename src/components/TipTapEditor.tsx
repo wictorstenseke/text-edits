@@ -21,8 +21,14 @@ import {
   Table as TableIcon,
   Plus,
   Minus,
+  FileSpreadsheet,
 } from "lucide-react";
 
+import {
+  createTagMentionExtension,
+  FinancialReportBlockExtension,
+  type TagItem,
+} from "@/components/editor";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -30,7 +36,7 @@ import { cn } from "@/lib/utils";
 interface TipTapEditorProps {
   content: string;
   onChange: (content: string) => void;
-  onInsertTag?: (tagKey: string) => void;
+  tags?: TagItem[];
   className?: string;
 }
 
@@ -63,7 +69,13 @@ const MenuButton = ({
   </Button>
 );
 
-const EditorMenuBar = ({ editor }: { editor: Editor | null }) => {
+const EditorMenuBar = ({
+  editor,
+  onInsertFinancialReport,
+}: {
+  editor: Editor | null;
+  onInsertFinancialReport?: () => void;
+}) => {
   if (!editor) {
     return null;
   }
@@ -77,6 +89,12 @@ const EditorMenuBar = ({ editor }: { editor: Editor | null }) => {
 
   const insertTable = () => {
     editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run();
+  };
+
+  const insertFinancialReport = () => {
+    if (onInsertFinancialReport) {
+      onInsertFinancialReport();
+    }
   };
 
   return (
@@ -162,6 +180,13 @@ const EditorMenuBar = ({ editor }: { editor: Editor | null }) => {
       >
         <TableIcon className="h-4 w-4" />
       </MenuButton>
+      
+      <MenuButton
+        onClick={insertFinancialReport}
+        title="Insert Financial Report"
+      >
+        <FileSpreadsheet className="h-4 w-4" />
+      </MenuButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -216,6 +241,7 @@ const EditorMenuBar = ({ editor }: { editor: Editor | null }) => {
 export const TipTapEditor = ({
   content,
   onChange,
+  tags = [],
   className,
 }: TipTapEditorProps) => {
   const editor = useEditor({
@@ -231,8 +257,10 @@ export const TipTapEditor = ({
         openOnClick: false,
       }),
       Placeholder.configure({
-        placeholder: "Start typing...",
+        placeholder: "Start typing... (use @ to insert tags)",
       }),
+      createTagMentionExtension(tags),
+      FinancialReportBlockExtension,
     ],
     content: content ? JSON.parse(content) : "",
     onUpdate: ({ editor }) => {
@@ -245,9 +273,32 @@ export const TipTapEditor = ({
     },
   });
 
+  const handleInsertFinancialReport = () => {
+    if (editor) {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "financialReportBlock",
+          attrs: {
+            columns: [
+              { id: `col-${Date.now()}-1`, label: "Opening Balance" },
+              { id: `col-${Date.now()}-2`, label: "Closing Balance" },
+            ],
+            rows: [],
+            showTotals: true,
+          },
+        })
+        .run();
+    }
+  };
+
   return (
     <div className={cn("border rounded-lg overflow-hidden bg-background", className)}>
-      <EditorMenuBar editor={editor} />
+      <EditorMenuBar
+        editor={editor}
+        onInsertFinancialReport={handleInsertFinancialReport}
+      />
       <EditorContent editor={editor} />
     </div>
   );
