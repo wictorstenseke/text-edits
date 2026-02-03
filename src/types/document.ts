@@ -4,6 +4,25 @@ export interface Tag {
   value: string;
 }
 
+export interface FinancialReportColumn {
+  id: string;
+  label: string;
+}
+
+export interface FinancialReportRow {
+  id: string;
+  accountNumber: string;
+  accountName: string;
+  values: Record<string, string>; // columnId -> value
+}
+
+export interface FinancialReportBlock {
+  id: string;
+  columns: FinancialReportColumn[];
+  rows: FinancialReportRow[];
+  showTotals: boolean;
+}
+
 export interface Section {
   id: string;
   title: string;
