@@ -8,6 +8,8 @@ import {
   FileText,
   Tag as TagIcon,
   PlusCircle,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
@@ -66,6 +68,9 @@ export const DocumentEditor = () => {
   const [newTagKey, setNewTagKey] = useState("");
   const [newTagValue, setNewTagValue] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
+    "medium"
+  );
 
   // Convert tagValues to TagItem array for the editor
   const tags: TagItem[] = useMemo(
@@ -519,6 +524,33 @@ export const DocumentEditor = () => {
             />
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 mr-2">
+              <span className="text-sm text-muted-foreground mr-1">Width:</span>
+              <Button
+                onClick={() => setPageWidth("narrow")}
+                variant={pageWidth === "narrow" ? "default" : "ghost"}
+                size="sm"
+                title="Narrow width"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setPageWidth("medium")}
+                variant={pageWidth === "medium" ? "default" : "ghost"}
+                size="sm"
+                title="Medium width"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setPageWidth("wide")}
+                variant={pageWidth === "wide" ? "default" : "ghost"}
+                size="sm"
+                title="Wide width"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
             <Button onClick={() => setResetDialogOpen(true)} variant="outline">
               Återställ
             </Button>
@@ -619,7 +651,14 @@ export const DocumentEditor = () => {
 
         {/* CENTER - Document Preview with Inline Editing */}
         <div className="flex-1 overflow-y-auto bg-muted/30">
-          <div className="max-w-4xl mx-auto p-8 bg-background my-8 shadow-sm rounded-lg">
+          <div
+            className={cn(
+              "mx-auto p-8 bg-background my-8 shadow-sm rounded-lg",
+              pageWidth === "narrow" && "max-w-2xl",
+              pageWidth === "medium" && "max-w-4xl",
+              pageWidth === "wide" && "max-w-6xl"
+            )}
+          >
             <h1 className="text-3xl font-bold mb-6">{document.title}</h1>
             {document.sections.map((section) => (
               <div
