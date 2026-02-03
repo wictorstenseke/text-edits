@@ -21,11 +21,13 @@ import {
   Minus,
   Trash2,
   FileSpreadsheet,
+  FileBreak,
 } from "lucide-react";
 
 import {
   createTagMentionExtension,
   FinancialReportBlockExtension,
+  PageBreakExtension,
   type TagItem,
 } from "@/components/editor";
 import { Button } from "@/components/ui/button";
@@ -294,6 +296,13 @@ const EditorMenuBar = ({
         <FileSpreadsheet className="h-4 w-4" />
       </MenuButton>
 
+      <MenuButton
+        onClick={() => editor.chain().focus().insertPageBreak().run()}
+        title="Insert Page Break"
+      >
+        <FileBreak className="h-4 w-4" />
+      </MenuButton>
+
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       <MenuButton
@@ -381,6 +390,7 @@ export const TipTapEditor = ({
       }),
       createTagMentionExtension(tags),
       FinancialReportBlockExtension,
+      PageBreakExtension,
     ],
     content: content ? JSON.parse(content) : "",
     onUpdate: ({ editor }) => {

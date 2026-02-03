@@ -488,6 +488,16 @@ export const DocumentEditor = () => {
           </div>
         );
       }
+      case "pageBreak":
+        return (
+          <div className="page-break my-8 flex items-center justify-center">
+            <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
+            <span className="mx-4 text-xs font-medium text-muted-foreground bg-background px-2 py-1 rounded border border-muted-foreground/30">
+              Page Break
+            </span>
+            <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
+          </div>
+        );
       default:
         return children;
     }
