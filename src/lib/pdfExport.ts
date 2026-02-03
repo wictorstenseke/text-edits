@@ -97,7 +97,7 @@ export const exportToPDF = async (
     }
 
     // Save the PDF
-    const filename = `${document.title.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+    const filename = `${document.title.replace(/[^a-z0-9\s-]/gi, "_").replace(/\s+/g, "_").replace(/_+/g, "_")}.pdf`;
     pdf.save(filename);
   } catch (error) {
     console.error("Error generating PDF:", error);

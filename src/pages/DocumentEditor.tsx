@@ -108,8 +108,10 @@ export const DocumentEditor = () => {
     setSelectedSectionId(sectionId);
 
     // Scroll to the section in the document
+    // Sanitize the sectionId for use in CSS selector
+    const sanitizedId = CSS.escape(sectionId);
     const sectionElement = window.document.querySelector(
-      `[data-section-id="${sectionId}"]`
+      `[data-section-id="${sanitizedId}"]`
     );
     if (sectionElement) {
       sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
