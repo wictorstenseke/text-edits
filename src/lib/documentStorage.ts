@@ -153,7 +153,18 @@ export const loadDocument = (): Document => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Validate the parsed object has the required Document structure
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.id === "string" &&
+        typeof parsed.title === "string" &&
+        Array.isArray(parsed.sections) &&
+        typeof parsed.tagValues === "object"
+      ) {
+        return parsed as Document;
+      }
     }
   } catch (error) {
     console.error("Error loading document:", error);

@@ -225,10 +225,12 @@ export const DocumentEditor = () => {
     if (!node) return null;
 
     if (node.type === "text") {
-      let text = node.text;
+      let text = node.text || "";
       // Replace tag placeholders with actual values
       Object.entries(tagValues).forEach(([key, value]) => {
-        text = text.replace(new RegExp(key, "g"), value);
+        // Escape special regex characters in the key
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        text = text.replace(new RegExp(escapedKey, "g"), value);
       });
 
       const marks = node.marks || [];
@@ -242,16 +244,19 @@ export const DocumentEditor = () => {
         } else if (mark.type === "strike") {
           element = <s>{element}</s>;
         } else if (mark.type === "link") {
-          element = (
-            <a
-              href={mark.attrs.href}
-              className="text-blue-600 hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {element}
-            </a>
-          );
+          const href = mark.attrs?.href;
+          if (href && typeof href === "string") {
+            element = (
+              <a
+                href={href}
+                className="text-blue-600 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {element}
+              </a>
+            );
+          }
         }
       });
 

@@ -122,7 +122,7 @@ const EditorMenuBar = ({ editor }: { editor: Editor | null }) => {
       <MenuButton
         onClick={() => editor.chain().focus().toggleStrike().run()}
         active={editor.isActive("strike")}
-        title="Underline"
+        title="Strikethrough"
       >
         <UnderlineIcon className="h-4 w-4" />
       </MenuButton>
