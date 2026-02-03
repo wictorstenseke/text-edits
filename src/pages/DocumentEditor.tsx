@@ -106,6 +106,14 @@ export const DocumentEditor = () => {
       return;
     }
     setSelectedSectionId(sectionId);
+
+    // Scroll to the section in the document
+    const sectionElement = document.querySelector(
+      `[data-section-id="${sectionId}"]`
+    );
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const handleStartEditing = (sectionId: string) => {
@@ -612,8 +620,10 @@ export const DocumentEditor = () => {
                 <div
                   key={section.id}
                   className={cn(
-                    "group rounded-lg p-2 cursor-pointer hover:bg-accent transition-colors",
-                    selectedSectionId === section.id && "bg-accent"
+                    "group rounded-lg p-2 cursor-pointer transition-colors border",
+                    selectedSectionId === section.id
+                      ? "bg-primary/10 border-primary/30 hover:bg-primary/15"
+                      : "border-transparent hover:border-accent/50 hover:bg-accent/50"
                   )}
                   onClick={() => handleSectionClick(section.id)}
                   onKeyDown={(e) => {
@@ -692,6 +702,7 @@ export const DocumentEditor = () => {
             {document.sections.map((section) => (
               <div
                 key={section.id}
+                data-section-id={section.id}
                 className={cn(
                   "mb-8 p-4 rounded-lg transition-all",
                   editingSectionId === section.id
