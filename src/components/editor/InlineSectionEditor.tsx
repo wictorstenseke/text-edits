@@ -56,7 +56,7 @@ interface InlineSectionEditorProps {
   content: string;
   tags: TagItem[];
   title: string;
-  onSave: (content: string) => void;
+  onSave: (content: string, title?: string) => void;
   onCancel: () => void;
   className?: string;
 }
@@ -107,6 +107,7 @@ export const InlineSectionEditor = ({
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
   const [tableHeaderRow, setTableHeaderRow] = useState(true);
+  const [editableTitle, setEditableTitle] = useState(title);
   const tagMentionExtension = useMemo(
     () => createTagMentionExtension(tags),
     [tags]
@@ -188,9 +189,9 @@ export const InlineSectionEditor = ({
 
   const handleSave = useCallback(() => {
     if (editor) {
-      onSave(JSON.stringify(editor.getJSON()));
+      onSave(JSON.stringify(editor.getJSON()), editableTitle);
     }
-  }, [editor, onSave]);
+  }, [editor, onSave, editableTitle]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -426,7 +427,12 @@ export const InlineSectionEditor = ({
           </div>
         </div>
       )}
-      <h2 className="text-xl font-semibold mb-3">{title}</h2>
+      <Input
+        value={editableTitle}
+        onChange={(e) => setEditableTitle(e.target.value)}
+        className="text-xl font-semibold mb-3 border-0 px-0 focus-visible:ring-0"
+        placeholder="Section title"
+      />
       <EditorContent editor={editor} />
       <Dialog open={tableDialogOpen} onOpenChange={setTableDialogOpen}>
         <DialogContent className="sm:max-w-xs">
