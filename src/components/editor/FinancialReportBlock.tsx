@@ -37,7 +37,7 @@ interface FinancialReportBlockAttrs {
   showTotals: boolean;
 }
 
-const generateId = () => `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+const generateId = () => crypto.randomUUID();
 
 const FinancialReportNodeView = ({
   node,

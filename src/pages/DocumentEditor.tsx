@@ -271,11 +271,13 @@ export const DocumentEditor = () => {
 
   const handleDeleteTag = (key: string) => {
     setDocument((prev) => {
-      const { [key]: _unusedValue, ...rest } = prev.tagValues;
-      void _unusedValue;
+      // Create a new object without the key
+      const newTagValues = Object.fromEntries(
+        Object.entries(prev.tagValues).filter(([k]) => k !== key)
+      );
       return {
         ...prev,
-        tagValues: rest,
+        tagValues: newTagValues,
       };
     });
   };

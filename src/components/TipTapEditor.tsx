@@ -282,8 +282,8 @@ export const TipTapEditor = ({
           type: "financialReportBlock",
           attrs: {
             columns: [
-              { id: `col-${Date.now()}-1`, label: "Opening Balance" },
-              { id: `col-${Date.now()}-2`, label: "Closing Balance" },
+              { id: crypto.randomUUID(), label: "Opening Balance" },
+              { id: crypto.randomUUID(), label: "Closing Balance" },
             ],
             rows: [],
             showTotals: true,
