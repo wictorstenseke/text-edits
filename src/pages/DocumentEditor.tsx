@@ -717,7 +717,12 @@ export const DocumentEditor = () => {
                   }
                 }}
                 onDoubleClick={() => {
-                  if (!editingSectionId) {
+                  // If another section is being edited, close it first
+                  if (editingSectionId && editingSectionId !== section.id) {
+                    setEditingSectionId(null);
+                  }
+                  // Then start editing the clicked section
+                  if (editingSectionId !== section.id) {
                     handleStartEditing(section.id);
                   }
                 }}
