@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
-import { TipTapEditor } from "@/components/TipTapEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -86,10 +85,6 @@ export const DocumentEditor = () => {
     return () => clearTimeout(timer);
   }, [document]);
 
-  const selectedSection = document.sections.find(
-    (s) => s.id === selectedSectionId
-  );
-
   const handleSectionClick = (sectionId: string) => {
     // If we're editing a different section, don't allow switching without saving
     if (editingSectionId && editingSectionId !== sectionId) {
@@ -121,17 +116,6 @@ export const DocumentEditor = () => {
   const handleCancelInlineEdit = useCallback(() => {
     setEditingSectionId(null);
   }, []);
-
-  const handleContentChange = (content: string) => {
-    if (!selectedSectionId) return;
-
-    setDocument((prev) => ({
-      ...prev,
-      sections: prev.sections.map((section) =>
-        section.id === selectedSectionId ? { ...section, content } : section
-      ),
-    }));
-  };
 
   const handleAddSection = () => {
     if (!newSectionTitle.trim()) return;
@@ -679,8 +663,7 @@ export const DocumentEditor = () => {
                     {renderContent(section.content, document.tagValues)}
                     {selectedSectionId === section.id && !editingSectionId && (
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Double-click to edit inline, or use the panel on the
-                        right
+                        Double-click to edit inline
                       </div>
                     )}
                   </div>
@@ -690,87 +673,64 @@ export const DocumentEditor = () => {
           </div>
         </div>
 
-        {/* RIGHT PANEL - Editor */}
-        <div className="w-96 border-l bg-background flex flex-col overflow-hidden">
-          {selectedSection ? (
-            <>
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Edit Section</h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedSection.title}
-                </p>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4">
-                <TipTapEditor
-                  key={selectedSectionId}
-                  content={selectedSection.content}
-                  onChange={handleContentChange}
-                  tags={tags}
-                />
-              </div>
-
-              {/* Tag Library */}
-              <div className="border-t p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-sm font-semibold flex items-center gap-2">
-                    <TagIcon className="h-4 w-4" />
-                    Tag Library
-                  </Label>
+        {/* RIGHT PANEL - Tags Only */}
+        <div className="w-80 border-l bg-background flex flex-col overflow-hidden">
+          {/* Tag Library */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <TagIcon className="h-4 w-4" />
+                Tag Library
+              </Label>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setNewTagDialogOpen(true)}
+                title="Add new tag"
+              >
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Type @ in the editor to insert a tag
+            </p>
+            <div className="space-y-2">
+              {Object.entries(document.tagValues).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
+                >
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => handleEditTag(key)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleEditTag(key);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="text-xs font-mono font-semibold">
+                      {key}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {value}
+                    </div>
+                  </div>
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    onClick={() => setNewTagDialogOpen(true)}
-                    title="Add new tag"
+                    onClick={() => handleDeleteTag(key)}
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                    title="Delete tag"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Type @ in the editor to insert a tag
-                </p>
-                <div className="space-y-2">
-                  {Object.entries(document.tagValues).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
-                    >
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => handleEditTag(key)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleEditTag(key);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        <div className="text-xs font-mono font-semibold">
-                          {key}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {value}
-                        </div>
-                      </div>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteTag(key)}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                        title="Delete tag"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <p>Select a section to edit</p>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
