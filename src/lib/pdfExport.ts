@@ -58,6 +58,98 @@ export const exportToPDF = async (
       }
     }
 
+    /**
+     * Default fallback color when OKLCH parsing fails.
+     */
+    const OKLCH_FALLBACK_COLOR = "#888888";
+
+    /**
+     * Converts OKLCH color values to hex approximations.
+     * html2canvas doesn't support oklch() so we need to convert them.
+     */
+    const oklchToHex = (oklchStr: string): string => {
+      // Parse oklch(L C H) or oklch(L C H / alpha)
+      const match = oklchStr.match(
+        /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.%]+))?\s*\)/
+      );
+      if (!match) return OKLCH_FALLBACK_COLOR;
+
+      const L = parseFloat(match[1]);
+      const C = parseFloat(match[2]);
+      const H = parseFloat(match[3]);
+      // Note: alpha is parsed but not used in hex output (hex doesn't support alpha)
+
+      // Convert OKLCH to OKLab
+      const a = C * Math.cos((H * Math.PI) / 180);
+      const b = C * Math.sin((H * Math.PI) / 180);
+
+      // Convert OKLab to linear sRGB
+      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+      const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+
+      const l = l_ * l_ * l_;
+      const m = m_ * m_ * m_;
+      const s = s_ * s_ * s_;
+
+      // Linear sRGB to sRGB
+      const linearR = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+      const linearG = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+      const linearB = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+
+      const toSrgb = (c: number): number => {
+        const clamped = Math.max(0, Math.min(1, c));
+        if (clamped <= 0.0031308) {
+          return clamped * 12.92;
+        }
+        return 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+      };
+
+      const r = Math.round(toSrgb(linearR) * 255);
+      const g = Math.round(toSrgb(linearG) * 255);
+      const bVal = Math.round(toSrgb(linearB) * 255);
+
+      const toHex = (n: number): string =>
+        Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+
+      return `#${toHex(r)}${toHex(g)}${toHex(bVal)}`;
+    };
+
+    /**
+     * Replaces all oklch() occurrences in a CSS value string with hex colors.
+     */
+    const replaceOklchInValue = (value: string): string => {
+      const oklchRegex = /oklch\([^)]+\)/g;
+      return value.replace(oklchRegex, (match) => oklchToHex(match));
+    };
+
+    /**
+     * CSS properties that can contain color values which may use oklch().
+     */
+    const COLOR_PROPERTIES = [
+      "color",
+      "background-color",
+      "background",
+      "border-color",
+      "border-top-color",
+      "border-right-color",
+      "border-bottom-color",
+      "border-left-color",
+      "border-block-start-color",
+      "border-block-end-color",
+      "border-inline-start-color",
+      "border-inline-end-color",
+      "outline-color",
+      "text-decoration-color",
+      "box-shadow",
+      "text-shadow",
+      "caret-color",
+      "column-rule-color",
+      "accent-color",
+      "fill",
+      "stroke",
+    ] as const;
+
     const normalizeUnsupportedColors = (root: HTMLElement) => {
       if (!("getComputedStyle" in globalThis)) return;
 
@@ -69,20 +161,14 @@ export const exportToPDF = async (
       for (const el of elements) {
         const computed = globalThis.getComputedStyle(el);
 
-        const normalizeProperty = (cssProperty: string, setter: () => void) => {
-          const value = computed.getPropertyValue(cssProperty).trim();
-          if (value.includes("oklch(")) {
-            setter();
+        for (const prop of COLOR_PROPERTIES) {
+          const value = computed.getPropertyValue(prop).trim();
+          if (value && value.includes("oklch(")) {
+            const converted = replaceOklchInValue(value);
+            // Use setProperty to handle hyphenated properties
+            el.style.setProperty(prop, converted);
           }
-        };
-
-        normalizeProperty("background-color", () => {
-          el.style.backgroundColor = "#ffffff";
-        });
-
-        normalizeProperty("color", () => {
-          el.style.color = "#111827";
-        });
+        }
       }
     };
 
@@ -107,7 +193,7 @@ export const exportToPDF = async (
         const computed = globalThis.getComputedStyle(el);
         const bg = computed.getPropertyValue("background-color").trim();
         if (bg.includes("oklch(")) {
-          el.style.backgroundColor = "#ffffff";
+          el.style.backgroundColor = replaceOklchInValue(bg);
         }
       };
 
