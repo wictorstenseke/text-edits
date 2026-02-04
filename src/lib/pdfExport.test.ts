@@ -114,8 +114,9 @@ describe("exportToPDF", () => {
     // Verify html2canvas was called
     expect(html2canvas).toHaveBeenCalledTimes(1);
     expect(capturedElement).not.toBeNull();
+    const el = capturedElement!;
 
     // The temp container should have white background
-    expect(capturedElement?.style.backgroundColor).toBe("white");
+    expect(el.style.backgroundColor).toBe("white");
   });
 });
