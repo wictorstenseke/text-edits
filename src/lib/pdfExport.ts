@@ -76,6 +76,44 @@ const getTextContent = (element: Node): string => {
 };
 
 /**
+ * Splits paragraph content into lines based on <br> elements.
+ * Returns an array of strings, including empty strings for consecutive <br> tags.
+ */
+const getParagraphLines = (element: HTMLElement): string[] => {
+  const lines: string[] = [];
+  let currentLine = "";
+
+  const processNode = (node: Node): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      currentLine += node.textContent || "";
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      
+      // Skip hidden elements
+      if (el.style.display === "none" || el.hidden) {
+        return;
+      }
+
+      if (el.tagName.toLowerCase() === "br") {
+        // Push current line and start new one
+        lines.push(currentLine);
+        currentLine = "";
+      } else {
+        // Process children for inline elements
+        Array.from(el.childNodes).forEach(processNode);
+      }
+    }
+  };
+
+  Array.from(element.childNodes).forEach(processNode);
+  
+  // Push the last line
+  lines.push(currentLine);
+
+  return lines;
+};
+
+/**
  * Splits text into lines that fit within the content width.
  */
 const wrapText = (
@@ -257,10 +295,38 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
       ctx.y += 1;
       break;
 
-    case "p":
-      renderTextBlock(ctx, getTextContent(element), FONT_SIZES.body);
-      ctx.y += 2; // Paragraph spacing
+    case "p": {
+      const lines = getParagraphLines(element);
+      const bodyLineHeight = FONT_SIZES.body * LINE_HEIGHT * 0.352778; // pt to mm
+      
+      // If the paragraph has no content or only empty lines, treat as blank lines
+      const hasContent = lines.some((line) => line.trim().length > 0);
+      
+      if (!hasContent) {
+        // Empty paragraph: render as full-height blank lines
+        const numBlankLines = Math.max(1, lines.length);
+        for (let i = 0; i < numBlankLines; i++) {
+          ctx.y = ensureSpace(ctx, bodyLineHeight);
+          ctx.y += bodyLineHeight;
+        }
+      } else {
+        // Paragraph with content: render each line separately
+        for (const line of lines) {
+          const normalizedLine = line.replace(/\s+/g, " ").trim();
+          
+          if (normalizedLine) {
+            // Non-empty line: render with text wrapping
+            renderTextBlock(ctx, normalizedLine, FONT_SIZES.body);
+          } else {
+            // Empty line within paragraph: add blank line
+            ctx.y = ensureSpace(ctx, bodyLineHeight);
+            ctx.y += bodyLineHeight;
+          }
+        }
+        ctx.y += 2; // Paragraph spacing
+      }
       break;
+    }
 
     case "ul":
       processListItems(ctx, element, "bullet");

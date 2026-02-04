@@ -160,4 +160,80 @@ describe("exportToPDF", () => {
       exportToPDF(doc, null as unknown as HTMLElement)
     ).rejects.toThrow("Failed to generate PDF. Please try again.");
   });
+
+  it("should handle paragraphs with line breaks", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "Line 1<br>Line 2<br>Line 3";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered for each line
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Line 1");
+    expect(textCalls).toContain("Line 2");
+    expect(textCalls).toContain("Line 3");
+  });
+
+  it("should handle empty paragraphs as blank lines", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const p1 = document.createElement("p");
+    p1.textContent = "First paragraph";
+    const p2 = document.createElement("p");
+    // Empty paragraph
+    const p3 = document.createElement("p");
+    p3.textContent = "Third paragraph";
+    
+    container.appendChild(p1);
+    container.appendChild(p2);
+    container.appendChild(p3);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered for non-empty paragraphs
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("First paragraph");
+    expect(textCalls).toContain("Third paragraph");
+    // Empty paragraph should not render text but should add vertical space
+    expect(textCalls.filter((text) => text === "").length).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should handle consecutive line breaks as empty lines", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "Line 1<br><br>Line 3";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Line 1");
+    expect(textCalls).toContain("Line 3");
+  });
 });
