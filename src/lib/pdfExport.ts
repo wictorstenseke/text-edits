@@ -304,7 +304,12 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
       
       if (!hasContent) {
         // Empty paragraph: render as full-height blank lines
-        const numBlankLines = Math.max(1, lines.length);
+        // Note: lines.length includes the implicit line after the last <br>,
+        // so for n <br> elements, we get n+1 lines. For consistency:
+        // - <p></p> (no breaks) → 1 blank line
+        // - <p><br></p> (1 break) → 1 blank line
+        // - <p><br><br></p> (2 breaks) → 2 blank lines
+        const numBlankLines = Math.max(1, lines.length - 1);
         for (let i = 0; i < numBlankLines; i++) {
           ctx.y = ensureSpace(ctx, bodyLineHeight);
           ctx.y += bodyLineHeight;
