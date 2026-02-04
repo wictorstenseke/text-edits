@@ -1,19 +1,30 @@
-import html2canvas from "html2canvas";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { exportToPDF } from "./pdfExport";
 
 import type { Document } from "@/types/document";
 
-const addImageMock = vi.fn();
 const addPageMock = vi.fn();
 const saveMock = vi.fn();
+const setFontMock = vi.fn();
+const setFontSizeMock = vi.fn();
+const textMock = vi.fn();
+const getTextWidthMock = vi.fn().mockReturnValue(50);
+const setDrawColorMock = vi.fn();
+const lineMock = vi.fn();
+const rectMock = vi.fn();
 
 vi.mock("jspdf", () => {
   class JsPdfMock {
-    addImage = addImageMock;
     addPage = addPageMock;
     save = saveMock;
+    setFont = setFontMock;
+    setFontSize = setFontSizeMock;
+    text = textMock;
+    getTextWidth = getTextWidthMock;
+    setDrawColor = setDrawColorMock;
+    line = lineMock;
+    rect = rectMock;
   }
 
   return {
@@ -21,27 +32,29 @@ vi.mock("jspdf", () => {
   };
 });
 
-vi.mock("html2canvas", () => ({
-  default: vi.fn(),
-}));
-
 describe("exportToPDF", () => {
+  let container: HTMLElement | null = null;
+
   beforeEach(() => {
-    addImageMock.mockClear();
     addPageMock.mockClear();
-    saveMock.mockClear();
-    vi.mocked(html2canvas).mockReset();
+    saveMock.mockClear().mockImplementation(() => {});
+    setFontMock.mockClear();
+    setFontSizeMock.mockClear();
+    textMock.mockClear();
+    getTextWidthMock.mockClear().mockReturnValue(50);
+    setDrawColorMock.mockClear();
+    lineMock.mockClear();
+    rectMock.mockClear();
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+    container = null;
   });
 
   it("should create a PDF and save it with a sanitized filename", async () => {
-    const canvasStub = {
-      width: 800,
-      height: 600,
-      toDataURL: vi.fn().mockReturnValue("data:image/png;base64,fake"),
-    } as unknown as HTMLCanvasElement;
-
-    vi.mocked(html2canvas).mockResolvedValue(canvasStub);
-
     const doc: Document = {
       id: "doc-1",
       title: "Test Document: 2025/Report",
@@ -49,47 +62,21 @@ describe("exportToPDF", () => {
       tagValues: {},
     };
 
-    const container = document.createElement("div");
-    container.textContent = "Hello world";
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Hello world";
+    container.appendChild(paragraph);
     document.body.appendChild(container);
 
     await exportToPDF(doc, container);
 
-    expect(addImageMock).toHaveBeenCalledTimes(1);
     expect(saveMock).toHaveBeenCalledTimes(1);
     expect(saveMock).toHaveBeenCalledWith("Test_Document_2025_Report.pdf");
   });
 
-  it("should throw a friendly error when html2canvas fails", async () => {
-    vi.mocked(html2canvas).mockRejectedValue(new Error("html2canvas failed"));
-
-    const doc: Document = {
-      id: "doc-1",
-      title: "Test",
-      sections: [],
-      tagValues: {},
-    };
-
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-
-    await expect(exportToPDF(doc, container)).rejects.toThrow(
-      "Failed to generate PDF. Please try again."
-    );
-  });
-
-  it("should normalize elements with oklch() colors before rendering", async () => {
-    const canvasStub = {
-      width: 800,
-      height: 600,
-      toDataURL: vi.fn().mockReturnValue("data:image/png;base64,fake"),
-    } as unknown as HTMLCanvasElement;
-
-    // Track what elements are passed to html2canvas and capture their styles
-    let capturedElement: HTMLElement | null = null;
-    vi.mocked(html2canvas).mockImplementation(async (element: HTMLElement) => {
-      capturedElement = element;
-      return canvasStub;
+  it("should throw a friendly error when PDF generation fails", async () => {
+    saveMock.mockImplementation(() => {
+      throw new Error("jsPDF failed");
     });
 
     const doc: Document = {
@@ -99,24 +86,78 @@ describe("exportToPDF", () => {
       tagValues: {},
     };
 
-    // Create container with a child that has inline oklch() styles
-    const container = document.createElement("div");
-    const child = document.createElement("span");
-    child.textContent = "Hello";
-    // Set inline style with oklch color that normalization should convert
-    child.style.color = "oklch(0.5 0.1 180)";
-    child.style.backgroundColor = "oklch(1 0 0)";
-    container.appendChild(child);
+    container = document.createElement("div");
+    document.body.appendChild(container);
+
+    await expect(exportToPDF(doc, container)).rejects.toThrow(
+      "Failed to generate PDF. Please try again."
+    );
+  });
+
+  it("should render text content from DOM elements", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const heading = document.createElement("h1");
+    heading.textContent = "Title";
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Some content";
+    container.appendChild(heading);
+    container.appendChild(paragraph);
     document.body.appendChild(container);
 
     await exportToPDF(doc, container);
 
-    // Verify html2canvas was called
-    expect(html2canvas).toHaveBeenCalledTimes(1);
-    expect(capturedElement).not.toBeNull();
-    const el = capturedElement!;
+    // Verify text was rendered
+    expect(textMock).toHaveBeenCalled();
+    // Check that both "Title" and "Some content" were rendered
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Title");
+    expect(textCalls).toContain("Some content");
+  });
 
-    // The temp container should have white background
-    expect(el.style.backgroundColor).toBe("white");
+  it("should handle page breaks by adding new pages", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const section1 = document.createElement("p");
+    section1.textContent = "Section 1";
+    const pageBreak = document.createElement("div");
+    pageBreak.className = "page-break";
+    const section2 = document.createElement("p");
+    section2.textContent = "Section 2";
+
+    container.appendChild(section1);
+    container.appendChild(pageBreak);
+    container.appendChild(section2);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify a new page was added for the page break
+    expect(addPageMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw error when documentElement is null", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    await expect(
+      exportToPDF(doc, null as unknown as HTMLElement)
+    ).rejects.toThrow("Failed to generate PDF. Please try again.");
   });
 });
