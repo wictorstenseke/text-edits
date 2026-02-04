@@ -1,9 +1,4 @@
-import {
-  useState,
-  useCallback,
-  useRef,
-  type KeyboardEvent,
-} from "react";
+import { useState, useCallback, useRef, type KeyboardEvent } from "react";
 
 import { Node, mergeAttributes } from "@tiptap/core";
 import {
@@ -32,7 +27,12 @@ import type {
 } from "@/types/document";
 
 interface FinancialReportBlockAttrs {
-  columns: FinancialReportColumn[];
+  leftColumns?: FinancialReportColumn[];
+  rightColumns?: FinancialReportColumn[];
+  // Legacy support
+  accountNumberColumn?: { label: string; align?: "left" | "right" };
+  accountNameColumn?: { label: string; align?: "left" | "right" };
+  columns?: FinancialReportColumn[];
   rows: FinancialReportRow[];
   showTotals: boolean;
 }
@@ -45,44 +45,135 @@ const FinancialReportNodeView = ({
   deleteNode,
 }: NodeViewProps) => {
   const attrs = node.attrs as FinancialReportBlockAttrs;
-  const { columns, rows, showTotals } = attrs;
+
+  // Migration logic: convert old structure to new structure
+  const migrateAttrs = useCallback((attrs: FinancialReportBlockAttrs) => {
+    // If new structure exists, use it
+    if (attrs.leftColumns && attrs.rightColumns) {
+      return {
+        leftColumns: attrs.leftColumns,
+        rightColumns: attrs.rightColumns,
+        rows: attrs.rows.map((row) => {
+          // Ensure all column values exist
+          const allColIds = [
+            ...attrs.leftColumns.map((c) => c.id),
+            ...attrs.rightColumns.map((c) => c.id),
+          ];
+          const values = { ...row.values };
+          allColIds.forEach((colId) => {
+            if (!(colId in values)) {
+              values[colId] = "";
+            }
+          });
+          return { ...row, values };
+        }),
+        showTotals: attrs.showTotals,
+      };
+    }
+
+    // Migrate from old structure
+    const accountNumberColumn = attrs.accountNumberColumn || {
+      label: "Account #",
+      align: "left" as const,
+    };
+    const accountNameColumn = attrs.accountNameColumn || {
+      label: "Account Name",
+      align: "left" as const,
+    };
+    const oldColumns = attrs.columns || [];
+
+    const leftColumns: FinancialReportColumn[] = [
+      {
+        id: "account",
+        label: accountNumberColumn.label,
+        align: accountNumberColumn.align || "left",
+      },
+    ];
+
+    const rightColumns: FinancialReportColumn[] =
+      oldColumns.length > 0
+        ? oldColumns
+        : [
+            {
+              id: "openingBalance",
+              label: "Opening Balance",
+              align: "right",
+            },
+            {
+              id: "closingBalance",
+              label: "Closing Balance",
+              align: "right",
+            },
+          ];
+
+    // Migrate row data
+    const migratedRows = attrs.rows.map((row) => {
+      const values: Record<string, string> = {};
+
+      // Add left column values (from accountNumber)
+      values[leftColumns[0].id] =
+        (row as any).accountNumber || row.values[leftColumns[0].id] || "";
+
+      // Add right column values
+      rightColumns.forEach((col) => {
+        values[col.id] = row.values[col.id] || "";
+      });
+
+      return {
+        id: row.id,
+        values,
+      };
+    });
+
+    return {
+      leftColumns,
+      rightColumns,
+      rows: migratedRows,
+      showTotals: attrs.showTotals,
+    };
+  }, []);
+
+  const migrated = migrateAttrs(attrs);
+  const { leftColumns, rightColumns, rows, showTotals } = migrated;
+
   const [focusedCell, setFocusedCell] = useState<{
     rowIndex: number;
     colId: string;
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [editColumns, setEditColumns] = useState<FinancialReportColumn[]>(columns);
+  const [editLeftColumns, setEditLeftColumns] =
+    useState<FinancialReportColumn[]>(leftColumns);
+  const [editRightColumns, setEditRightColumns] =
+    useState<FinancialReportColumn[]>(rightColumns);
   const [editShowTotals, setEditShowTotals] = useState(showTotals);
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
   const handleCellChange = useCallback(
-    (rowIndex: number, field: "accountNumber" | "accountName" | string, value: string) => {
+    (rowIndex: number, colId: string, value: string) => {
       const newRows = [...rows];
-      if (field === "accountNumber" || field === "accountName") {
-        newRows[rowIndex] = { ...newRows[rowIndex], [field]: value };
-      } else {
-        newRows[rowIndex] = {
-          ...newRows[rowIndex],
-          values: { ...newRows[rowIndex].values, [field]: value },
-        };
-      }
+      newRows[rowIndex] = {
+        ...newRows[rowIndex],
+        values: { ...newRows[rowIndex].values, [colId]: value },
+      };
       updateAttributes({ rows: newRows });
     },
     [rows, updateAttributes]
   );
 
   const handleAddRow = useCallback(() => {
+    const allColIds = [
+      ...leftColumns.map((c) => c.id),
+      ...rightColumns.map((c) => c.id),
+    ];
     const newRow: FinancialReportRow = {
       id: generateId(),
-      accountNumber: "",
-      accountName: "",
-      values: columns.reduce(
-        (acc, col) => ({ ...acc, [col.id]: "" }),
+      values: allColIds.reduce(
+        (acc, colId) => ({ ...acc, [colId]: "" }),
         {} as Record<string, string>
       ),
     };
     updateAttributes({ rows: [...rows, newRow] });
-  }, [columns, rows, updateAttributes]);
+  }, [leftColumns, rightColumns, rows, updateAttributes]);
 
   const handleDeleteRow = useCallback(
     (rowIndex: number) => {
@@ -94,7 +185,10 @@ const FinancialReportNodeView = ({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>, rowIndex: number, colId: string) => {
-      const allCols = ["accountNumber", "accountName", ...columns.map((c) => c.id)];
+      const allCols = [
+        ...leftColumns.map((c) => c.id),
+        ...rightColumns.map((c) => c.id),
+      ];
       const colIndex = allCols.indexOf(colId);
 
       const focusCell = (newRowIndex: number, newColId: string) => {
@@ -109,10 +203,14 @@ const FinancialReportNodeView = ({
       if (e.key === "Tab") {
         e.preventDefault();
         const nextColIndex = e.shiftKey ? colIndex - 1 : colIndex + 1;
-        
+
         if (nextColIndex >= 0 && nextColIndex < allCols.length) {
           focusCell(rowIndex, allCols[nextColIndex]);
-        } else if (!e.shiftKey && nextColIndex >= allCols.length && rowIndex < rows.length - 1) {
+        } else if (
+          !e.shiftKey &&
+          nextColIndex >= allCols.length &&
+          rowIndex < rows.length - 1
+        ) {
           // Move to next row
           focusCell(rowIndex + 1, allCols[0]);
         } else if (e.shiftKey && nextColIndex < 0 && rowIndex > 0) {
@@ -136,7 +234,10 @@ const FinancialReportNodeView = ({
       } else if (e.key === "ArrowDown" && rowIndex < rows.length - 1) {
         e.preventDefault();
         focusCell(rowIndex + 1, colId);
-      } else if (e.key === "ArrowLeft" && e.currentTarget.selectionStart === 0) {
+      } else if (
+        e.key === "ArrowLeft" &&
+        e.currentTarget.selectionStart === 0
+      ) {
         if (colIndex > 0) {
           e.preventDefault();
           focusCell(rowIndex, allCols[colIndex - 1]);
@@ -151,11 +252,15 @@ const FinancialReportNodeView = ({
         }
       }
     },
-    [columns, rows.length, handleAddRow]
+    [leftColumns, rightColumns, rows.length, handleAddRow]
   );
 
   const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLInputElement>, rowIndex: number, colId: string) => {
+    (
+      e: React.ClipboardEvent<HTMLInputElement>,
+      rowIndex: number,
+      colId: string
+    ) => {
       const pasteData = e.clipboardData.getData("text");
       if (!pasteData.includes("\t") && !pasteData.includes("\n")) {
         return; // Let default paste handle single values
@@ -163,7 +268,10 @@ const FinancialReportNodeView = ({
 
       e.preventDefault();
       const lines = pasteData.split("\n").filter((line) => line.trim());
-      const allCols = ["accountNumber", "accountName", ...columns.map((c) => c.id)];
+      const allCols = [
+        ...leftColumns.map((c) => c.id),
+        ...rightColumns.map((c) => c.id),
+      ];
       const startColIndex = allCols.indexOf(colId);
 
       const newRows = [...rows];
@@ -174,12 +282,14 @@ const FinancialReportNodeView = ({
 
         // Add new rows if necessary
         while (newRows.length <= targetRowIndex) {
+          const allColIds = [
+            ...leftColumns.map((c) => c.id),
+            ...rightColumns.map((c) => c.id),
+          ];
           newRows.push({
             id: generateId(),
-            accountNumber: "",
-            accountName: "",
-            values: columns.reduce(
-              (acc, col) => ({ ...acc, [col.id]: "" }),
+            values: allColIds.reduce(
+              (acc, colId) => ({ ...acc, [colId]: "" }),
               {} as Record<string, string>
             ),
           });
@@ -189,32 +299,27 @@ const FinancialReportNodeView = ({
           const targetColIndex = startColIndex + cellIndex;
           if (targetColIndex < allCols.length) {
             const targetColId = allCols[targetColIndex];
-            if (targetColId === "accountNumber" || targetColId === "accountName") {
-              newRows[targetRowIndex] = {
-                ...newRows[targetRowIndex],
+            newRows[targetRowIndex] = {
+              ...newRows[targetRowIndex],
+              values: {
+                ...newRows[targetRowIndex].values,
                 [targetColId]: cell.trim(),
-              };
-            } else {
-              newRows[targetRowIndex] = {
-                ...newRows[targetRowIndex],
-                values: {
-                  ...newRows[targetRowIndex].values,
-                  [targetColId]: cell.trim(),
-                },
-              };
-            }
+              },
+            };
           }
         });
       });
 
       updateAttributes({ rows: newRows });
     },
-    [columns, rows, updateAttributes]
+    [leftColumns, rightColumns, rows, updateAttributes]
   );
 
   const calculateTotal = (colId: string) => {
     return rows.reduce((sum, row) => {
-      const value = parseFloat(row.values[colId]?.replace(/[^\d.-]/g, "") || "0");
+      const value = parseFloat(
+        row.values[colId]?.replace(/[^\d.-]/g, "") || "0"
+      );
       return sum + (isNaN(value) ? 0 : value);
     }, 0);
   };
@@ -228,46 +333,109 @@ const FinancialReportNodeView = ({
 
   const handleSaveSettings = useCallback(() => {
     // Update columns and sync row values
+    const allColIds = [
+      ...editLeftColumns.map((c) => c.id),
+      ...editRightColumns.map((c) => c.id),
+    ];
     const newRows = rows.map((row) => ({
       ...row,
-      values: editColumns.reduce(
-        (acc, col) => ({
+      values: allColIds.reduce(
+        (acc, colId) => ({
           ...acc,
-          [col.id]: row.values[col.id] || "",
+          [colId]: row.values[colId] || "",
         }),
         {} as Record<string, string>
       ),
     }));
     updateAttributes({
-      columns: editColumns,
+      leftColumns: editLeftColumns,
+      rightColumns: editRightColumns,
       rows: newRows,
       showTotals: editShowTotals,
     });
     setSettingsOpen(false);
-  }, [editColumns, editShowTotals, rows, updateAttributes]);
+  }, [
+    editLeftColumns,
+    editRightColumns,
+    editShowTotals,
+    rows,
+    updateAttributes,
+  ]);
 
-  const handleAddColumn = useCallback(() => {
-    setEditColumns([
-      ...editColumns,
-      { id: generateId(), label: `Column ${editColumns.length + 1}` },
+  const handleAddLeftColumn = useCallback(() => {
+    setEditLeftColumns([
+      ...editLeftColumns,
+      {
+        id: generateId(),
+        label: `Left Column ${editLeftColumns.length + 1}`,
+        align: "left",
+      },
     ]);
-  }, [editColumns]);
+  }, [editLeftColumns]);
 
-  const handleRemoveColumn = useCallback(
+  const handleRemoveLeftColumn = useCallback(
     (colId: string) => {
-      setEditColumns(editColumns.filter((c) => c.id !== colId));
+      setEditLeftColumns(editLeftColumns.filter((c) => c.id !== colId));
     },
-    [editColumns]
+    [editLeftColumns]
   );
 
-  const handleColumnLabelChange = useCallback(
+  const handleAddRightColumn = useCallback(() => {
+    setEditRightColumns([
+      ...editRightColumns,
+      {
+        id: generateId(),
+        label: `Right Column ${editRightColumns.length + 1}`,
+        align: "right",
+      },
+    ]);
+  }, [editRightColumns]);
+
+  const handleRemoveRightColumn = useCallback(
+    (colId: string) => {
+      setEditRightColumns(editRightColumns.filter((c) => c.id !== colId));
+    },
+    [editRightColumns]
+  );
+
+  const handleLeftColumnLabelChange = useCallback(
     (colId: string, label: string) => {
-      setEditColumns(
-        editColumns.map((c) => (c.id === colId ? { ...c, label } : c))
+      setEditLeftColumns(
+        editLeftColumns.map((c) => (c.id === colId ? { ...c, label } : c))
       );
     },
-    [editColumns]
+    [editLeftColumns]
   );
+
+  const handleLeftColumnAlignChange = useCallback(
+    (colId: string, align: "left" | "right") => {
+      setEditLeftColumns(
+        editLeftColumns.map((c) => (c.id === colId ? { ...c, align } : c))
+      );
+    },
+    [editLeftColumns]
+  );
+
+  const handleRightColumnLabelChange = useCallback(
+    (colId: string, label: string) => {
+      setEditRightColumns(
+        editRightColumns.map((c) => (c.id === colId ? { ...c, label } : c))
+      );
+    },
+    [editRightColumns]
+  );
+
+  const handleRightColumnAlignChange = useCallback(
+    (colId: string, align: "left" | "right") => {
+      setEditRightColumns(
+        editRightColumns.map((c) => (c.id === colId ? { ...c, align } : c))
+      );
+    },
+    [editRightColumns]
+  );
+
+  const columnAlignClass = (align: "left" | "right" | undefined) =>
+    align === "left" ? "text-left" : "text-right";
 
   // Sync edit state when dialog opens
   // Using sync state update pattern with ref tracking
@@ -275,8 +443,13 @@ const FinancialReportNodeView = ({
   // eslint-disable-next-line react-hooks/refs
   if (settingsOpen && !prevSettingsOpenRef.current) {
     // Dialog just opened, sync edit state
-    if (editColumns !== columns || editShowTotals !== showTotals) {
-      setEditColumns(columns);
+    if (
+      editLeftColumns !== leftColumns ||
+      editRightColumns !== rightColumns ||
+      editShowTotals !== showTotals
+    ) {
+      setEditLeftColumns(leftColumns);
+      setEditRightColumns(rightColumns);
       setEditShowTotals(showTotals);
     }
   }
@@ -325,20 +498,40 @@ const FinancialReportNodeView = ({
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto pr-2">
+          <table className="w-full border-collapse table-fixed">
+            <colgroup>
+              {leftColumns.map((col) => (
+                <col key={col.id} />
+              ))}
+              {rightColumns.map((col) => (
+                <col key={col.id} className="w-[12ch]" />
+              ))}
+              <col className="w-10" />
+            </colgroup>
             <thead>
               <tr className="bg-muted/50">
-                <th className="border-b px-3 py-2 text-left text-sm font-semibold min-w-[100px]">
-                  Account #
-                </th>
-                <th className="border-b px-3 py-2 text-left text-sm font-semibold min-w-[150px]">
-                  Account Name
-                </th>
-                {columns.map((col) => (
+                {leftColumns.map((col) => (
                   <th
                     key={col.id}
-                    className="border-b px-3 py-2 text-right text-sm font-semibold min-w-[120px]"
+                    className={cn(
+                      "border-b px-3 py-2 text-sm font-semibold min-w-[180px]",
+                      columnAlignClass(col.align)
+                    )}
+                  >
+                    {col.label}
+                  </th>
+                ))}
+                {rightColumns.map((col, rightIndex) => (
+                  <th
+                    key={col.id}
+                    className={cn(
+                      // Allow wrapping; increased header height is OK
+                      "border-b py-2 text-sm font-semibold whitespace-normal wrap-break-word tabular-nums",
+                      "pl-1 pr-0.5",
+                      rightIndex === 0 && "border-l border-border/60",
+                      columnAlignClass(col.align)
+                    )}
                   >
                     {col.label}
                   </th>
@@ -355,42 +548,14 @@ const FinancialReportNodeView = ({
                     focusedCell?.rowIndex === rowIndex && "bg-accent/20"
                   )}
                 >
-                  <td className="border-b px-1 py-1">
-                    <input
-                      ref={setInputRef(rowIndex, "accountNumber")}
-                      type="text"
-                      value={row.accountNumber}
-                      onChange={(e) =>
-                        handleCellChange(rowIndex, "accountNumber", e.target.value)
-                      }
-                      onKeyDown={(e) => handleKeyDown(e, rowIndex, "accountNumber")}
-                      onPaste={(e) => handlePaste(e, rowIndex, "accountNumber")}
-                      onFocus={() =>
-                        setFocusedCell({ rowIndex, colId: "accountNumber" })
-                      }
-                      className="w-full px-2 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm font-mono"
-                      placeholder="####"
-                    />
-                  </td>
-                  <td className="border-b px-1 py-1">
-                    <input
-                      ref={setInputRef(rowIndex, "accountName")}
-                      type="text"
-                      value={row.accountName}
-                      onChange={(e) =>
-                        handleCellChange(rowIndex, "accountName", e.target.value)
-                      }
-                      onKeyDown={(e) => handleKeyDown(e, rowIndex, "accountName")}
-                      onPaste={(e) => handlePaste(e, rowIndex, "accountName")}
-                      onFocus={() =>
-                        setFocusedCell({ rowIndex, colId: "accountName" })
-                      }
-                      className="w-full px-2 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm"
-                      placeholder="Account name"
-                    />
-                  </td>
-                  {columns.map((col) => (
-                    <td key={col.id} className="border-b px-1 py-1">
+                  {leftColumns.map((col) => (
+                    <td
+                      key={col.id}
+                      className={cn(
+                        "border-b px-1 py-1",
+                        columnAlignClass(col.align)
+                      )}
+                    >
                       <input
                         ref={setInputRef(rowIndex, col.id)}
                         type="text"
@@ -400,8 +565,44 @@ const FinancialReportNodeView = ({
                         }
                         onKeyDown={(e) => handleKeyDown(e, rowIndex, col.id)}
                         onPaste={(e) => handlePaste(e, rowIndex, col.id)}
-                        onFocus={() => setFocusedCell({ rowIndex, colId: col.id })}
-                        className="w-full px-2 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm text-right font-mono"
+                        onFocus={() =>
+                          setFocusedCell({ rowIndex, colId: col.id })
+                        }
+                        className={cn(
+                          "w-full px-2 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm",
+                          columnAlignClass(col.align)
+                        )}
+                        placeholder=""
+                      />
+                    </td>
+                  ))}
+                  {rightColumns.map((col, rightIndex) => (
+                    <td
+                      key={col.id}
+                      className={cn(
+                        "border-b py-1 whitespace-nowrap",
+                        "pl-1 pr-0.5",
+                        rightIndex === 0 && "border-l border-border/60",
+                        columnAlignClass(col.align)
+                      )}
+                    >
+                      <input
+                        ref={setInputRef(rowIndex, col.id)}
+                        type="text"
+                        value={row.values[col.id] || ""}
+                        onChange={(e) =>
+                          handleCellChange(rowIndex, col.id, e.target.value)
+                        }
+                        onKeyDown={(e) => handleKeyDown(e, rowIndex, col.id)}
+                        onPaste={(e) => handlePaste(e, rowIndex, col.id)}
+                        onFocus={() =>
+                          setFocusedCell({ rowIndex, colId: col.id })
+                        }
+                        className={cn(
+                          // Column width comes from colgroup; keep input comfortable
+                          "w-full min-w-0 pl-1 pr-0.5 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm font-mono tabular-nums",
+                          columnAlignClass(col.align)
+                        )}
                         placeholder="0"
                       />
                     </td>
@@ -422,13 +623,22 @@ const FinancialReportNodeView = ({
               ))}
               {showTotals && rows.length > 0 && (
                 <tr className="bg-muted/30 font-semibold">
-                  <td className="border-t-2 px-3 py-2 text-sm" colSpan={2}>
+                  <td
+                    className="border-t-2 px-3 py-2 text-sm"
+                    colSpan={leftColumns.length}
+                  >
                     Total
                   </td>
-                  {columns.map((col) => (
+                  {rightColumns.map((col, rightIndex) => (
                     <td
                       key={col.id}
-                      className="border-t-2 px-3 py-2 text-right text-sm font-mono"
+                      className={cn(
+                        "border-t-2 text-sm font-mono tabular-nums",
+                        "pl-1 pr-0.5 py-2",
+                        rightIndex === 0 && "border-l border-border/60",
+                        "whitespace-nowrap",
+                        columnAlignClass(col.align)
+                      )}
                     >
                       {formatNumber(calculateTotal(col.id))}
                     </td>
@@ -461,29 +671,57 @@ const FinancialReportNodeView = ({
           <DialogHeader>
             <DialogTitle>Report Settings</DialogTitle>
             <DialogDescription>
-              Configure the columns and display options for this financial report
-              block.
+              Configure the columns and display options for this financial
+              report block.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Columns</Label>
-              {editColumns.map((col, index) => (
-                <div key={col.id} className="flex items-center gap-2">
+              <Label>Left Columns</Label>
+              <p className="text-xs text-muted-foreground">
+                Set label and alignment (left or right) for each left column.
+              </p>
+              {editLeftColumns.map((col, index) => (
+                <div
+                  key={col.id}
+                  className="flex flex-wrap items-center gap-2 rounded-md border border-border p-2"
+                >
                   <Input
                     value={col.label}
                     onChange={(e) =>
-                      handleColumnLabelChange(col.id, e.target.value)
+                      handleLeftColumnLabelChange(col.id, e.target.value)
                     }
-                    placeholder={`Column ${index + 1}`}
-                    className="flex-1"
+                    placeholder={`Left Column ${index + 1}`}
+                    className="flex-1 min-w-[120px]"
                   />
+                  <div className="flex items-center gap-1.5">
+                    <Label
+                      htmlFor={`align-left-${col.id}`}
+                      className="text-xs whitespace-nowrap"
+                    >
+                      Align:
+                    </Label>
+                    <select
+                      id={`align-left-${col.id}`}
+                      value={col.align ?? "left"}
+                      onChange={(e) =>
+                        handleLeftColumnAlignChange(
+                          col.id,
+                          e.target.value as "left" | "right"
+                        )
+                      }
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    onClick={() => handleRemoveColumn(col.id)}
-                    disabled={editColumns.length <= 1}
-                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleRemoveLeftColumn(col.id)}
+                    disabled={editLeftColumns.length <= 1}
+                    className="text-destructive hover:text-destructive shrink-0"
                     type="button"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -493,12 +731,75 @@ const FinancialReportNodeView = ({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleAddColumn}
+                onClick={handleAddLeftColumn}
                 className="w-full"
                 type="button"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Column
+                Add Left Column
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label>Right Columns</Label>
+              <p className="text-xs text-muted-foreground">
+                Set label and alignment (left or right) for each right column.
+              </p>
+              {editRightColumns.map((col, index) => (
+                <div
+                  key={col.id}
+                  className="flex flex-wrap items-center gap-2 rounded-md border border-border p-2"
+                >
+                  <Input
+                    value={col.label}
+                    onChange={(e) =>
+                      handleRightColumnLabelChange(col.id, e.target.value)
+                    }
+                    placeholder={`Right Column ${index + 1}`}
+                    className="flex-1 min-w-[120px]"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <Label
+                      htmlFor={`align-right-${col.id}`}
+                      className="text-xs whitespace-nowrap"
+                    >
+                      Align:
+                    </Label>
+                    <select
+                      id={`align-right-${col.id}`}
+                      value={col.align ?? "right"}
+                      onChange={(e) =>
+                        handleRightColumnAlignChange(
+                          col.id,
+                          e.target.value as "left" | "right"
+                        )
+                      }
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => handleRemoveRightColumn(col.id)}
+                    disabled={editRightColumns.length <= 1}
+                    className="text-destructive hover:text-destructive shrink-0"
+                    type="button"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAddRightColumn}
+                className="w-full"
+                type="button"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Right Column
               </Button>
             </div>
             <div className="flex items-center gap-2">
@@ -532,10 +833,27 @@ export const FinancialReportBlockExtension = Node.create({
 
   addAttributes() {
     return {
-      columns: {
+      leftColumns: {
         default: [
-          { id: "openingBalance", label: "Opening Balance" },
-          { id: "closingBalance", label: "Closing Balance" },
+          {
+            id: "account",
+            label: "Account",
+            align: "left" as const,
+          },
+        ],
+      },
+      rightColumns: {
+        default: [
+          {
+            id: "openingBalance",
+            label: "Opening Balance",
+            align: "right" as const,
+          },
+          {
+            id: "closingBalance",
+            label: "Closing Balance",
+            align: "right" as const,
+          },
         ],
       },
       rows: {
@@ -558,7 +876,9 @@ export const FinancialReportBlockExtension = Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       "div",
-      mergeAttributes(HTMLAttributes, { "data-type": "financial-report-block" }),
+      mergeAttributes(HTMLAttributes, {
+        "data-type": "financial-report-block",
+      }),
     ];
   },
 
@@ -569,13 +889,20 @@ export const FinancialReportBlockExtension = Node.create({
 
 // Create a financial report block with custom configuration
 export const createFinancialReportBlock = (
-  columns: { label: string }[],
+  leftColumns: { label: string; align?: "left" | "right" }[],
+  rightColumns: { label: string; align?: "left" | "right" }[],
   showTotals = true
 ): FinancialReportBlockAttrs => {
   return {
-    columns: columns.map((col, index) => ({
+    leftColumns: leftColumns.map((col, index) => ({
       id: generateId(),
-      label: col.label || `Column ${index + 1}`,
+      label: col.label || `Left Column ${index + 1}`,
+      align: col.align ?? "left",
+    })),
+    rightColumns: rightColumns.map((col, index) => ({
+      id: generateId(),
+      label: col.label || `Right Column ${index + 1}`,
+      align: col.align ?? "right",
     })),
     rows: [],
     showTotals,

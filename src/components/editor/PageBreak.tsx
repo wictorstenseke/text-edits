@@ -1,5 +1,13 @@
-import { Node, mergeAttributes } from "@tiptap/core";
+import { Node, mergeAttributes, type CommandProps } from "@tiptap/core";
 import { ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    insertPageBreak: {
+      insertPageBreak: () => ReturnType;
+    };
+  }
+}
 
 const PageBreakComponent = () => {
   return (
@@ -44,12 +52,11 @@ export const PageBreakExtension = Node.create({
   },
 
   addCommands() {
+    const name = this.name;
     return {
-      insertPageBreak:
-        () =>
-        ({ commands }) => {
-          return commands.insertContent({ type: this.name });
-        },
+      insertPageBreak: () => (props: CommandProps) => {
+        return props.commands.insertContent({ type: name });
+      },
     };
   },
 });

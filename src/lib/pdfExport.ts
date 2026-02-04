@@ -4,7 +4,7 @@ import jsPDF from "jspdf";
 import type { Document } from "@/types/document";
 
 export const exportToPDF = async (
-  document: Document,
+  doc: Document,
   documentElement: HTMLElement
 ): Promise<void> => {
   try {
@@ -59,7 +59,7 @@ export const exportToPDF = async (
       const section = sections[i];
 
       // Create a temporary container for the section
-      const tempContainer = document.createElement("div");
+      const tempContainer = globalThis.document.createElement("div");
       tempContainer.style.position = "absolute";
       tempContainer.style.left = "-9999px";
       tempContainer.style.top = "0";
@@ -67,7 +67,7 @@ export const exportToPDF = async (
       tempContainer.style.padding = `${padding}mm`;
       tempContainer.style.backgroundColor = "white";
       tempContainer.appendChild(section);
-      document.body.appendChild(tempContainer);
+      globalThis.document.body.appendChild(tempContainer);
 
       // Convert to canvas
       const canvas = await html2canvas(tempContainer, {
@@ -93,11 +93,14 @@ export const exportToPDF = async (
       );
 
       // Clean up
-      document.body.removeChild(tempContainer);
+      globalThis.document.body.removeChild(tempContainer);
     }
 
     // Save the PDF
-    const filename = `${document.title.replace(/[^a-z0-9\s-]/gi, "_").replace(/\s+/g, "_").replace(/_+/g, "_")}.pdf`;
+    const filename = `${doc.title
+      .replace(/[^a-z0-9\s-]/gi, "_")
+      .replace(/\s+/g, "_")
+      .replace(/_+/g, "_")}.pdf`;
     pdf.save(filename);
   } catch (error) {
     console.error("Error generating PDF:", error);

@@ -100,21 +100,22 @@ export const DocumentEditor = () => {
     return () => clearTimeout(timer);
   }, [document]);
 
-  const handleSectionClick = (sectionId: string) => {
+  const handleSectionClick = (sectionId: string, scrollToSection = false) => {
     // If we're editing a different section, don't allow switching without saving
     if (editingSectionId && editingSectionId !== sectionId) {
       return;
     }
     setSelectedSectionId(sectionId);
 
-    // Scroll to the section in the document
-    // Sanitize the sectionId for use in CSS selector
-    const sanitizedId = CSS.escape(sectionId);
-    const sectionElement = window.document.querySelector(
-      `[data-section-id="${sanitizedId}"]`
-    );
-    if (sectionElement) {
-      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Only smooth-scroll when navigating from the left sidebar, not when clicking in the document
+    if (scrollToSection) {
+      const sanitizedId = CSS.escape(sectionId);
+      const sectionElement = window.document.querySelector(
+        `[data-section-id="${sanitizedId}"]`
+      );
+      if (sectionElement) {
+        sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
 
@@ -446,7 +447,40 @@ export const DocumentEditor = () => {
       }
       case "financialReportBlock": {
         // Render financial report block in read-only mode
-        const columns = (node.attrs?.columns as FinancialReportColumn[]) || [];
+        // Migration: handle old structure
+        let leftColumns: FinancialReportColumn[] = [];
+        let rightColumns: FinancialReportColumn[] = [];
+
+        if (node.attrs?.leftColumns && node.attrs?.rightColumns) {
+          leftColumns = node.attrs.leftColumns as FinancialReportColumn[];
+          rightColumns = node.attrs.rightColumns as FinancialReportColumn[];
+        } else {
+          // Migrate from old structure
+          const accountNumberColumn = (node.attrs?.accountNumberColumn as {
+            label: string;
+            align?: "left" | "right";
+          }) || { label: "Account #", align: "left" };
+          leftColumns = [
+            {
+              id: "account",
+              label: accountNumberColumn.label,
+              align: accountNumberColumn.align || "left",
+            },
+          ];
+          rightColumns = (node.attrs?.columns as FinancialReportColumn[]) || [
+            {
+              id: "openingBalance",
+              label: "Opening Balance",
+              align: "right",
+            },
+            {
+              id: "closingBalance",
+              label: "Closing Balance",
+              align: "right",
+            },
+          ];
+        }
+
         const rows = (node.attrs?.rows as FinancialReportRow[]) || [];
         const showTotals = node.attrs?.showTotals as boolean;
 
@@ -471,61 +505,108 @@ export const DocumentEditor = () => {
             <div className="px-4 py-2 bg-muted border-b">
               <span className="text-sm font-semibold">Financial Report</span>
             </div>
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="border-b px-3 py-2 text-left text-sm font-semibold">
-                    Account #
-                  </th>
-                  <th className="border-b px-3 py-2 text-left text-sm font-semibold">
-                    Account Name
-                  </th>
-                  {columns.map((col) => (
-                    <th
-                      key={col.id}
-                      className="border-b px-3 py-2 text-right text-sm font-semibold"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-accent/30">
-                    <td className="border-b px-3 py-2 text-sm font-mono">
-                      {row.accountNumber}
-                    </td>
-                    <td className="border-b px-3 py-2 text-sm">
-                      {row.accountName}
-                    </td>
-                    {columns.map((col) => (
-                      <td
+            <div className="overflow-x-auto pr-2">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-muted/50">
+                    {leftColumns.map((col) => (
+                      <th
                         key={col.id}
-                        className="border-b px-3 py-2 text-sm text-right font-mono"
+                        className={cn(
+                          "border-b px-3 py-2 text-sm font-semibold min-w-[180px]",
+                          col.align === "left" ? "text-left" : "text-right"
+                        )}
                       >
-                        {row.values[col.id] || ""}
-                      </td>
+                        {col.label}
+                      </th>
+                    ))}
+                    {rightColumns.map((col, rightIndex) => (
+                      <th
+                        key={col.id}
+                        className={cn(
+                          // Allow wrapping; increased header height is OK
+                          "border-b py-2 text-sm font-semibold whitespace-normal wrap-break-word tabular-nums w-[1%] min-w-[10ch]",
+                          "pl-1 pr-0.5",
+                          rightIndex === 0 && "border-l border-border/60",
+                          col.align === "left" ? "text-left" : "text-right"
+                        )}
+                      >
+                        {col.label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-                {showTotals && rows.length > 0 && (
-                  <tr className="bg-muted/30 font-semibold">
-                    <td className="border-t-2 px-3 py-2 text-sm" colSpan={2}>
-                      Total
-                    </td>
-                    {columns.map((col) => (
+                </thead>
+                <tbody>
+                  {rows.map((row) => {
+                    // Migrate row data if needed
+                    const rowValues = { ...row.values };
+                    if ((row as any).accountNumber !== undefined) {
+                      // Old structure - migrate
+                      if (leftColumns.length > 0) {
+                        rowValues[leftColumns[0].id] =
+                          (row as any).accountNumber ||
+                          rowValues[leftColumns[0].id] ||
+                          "";
+                      }
+                    }
+
+                    return (
+                      <tr key={row.id} className="hover:bg-accent/30">
+                        {leftColumns.map((col) => (
+                          <td
+                            key={col.id}
+                            className={cn(
+                              "border-b px-3 py-2 text-sm",
+                              col.align === "left" ? "text-left" : "text-right"
+                            )}
+                          >
+                            {rowValues[col.id] || ""}
+                          </td>
+                        ))}
+                        {rightColumns.map((col, rightIndex) => (
+                          <td
+                            key={col.id}
+                            className={cn(
+                              "border-b text-sm font-mono tabular-nums",
+                              "pl-1 pr-0.5 py-2",
+                              rightIndex === 0 && "border-l border-border/60",
+                              "whitespace-nowrap w-[1%] min-w-[10ch]",
+                              col.align === "left" ? "text-left" : "text-right"
+                            )}
+                          >
+                            {rowValues[col.id] || ""}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                  {showTotals && rows.length > 0 && (
+                    <tr className="bg-muted/30 font-semibold">
                       <td
-                        key={col.id}
-                        className="border-t-2 px-3 py-2 text-right text-sm font-mono"
+                        className="border-t-2 px-3 py-2 text-sm"
+                        colSpan={leftColumns.length}
                       >
-                        {formatNumber(calculateTotal(col.id))}
+                        Total
                       </td>
-                    ))}
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      {rightColumns.map((col, rightIndex) => (
+                        <td
+                          key={col.id}
+                          className={cn(
+                            "border-t-2 text-sm font-mono tabular-nums",
+                            "pl-1 pr-0.5 py-2",
+                            rightIndex === 0 && "border-l border-border/60",
+                            "whitespace-nowrap w-[1%] min-w-[10ch]",
+                            col.align === "left" ? "text-left" : "text-right"
+                          )}
+                        >
+                          {formatNumber(calculateTotal(col.id))}
+                        </td>
+                      ))}
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       }
@@ -622,30 +703,27 @@ export const DocumentEditor = () => {
                 <div
                   key={section.id}
                   className={cn(
-                    "group rounded-lg p-2 cursor-pointer transition-colors border",
+                    "group rounded-lg p-2 cursor-pointer transition-colors border text-foreground",
+                    "hover:bg-accent/60 active:bg-accent/70",
                     selectedSectionId === section.id
-                      ? "bg-primary/10 border-primary/30 hover:bg-primary/15"
+                      ? "bg-primary/15 border-primary/40 text-foreground"
                       : "border-transparent hover:border-accent/50"
                   )}
-                  onClick={() => handleSectionClick(section.id)}
+                  onClick={() => handleSectionClick(section.id, true)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      handleSectionClick(section.id);
+                      e.preventDefault();
+                      handleSectionClick(section.id, true);
                     }
                   }}
                   role="button"
                   tabIndex={0}
                 >
-                  <div className="flex items-center justify-between">
-                    <Input
-                      value={section.title}
-                      onChange={(e) =>
-                        handleRenameSection(section.id, e.target.value)
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      className="border-0 px-0 py-0 h-auto focus-visible:ring-0 font-medium"
-                    />
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex-1 min-w-0 truncate text-foreground font-medium">
+                      {section.title}
+                    </span>
+                    <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="icon-sm"
                         variant="ghost"
@@ -807,9 +885,7 @@ export const DocumentEditor = () => {
                     role="button"
                     tabIndex={0}
                   >
-                    <div className="text-xs font-mono font-semibold">
-                      {key}
-                    </div>
+                    <div className="text-xs font-mono font-semibold">{key}</div>
                     <div className="text-xs text-muted-foreground truncate">
                       {value}
                     </div>

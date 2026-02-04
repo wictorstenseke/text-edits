@@ -4,21 +4,23 @@ export interface Tag {
   value: string;
 }
 
+export type FinancialReportColumnAlign = "left" | "right";
+
 export interface FinancialReportColumn {
   id: string;
   label: string;
+  align?: FinancialReportColumnAlign;
 }
 
 export interface FinancialReportRow {
   id: string;
-  accountNumber: string;
-  accountName: string;
-  values: Record<string, string>; // columnId -> value
+  values: Record<string, string>; // columnId -> value (for both left and right columns)
 }
 
 export interface FinancialReportBlock {
   id: string;
-  columns: FinancialReportColumn[];
+  leftColumns: FinancialReportColumn[];
+  rightColumns: FinancialReportColumn[];
   rows: FinancialReportRow[];
   showTotals: boolean;
 }

@@ -13,6 +13,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // html2canvas has no "exports" field; point to ESM build for reliable resolution
+      html2canvas: path.resolve(
+        __dirname,
+        "node_modules/html2canvas/dist/html2canvas.esm.js"
+      ),
     },
+  },
+  optimizeDeps: {
+    include: ["html2canvas", "jspdf"],
   },
 });
