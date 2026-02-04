@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && npm run lint && npm run test && vite build",
+    "build": "npm run generate:routes && tsc -b && npm run lint && npm run test && vite build",
     "preview": "vite preview",
     "generate:routes": "tsr generate",
     "type-check": "tsr generate && tsc -b --noEmit",
