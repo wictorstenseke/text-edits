@@ -37,9 +37,6 @@ const LINE_HEIGHT = 1.4;
 interface RenderContext {
   pdf: jsPDF;
   y: number;
-  listDepth: number;
-  listType: "bullet" | "ordered" | null;
-  listItemIndex: number;
 }
 
 /**
@@ -56,7 +53,7 @@ const ensureSpace = (ctx: RenderContext, neededHeight: number): number => {
 };
 
 /**
- * Extracts plain text content from an HTML element, preserving structure.
+ * Extracts plain text content from an HTML element, preserving whitespace appropriately.
  */
 const getTextContent = (element: Node): string => {
   if (element.nodeType === Node.TEXT_NODE) {
@@ -69,7 +66,7 @@ const getTextContent = (element: Node): string => {
     if (el.style.display === "none" || el.hidden) {
       return "";
     }
-    // Get text from children
+    // Get text from children, adding space between inline elements
     return Array.from(element.childNodes)
       .map((child) => getTextContent(child))
       .join("");
@@ -88,7 +85,9 @@ const wrapText = (
   indent: number = 0
 ): string[] => {
   const effectiveWidth = maxWidth - indent;
-  const words = text.split(/\s+/).filter((w) => w.length > 0);
+  // Normalize whitespace: collapse multiple spaces/newlines into single spaces
+  const normalizedText = text.replace(/\s+/g, " ").trim();
+  const words = normalizedText.split(" ").filter((w) => w.length > 0);
 
   if (words.length === 0) return [];
 
@@ -128,8 +127,8 @@ const renderTextBlock = (
   pdf.setFontSize(fontSize);
   pdf.setFont("helvetica", fontStyle);
 
-  const lineHeightMm = (fontSize * LINE_HEIGHT * 0.352778); // pt to mm
-  const lines = wrapText(pdf, text.trim(), CONTENT_WIDTH, indent);
+  const lineHeightMm = fontSize * LINE_HEIGHT * 0.352778; // pt to mm
+  const lines = wrapText(pdf, text, CONTENT_WIDTH, indent);
 
   for (const line of lines) {
     ctx.y = ensureSpace(ctx, lineHeightMm);
@@ -174,14 +173,19 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
     }
 
     rowCells.forEach((cell, colIndex) => {
-      const cellText = getTextContent(cell).trim();
+      const cellText = getTextContent(cell).replace(/\s+/g, " ").trim();
       const x = PADDING + colIndex * colWidth + cellPadding;
 
-      // Truncate text if too wide
+      // Truncate text if too wide using simple character estimation
       let displayText = cellText;
       const maxTextWidth = colWidth - cellPadding * 2;
-      while (pdf.getTextWidth(displayText) > maxTextWidth && displayText.length > 3) {
-        displayText = displayText.slice(0, -4) + "...";
+      if (pdf.getTextWidth(displayText) > maxTextWidth) {
+        // Estimate characters that fit
+        const avgCharWidth = pdf.getTextWidth("m");
+        const maxChars = Math.floor(maxTextWidth / avgCharWidth);
+        if (displayText.length > maxChars) {
+          displayText = displayText.slice(0, Math.max(0, maxChars - 3)) + "...";
+        }
       }
 
       pdf.text(displayText, x, ctx.y);
@@ -259,52 +263,17 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
       break;
 
     case "ul":
-      ctx.listDepth++;
-      ctx.listType = "bullet";
-      ctx.listItemIndex = 0;
-      processChildren(ctx, element);
-      ctx.listDepth--;
-      if (ctx.listDepth === 0) {
-        ctx.listType = null;
-        ctx.y += 2;
-      }
+      processListItems(ctx, element, "bullet");
+      ctx.y += 2;
       break;
 
     case "ol":
-      ctx.listDepth++;
-      ctx.listType = "ordered";
-      ctx.listItemIndex = 0;
-      processChildren(ctx, element);
-      ctx.listDepth--;
-      if (ctx.listDepth === 0) {
-        ctx.listType = null;
-        ctx.y += 2;
-      }
+      processListItems(ctx, element, "ordered");
+      ctx.y += 2;
       break;
-
-    case "li": {
-      ctx.listItemIndex++;
-      const indent = ctx.listDepth * 5;
-      const bullet = ctx.listType === "ordered" 
-        ? `${ctx.listItemIndex}. `
-        : "• ";
-      const text = bullet + getTextContent(element).trim();
-      renderTextBlock(ctx, text, FONT_SIZES.body, "normal", indent);
-      break;
-    }
 
     case "table":
       renderTable(ctx, element);
-      break;
-
-    case "strong":
-    case "b":
-      renderTextBlock(ctx, getTextContent(element), FONT_SIZES.body, "bold");
-      break;
-
-    case "em":
-    case "i":
-      renderTextBlock(ctx, getTextContent(element), FONT_SIZES.body, "italic");
       break;
 
     case "br":
@@ -322,17 +291,81 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
     case "section":
     case "article":
     case "main":
-    case "span":
-    case "a":
-      // Container elements - process children
+      // Block container elements - process children
       processChildren(ctx, element);
       break;
 
+    case "span":
+    case "a":
+    case "strong":
+    case "b":
+    case "em":
+    case "i":
+    case "s":
+    case "u":
+      // Inline elements - get their text content within parent context
+      // These are handled by getTextContent when processing their parent
+      break;
+
+    case "li":
+      // List items are handled by processListItems
+      break;
+
     default: {
-      // For unknown elements, try to render text content
-      const text = getTextContent(element).trim();
-      if (text) {
+      // For unknown block elements, try to render text content
+      const text = getTextContent(element);
+      if (text.trim()) {
         renderTextBlock(ctx, text, FONT_SIZES.body);
+      }
+    }
+  }
+};
+
+/**
+ * Processes list items within a ul or ol element.
+ */
+const processListItems = (
+  ctx: RenderContext,
+  listElement: HTMLElement,
+  listType: "bullet" | "ordered",
+  depth: number = 1
+): void => {
+  const indent = depth * 5;
+  let itemIndex = 0;
+
+  for (const child of Array.from(listElement.children)) {
+    if (child.tagName.toLowerCase() === "li") {
+      itemIndex++;
+      const bullet = listType === "ordered" ? `${itemIndex}. ` : "• ";
+
+      // Get direct text content, excluding nested lists
+      let textContent = "";
+      for (const node of Array.from(child.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          textContent += node.textContent || "";
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          const tag = el.tagName.toLowerCase();
+          // Skip nested lists, we'll process them separately
+          if (tag !== "ul" && tag !== "ol") {
+            textContent += getTextContent(el);
+          }
+        }
+      }
+
+      const text = bullet + textContent.replace(/\s+/g, " ").trim();
+      if (text.trim() !== bullet.trim()) {
+        renderTextBlock(ctx, text, FONT_SIZES.body, "normal", indent);
+      }
+
+      // Process nested lists
+      for (const nested of Array.from(child.children)) {
+        const nestedTag = nested.tagName.toLowerCase();
+        if (nestedTag === "ul") {
+          processListItems(ctx, nested as HTMLElement, "bullet", depth + 1);
+        } else if (nestedTag === "ol") {
+          processListItems(ctx, nested as HTMLElement, "ordered", depth + 1);
+        }
       }
     }
   }
@@ -346,8 +379,9 @@ const processChildren = (ctx: RenderContext, parent: HTMLElement): void => {
     if (child.nodeType === Node.ELEMENT_NODE) {
       processElement(ctx, child as HTMLElement);
     } else if (child.nodeType === Node.TEXT_NODE) {
-      const text = child.textContent?.trim();
-      if (text) {
+      // Only render standalone text nodes that have content
+      const text = child.textContent;
+      if (text && text.trim()) {
         renderTextBlock(ctx, text, FONT_SIZES.body);
       }
     }
@@ -398,9 +432,6 @@ export const exportToPDF = async (
     const ctx: RenderContext = {
       pdf,
       y: PADDING,
-      listDepth: 0,
-      listType: null,
-      listItemIndex: 0,
     };
 
     // Process the document content
