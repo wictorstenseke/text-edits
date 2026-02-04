@@ -433,8 +433,28 @@ export const DocumentEditor = () => {
     switch (node.type) {
       case "doc":
         return <div>{children}</div>;
-      case "paragraph":
+      case "paragraph": {
+        // Ensure empty paragraphs render as visible blank lines so that
+        // manual line breaks created with the keyboard are preserved in
+        // the preview (and match the PDF export behavior).
+        const hasMeaningfulContent =
+          Array.isArray(node.content) &&
+          node.content.some((child) => {
+            if (child.type === "text") {
+              return (child.text || "").trim().length > 0;
+            }
+            // Treat non-text child nodes (e.g. mentions, inline nodes) as content
+            // but ignore hardBreak-only paragraphs which should behave as blank lines.
+            return child.type !== "hardBreak";
+          });
+
+        if (!hasMeaningfulContent) {
+          // Render a non-empty paragraph so typography styles don't collapse it
+          return <p className="mb-2">&nbsp;</p>;
+        }
+
         return <p className="mb-2">{children}</p>;
+      }
       case "heading": {
         const level = (node.attrs?.level as number) || 1;
         const className =
