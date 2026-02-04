@@ -9,14 +9,13 @@ import {
 
 import {
   Plus,
+  Minus,
   Trash2,
   ChevronUp,
   ChevronDown,
   FileText,
   Tag as TagIcon,
   PlusCircle,
-  Maximize2,
-  Minimize2,
   Download,
 } from "lucide-react";
 
@@ -81,6 +80,32 @@ export const DocumentEditor = () => {
   const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
     "medium"
   );
+
+  const pageWidthOptions = useMemo(
+    () => ["narrow", "medium", "wide"] as const,
+    []
+  );
+
+  const pageWidthIndex = useMemo(
+    () => pageWidthOptions.indexOf(pageWidth),
+    [pageWidth, pageWidthOptions]
+  );
+
+  const handleDecreasePageWidth = useCallback(() => {
+    setPageWidth((prev) => {
+      const prevIndex = pageWidthOptions.indexOf(prev);
+      const nextIndex = Math.max(0, prevIndex - 1);
+      return pageWidthOptions[nextIndex];
+    });
+  }, [pageWidthOptions]);
+
+  const handleIncreasePageWidth = useCallback(() => {
+    setPageWidth((prev) => {
+      const prevIndex = pageWidthOptions.indexOf(prev);
+      const nextIndex = Math.min(pageWidthOptions.length - 1, prevIndex + 1);
+      return pageWidthOptions[nextIndex];
+    });
+  }, [pageWidthOptions]);
 
   // Convert tagValues to TagItem array for the editor
   const tags: TagItem[] = useMemo(
@@ -642,30 +667,28 @@ export const DocumentEditor = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 mr-2">
-              <span className="text-sm text-muted-foreground mr-1">Width:</span>
+              <span className="text-sm text-muted-foreground mr-1">
+                Document width:
+              </span>
               <Button
-                onClick={() => setPageWidth("narrow")}
-                variant={pageWidth === "narrow" ? "default" : "ghost"}
-                size="sm"
-                title="Narrow width"
+                onClick={handleDecreasePageWidth}
+                variant="outline"
+                size="icon"
+                title="Decrease document width"
+                aria-label="Decrease document width"
+                disabled={pageWidthIndex <= 0}
               >
-                <Minimize2 className="h-4 w-4" />
+                <Minus className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => setPageWidth("medium")}
-                variant={pageWidth === "medium" ? "default" : "ghost"}
-                size="sm"
-                title="Medium width"
+                onClick={handleIncreasePageWidth}
+                variant="outline"
+                size="icon"
+                title="Increase document width"
+                aria-label="Increase document width"
+                disabled={pageWidthIndex >= pageWidthOptions.length - 1}
               >
-                <FileText className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => setPageWidth("wide")}
-                variant={pageWidth === "wide" ? "default" : "ghost"}
-                size="sm"
-                title="Wide width"
-              >
-                <Maximize2 className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
             <Button onClick={handleExportPDF} variant="default" size="sm">
