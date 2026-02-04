@@ -1,4 +1,7 @@
+import html2canvas from "html2canvas";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import { exportToPDF } from "./pdfExport";
 
 import type { Document } from "@/types/document";
 
@@ -21,10 +24,6 @@ vi.mock("jspdf", () => {
 vi.mock("html2canvas", () => ({
   default: vi.fn(),
 }));
-
-import { exportToPDF } from "./pdfExport";
-
-import html2canvas from "html2canvas";
 
 describe("exportToPDF", () => {
   beforeEach(() => {
@@ -77,5 +76,48 @@ describe("exportToPDF", () => {
     await expect(exportToPDF(doc, container)).rejects.toThrow(
       "Failed to generate PDF. Please try again."
     );
+  });
+
+  it("should normalize elements with oklch() colors before rendering", async () => {
+    const canvasStub = {
+      width: 800,
+      height: 600,
+      toDataURL: vi.fn().mockReturnValue("data:image/png;base64,fake"),
+    } as unknown as HTMLCanvasElement;
+
+    // Track what elements are passed to html2canvas and capture their styles
+    let capturedElement: HTMLElement | null = null;
+    vi.mocked(html2canvas).mockImplementation(
+      async (element: HTMLElement) => {
+        capturedElement = element;
+        return canvasStub;
+      }
+    );
+
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    // Create container with a child that has inline oklch() styles
+    const container = document.createElement("div");
+    const child = document.createElement("span");
+    child.textContent = "Hello";
+    // Set inline style with oklch color that normalization should convert
+    child.style.color = "oklch(0.5 0.1 180)";
+    child.style.backgroundColor = "oklch(1 0 0)";
+    container.appendChild(child);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify html2canvas was called
+    expect(html2canvas).toHaveBeenCalledTimes(1);
+    expect(capturedElement).not.toBeNull();
+
+    // The temp container should have white background
+    expect(capturedElement?.style.backgroundColor).toBe("white");
   });
 });
