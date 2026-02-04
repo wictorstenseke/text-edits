@@ -58,50 +58,129 @@ export const exportToPDF = async (
       }
     }
 
-    // Process each section (page)
-    for (let i = 0; i < sections.length; i++) {
-      if (i > 0) {
-        pdf.addPage();
+    const normalizeUnsupportedColors = (root: HTMLElement) => {
+      if (!("getComputedStyle" in globalThis)) return;
+
+      const elements: HTMLElement[] = [
+        root,
+        ...Array.from(root.querySelectorAll<HTMLElement>("*")),
+      ];
+
+      for (const el of elements) {
+        const computed = globalThis.getComputedStyle(el);
+
+        const normalizeProperty = (cssProperty: string, setter: () => void) => {
+          const value = computed.getPropertyValue(cssProperty).trim();
+          if (value.includes("oklch(")) {
+            setter();
+          }
+        };
+
+        normalizeProperty("background-color", () => {
+          el.style.backgroundColor = "#ffffff";
+        });
+
+        normalizeProperty("color", () => {
+          el.style.color = "#111827";
+        });
+      }
+    };
+
+    const overrideRootBackgroundsForExport = () => {
+      if (!("getComputedStyle" in globalThis)) {
+        return {
+          htmlBackground: "",
+          bodyBackground: "",
+        };
       }
 
-      const section = sections[i];
+      const doc = globalThis.document;
+      const htmlEl = doc.documentElement as HTMLElement;
+      const bodyEl = doc.body as HTMLElement;
 
-      // Create a temporary container for the section
-      const tempContainer = globalThis.document.createElement("div");
-      tempContainer.style.position = "absolute";
-      tempContainer.style.left = "-9999px";
-      tempContainer.style.top = "0";
-      tempContainer.style.width = `${pdfWidth - 2 * padding}mm`;
-      tempContainer.style.padding = `${padding}mm`;
-      tempContainer.style.backgroundColor = "white";
-      tempContainer.appendChild(section);
-      globalThis.document.body.appendChild(tempContainer);
+      const originals = {
+        htmlBackground: htmlEl.style.backgroundColor,
+        bodyBackground: bodyEl.style.backgroundColor,
+      };
 
-      // Convert to canvas
-      const canvas = await html2canvas(tempContainer, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
+      const normalizeElement = (el: HTMLElement) => {
+        const computed = globalThis.getComputedStyle(el);
+        const bg = computed.getPropertyValue("background-color").trim();
+        if (bg.includes("oklch(")) {
+          el.style.backgroundColor = "#ffffff";
+        }
+      };
 
-      // Calculate dimensions
-      const imgWidth = pdfWidth - 2 * padding;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      normalizeElement(htmlEl);
+      normalizeElement(bodyEl);
 
-      // Add image to PDF
-      const imgData = canvas.toDataURL("image/png");
-      pdf.addImage(
-        imgData,
-        "PNG",
-        padding,
-        padding,
-        imgWidth,
-        Math.min(imgHeight, pdfHeight - 2 * padding)
-      );
+      return originals;
+    };
 
-      // Clean up
-      globalThis.document.body.removeChild(tempContainer);
+    const restoreRootBackgroundsAfterExport = (originals: {
+      htmlBackground: string;
+      bodyBackground: string;
+    }) => {
+      const doc = globalThis.document;
+      (doc.documentElement as HTMLElement).style.backgroundColor =
+        originals.htmlBackground;
+      (doc.body as HTMLElement).style.backgroundColor =
+        originals.bodyBackground;
+    };
+
+    const rootBackgrounds = overrideRootBackgroundsForExport();
+
+    try {
+      // Process each section (page)
+      for (let i = 0; i < sections.length; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+
+        const section = sections[i];
+
+        // Create a temporary container for the section
+        const tempContainer = globalThis.document.createElement("div");
+        tempContainer.style.position = "absolute";
+        tempContainer.style.left = "-9999px";
+        tempContainer.style.top = "0";
+        tempContainer.style.width = `${pdfWidth - 2 * padding}mm`;
+        tempContainer.style.padding = `${padding}mm`;
+        tempContainer.style.backgroundColor = "white";
+        tempContainer.appendChild(section);
+        globalThis.document.body.appendChild(tempContainer);
+
+        // Work around html2canvas not supporting modern color functions like oklch()
+        normalizeUnsupportedColors(tempContainer);
+
+        // Convert to canvas
+        const canvas = await html2canvas(tempContainer, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+        });
+
+        // Calculate dimensions
+        const imgWidth = pdfWidth - 2 * padding;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Add image to PDF
+        const imgData = canvas.toDataURL("image/png");
+        pdf.addImage(
+          imgData,
+          "PNG",
+          padding,
+          padding,
+          imgWidth,
+          Math.min(imgHeight, pdfHeight - 2 * padding)
+        );
+
+        // Clean up
+        globalThis.document.body.removeChild(tempContainer);
+      }
+    } finally {
+      restoreRootBackgroundsAfterExport(rootBackgrounds);
     }
 
     // Save the PDF
