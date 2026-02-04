@@ -251,21 +251,48 @@ export const InlineSectionEditor = ({
               <Separator orientation="vertical" className="h-6 mx-1" />
 
               <MenuButton
-                onClick={() => editor.chain().focus().toggleBold().run()}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent("financial-report-toggle-format", {
+                        detail: { type: "bold" },
+                      })
+                    );
+                  }
+                  editor.chain().focus().toggleBold().run();
+                }}
                 active={editor.isActive("bold")}
                 title="Bold"
               >
                 <Bold className="h-4 w-4" />
               </MenuButton>
               <MenuButton
-                onClick={() => editor.chain().focus().toggleItalic().run()}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent("financial-report-toggle-format", {
+                        detail: { type: "italic" },
+                      })
+                    );
+                  }
+                  editor.chain().focus().toggleItalic().run();
+                }}
                 active={editor.isActive("italic")}
                 title="Italic"
               >
                 <Italic className="h-4 w-4" />
               </MenuButton>
               <MenuButton
-                onClick={() => editor.chain().focus().toggleStrike().run()}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(
+                      new CustomEvent("financial-report-toggle-format", {
+                        detail: { type: "strike" },
+                      })
+                    );
+                  }
+                  editor.chain().focus().toggleStrike().run();
+                }}
                 active={editor.isActive("strike")}
                 title="Strikethrough"
               >

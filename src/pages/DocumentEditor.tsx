@@ -5,6 +5,7 @@ import {
   useCallback,
   useMemo,
   useRef,
+  type ReactNode,
 } from "react";
 
 import {
@@ -64,10 +65,11 @@ export const DocumentEditor = () => {
     document.sections[0]?.id || null
   );
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
   const [newSectionDialogOpen, setNewSectionDialogOpen] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [manageSectionsDialogOpen, setManageSectionsDialogOpen] =
+    useState(false);
+  const [manageNewSectionTitle, setManageNewSectionTitle] = useState("");
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [templates] = useState<Template[]>(getSampleTemplates());
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -201,30 +203,49 @@ export const DocumentEditor = () => {
     setResetDialogOpen(false);
   }, []);
 
-  const handleDeleteSection = (sectionId: string) => {
-    setSectionToDelete(sectionId);
-    setDeleteDialogOpen(true);
-  };
+  const handleRemoveSection = useCallback(
+    (sectionId: string) => {
+      const updatedSections = document.sections
+        .filter((s) => s.id !== sectionId)
+        .map((s, index) => ({ ...s, order: index }));
 
-  const confirmDeleteSection = () => {
-    if (!sectionToDelete) return;
+      setDocument((prev) => ({
+        ...prev,
+        sections: updatedSections,
+      }));
 
-    const updatedSections = document.sections
-      .filter((s) => s.id !== sectionToDelete)
-      .map((s, index) => ({ ...s, order: index }));
+      if (selectedSectionId === sectionId) {
+        setSelectedSectionId(updatedSections[0]?.id || null);
+      }
+
+      if (editingSectionId === sectionId) {
+        setEditingSectionId(null);
+      }
+    },
+    [document.sections, editingSectionId, selectedSectionId]
+  );
+
+  const handleAddSectionFromManage = useCallback(() => {
+    if (!manageNewSectionTitle.trim()) return;
+
+    const newSection: Section = {
+      id: `section-${Date.now()}`,
+      title: manageNewSectionTitle.trim(),
+      order: document.sections.length,
+      content: JSON.stringify({
+        type: "doc",
+        content: [{ type: "paragraph" }],
+      }),
+    };
 
     setDocument((prev) => ({
       ...prev,
-      sections: updatedSections,
+      sections: [...prev.sections, newSection],
     }));
 
-    if (selectedSectionId === sectionToDelete) {
-      setSelectedSectionId(updatedSections[0]?.id || null);
-    }
-
-    setDeleteDialogOpen(false);
-    setSectionToDelete(null);
-  };
+    setManageNewSectionTitle("");
+    setSelectedSectionId(newSection.id);
+  }, [document.sections.length, manageNewSectionTitle]);
 
   const handleReorderSection = (
     sectionId: string,
@@ -525,11 +546,57 @@ export const DocumentEditor = () => {
           }).format(num);
         };
 
+        const renderFormattedText = (value: string) => {
+          if (!value) return "";
+
+          const parts: ReactNode[] = [];
+          const pattern =
+            /(\*\*([^*]+)\*\*|\*([^*]+)\*|__([^_]+)__|_([^_]+)_|~~([^~]+)~~)/g;
+          let lastIndex = 0;
+          let match: RegExpExecArray | null;
+
+          // Simple markdown-like bold/italic/strike parsing for display
+          // Supports **bold**, *italic*, __bold__, _italic_, ~~strike~~
+          // Raw markers are preserved in storage; only rendering is formatted
+          while ((match = pattern.exec(value)) !== null) {
+            if (match.index > lastIndex) {
+              parts.push(value.slice(lastIndex, match.index));
+            }
+
+            const token = match[0];
+            const isBold = token.startsWith("**") || token.startsWith("__");
+            const isStrike = token.startsWith("~~");
+            const inner =
+              isBold || isStrike ? token.slice(2, -2) : token.slice(1, -1);
+
+            if (isStrike) {
+              parts.push(
+                <span key={parts.length} className="line-through">
+                  {inner}
+                </span>
+              );
+            } else {
+              parts.push(
+                isBold ? (
+                  <strong key={parts.length}>{inner}</strong>
+                ) : (
+                  <em key={parts.length}>{inner}</em>
+                )
+              );
+            }
+
+            lastIndex = pattern.lastIndex;
+          }
+
+          if (lastIndex < value.length) {
+            parts.push(value.slice(lastIndex));
+          }
+
+          return parts;
+        };
+
         return (
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="px-4 py-2 bg-muted border-b">
-              <span className="text-sm font-semibold">Financial Report</span>
-            </div>
             <div className="overflow-x-auto pr-2">
               <table className="w-full border-collapse">
                 <thead>
@@ -551,7 +618,7 @@ export const DocumentEditor = () => {
                         className={cn(
                           // Allow wrapping; increased header height is OK
                           "border-b py-2 text-sm font-semibold whitespace-normal wrap-break-word tabular-nums w-[1%] min-w-[10ch]",
-                          "pl-1 pr-0.5",
+                          "px-2",
                           rightIndex === 0 && "border-l border-border/60",
                           col.align === "left" ? "text-left" : "text-right"
                         )}
@@ -585,21 +652,21 @@ export const DocumentEditor = () => {
                               col.align === "left" ? "text-left" : "text-right"
                             )}
                           >
-                            {rowValues[col.id] || ""}
+                            {renderFormattedText(rowValues[col.id] || "")}
                           </td>
                         ))}
                         {rightColumns.map((col, rightIndex) => (
                           <td
                             key={col.id}
                             className={cn(
-                              "border-b text-sm font-mono tabular-nums",
-                              "pl-1 pr-0.5 py-2",
+                              "border-b text-sm font-semibold tabular-nums",
+                              "px-2 py-2",
                               rightIndex === 0 && "border-l border-border/60",
                               "whitespace-nowrap w-[1%] min-w-[10ch]",
                               col.align === "left" ? "text-left" : "text-right"
                             )}
                           >
-                            {rowValues[col.id] || ""}
+                            {renderFormattedText(rowValues[col.id] || "")}
                           </td>
                         ))}
                       </tr>
@@ -617,8 +684,8 @@ export const DocumentEditor = () => {
                         <td
                           key={col.id}
                           className={cn(
-                            "border-t-2 text-sm font-mono tabular-nums",
-                            "pl-1 pr-0.5 py-2",
+                            "border-t-2 text-sm font-semibold tabular-nums",
+                            "px-2 py-2",
                             rightIndex === 0 && "border-l border-border/60",
                             "whitespace-nowrap w-[1%] min-w-[10ch]",
                             col.align === "left" ? "text-left" : "text-right"
@@ -742,50 +809,20 @@ export const DocumentEditor = () => {
                   role="button"
                   tabIndex={0}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex-1 min-w-0 truncate text-foreground font-medium">
-                      {section.title}
-                    </span>
-                    <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReorderSection(section.id, "up");
-                        }}
-                        disabled={index === 0}
-                        className="h-6 w-6"
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReorderSection(section.id, "down");
-                        }}
-                        disabled={index === document.sections.length - 1}
-                        className="h-6 w-6"
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSection(section.id);
-                        }}
-                        className="h-6 w-6 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                  <span className="block text-xs font-medium leading-tight text-foreground truncate">
+                    {section.title}
+                  </span>
                 </div>
               ))}
+            </div>
+            <div className="pt-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setManageSectionsDialogOpen(true)}
+              >
+                Manage sections
+              </Button>
             </div>
           </div>
         </div>
@@ -929,25 +966,95 @@ export const DocumentEditor = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+      {/* Manage Sections Dialog */}
+      <Dialog
+        open={manageSectionsDialogOpen}
+        onOpenChange={setManageSectionsDialogOpen}
+      >
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Delete Section</DialogTitle>
+            <DialogTitle>Manage sections</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this section? This action cannot
-              be undone.
+              Add, remove, and change the order of sections.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="py-2 space-y-4">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label htmlFor="manage-section-title">New section title</Label>
+                <Input
+                  id="manage-section-title"
+                  value={manageNewSectionTitle}
+                  onChange={(e) => setManageNewSectionTitle(e.target.value)}
+                  placeholder="Enter section title"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddSectionFromManage();
+                    }
+                  }}
+                />
+              </div>
+              <Button onClick={handleAddSectionFromManage}>Add</Button>
+            </div>
+
+            <div className="space-y-1">
+              {document.sections.map((section, index) => (
+                <div
+                  key={section.id}
+                  className="flex items-center justify-between gap-2 rounded-md border px-2 py-1.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">
+                      {section.title}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleReorderSection(section.id, "up")}
+                      disabled={index === 0}
+                      aria-label="Move section up"
+                      title="Move up"
+                      className="h-7 w-7"
+                    >
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleReorderSection(section.id, "down")}
+                      disabled={index === document.sections.length - 1}
+                      aria-label="Move section down"
+                      title="Move down"
+                      className="h-7 w-7"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveSection(section.id)}
+                      aria-label="Remove section"
+                      title="Remove"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
+              onClick={() => setManageSectionsDialogOpen(false)}
             >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteSection}>
-              Delete
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

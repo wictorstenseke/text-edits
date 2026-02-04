@@ -1,4 +1,10 @@
-import { useState, useCallback, useRef, type KeyboardEvent } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type KeyboardEvent,
+} from "react";
 
 import { Node, mergeAttributes } from "@tiptap/core";
 import {
@@ -254,6 +260,75 @@ const FinancialReportNodeView = ({
     },
     [leftColumns, rightColumns, rows.length, handleAddRow]
   );
+
+  const applyFormattingToActiveCell = useCallback(
+    (format: "bold" | "italic" | "strike") => {
+      if (!focusedCell) return;
+
+      const key = `${focusedCell.rowIndex}-${focusedCell.colId}`;
+      const input = inputRefs.current.get(key);
+      if (!input) return;
+
+      const value = input.value ?? "";
+      const selectionStart = input.selectionStart ?? 0;
+      const selectionEnd = input.selectionEnd ?? selectionStart;
+
+      const hasSelection = selectionEnd > selectionStart;
+      const start = hasSelection ? selectionStart : 0;
+      const end = hasSelection ? selectionEnd : value.length;
+
+      const before = value.slice(0, start);
+      const selected = value.slice(start, end);
+      const after = value.slice(end);
+
+      if (!selected && !hasSelection) {
+        return;
+      }
+
+      let wrapped: string;
+      if (format === "bold") {
+        wrapped = `**${selected || value}**`;
+      } else if (format === "italic") {
+        wrapped = `*${selected || value}*`;
+      } else {
+        wrapped = `~~${selected || value}~~`;
+      }
+
+      const newValue = hasSelection ? `${before}${wrapped}${after}` : wrapped;
+
+      input.value = newValue;
+      handleCellChange(focusedCell.rowIndex, focusedCell.colId, newValue);
+
+      // Place caret just after the formatted text
+      const newCaretPos = hasSelection
+        ? before.length + wrapped.length
+        : wrapped.length;
+      input.setSelectionRange(newCaretPos, newCaretPos);
+    },
+    [focusedCell, handleCellChange]
+  );
+
+  useEffect(() => {
+    const handler = (
+      event: Event | CustomEvent<{ type: "bold" | "italic" | "strike" }>
+    ) => {
+      const custom = event as CustomEvent<{
+        type: "bold" | "italic" | "strike";
+      }>;
+      if (!custom.detail?.type) return;
+      applyFormattingToActiveCell(custom.detail.type);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("financial-report-toggle-format", handler);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("financial-report-toggle-format", handler);
+      }
+    };
+  }, [applyFormattingToActiveCell]);
 
   const handlePaste = useCallback(
     (
@@ -528,7 +603,7 @@ const FinancialReportNodeView = ({
                     className={cn(
                       // Allow wrapping; increased header height is OK
                       "border-b py-2 text-sm font-semibold whitespace-normal wrap-break-word tabular-nums",
-                      "pl-1 pr-0.5",
+                      "px-2",
                       rightIndex === 0 && "border-l border-border/60",
                       columnAlignClass(col.align)
                     )}
@@ -581,7 +656,7 @@ const FinancialReportNodeView = ({
                       key={col.id}
                       className={cn(
                         "border-b py-1 whitespace-nowrap",
-                        "pl-1 pr-0.5",
+                        "px-2",
                         rightIndex === 0 && "border-l border-border/60",
                         columnAlignClass(col.align)
                       )}
@@ -600,7 +675,7 @@ const FinancialReportNodeView = ({
                         }
                         className={cn(
                           // Column width comes from colgroup; keep input comfortable
-                          "w-full min-w-0 pl-1 pr-0.5 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm font-mono tabular-nums",
+                          "w-full min-w-0 px-1 py-1 bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-ring rounded text-sm font-semibold tabular-nums",
                           columnAlignClass(col.align)
                         )}
                         placeholder="0"
@@ -633,8 +708,8 @@ const FinancialReportNodeView = ({
                     <td
                       key={col.id}
                       className={cn(
-                        "border-t-2 text-sm font-mono tabular-nums",
-                        "pl-1 pr-0.5 py-2",
+                        "border-t-2 text-sm font-semibold tabular-nums",
+                        "px-2 py-2",
                         rightIndex === 0 && "border-l border-border/60",
                         "whitespace-nowrap",
                         columnAlignClass(col.align)

@@ -1,5 +1,5 @@
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 
 import type { Document } from "@/types/document";
 
@@ -8,6 +8,14 @@ export const exportToPDF = async (
   documentElement: HTMLElement
 ): Promise<void> => {
   try {
+    if (typeof globalThis === "undefined" || !globalThis.document) {
+      throw new Error("PDF export is only available in a browser environment.");
+    }
+
+    if (!documentElement) {
+      throw new Error("No document content available to export.");
+    }
+
     // Create a new jsPDF instance
     const pdf = new jsPDF({
       orientation: "portrait",

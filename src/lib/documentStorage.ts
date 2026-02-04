@@ -26,7 +26,10 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "paragraph",
             content: [
-              { type: "text", text: "Reporting Period: January 1, 2025 – December 31, 2025" },
+              {
+                type: "text",
+                text: "Reporting Period: January 1, 2025 – December 31, 2025",
+              },
             ],
           },
         ],
@@ -40,15 +43,8 @@ export const getDefaultAnnualReportDocument = (): Document => ({
         type: "doc",
         content: [
           {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Letter to Shareholders" }],
-          },
-          {
             type: "paragraph",
-            content: [
-              { type: "text", text: "Dear Shareholders," },
-            ],
+            content: [{ type: "text", text: "Dear Shareholders," }],
           },
           {
             type: "paragraph",
@@ -72,7 +68,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Revenue growth of 15% year-over-year" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Revenue growth of 15% year-over-year",
+                      },
+                    ],
                   },
                 ],
               },
@@ -81,7 +82,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Expansion into three new markets" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Expansion into three new markets",
+                      },
+                    ],
                   },
                 ],
               },
@@ -90,7 +96,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Launch of innovative product line" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Launch of innovative product line",
+                      },
+                    ],
                   },
                 ],
               },
@@ -112,9 +123,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           },
           {
             type: "paragraph",
-            content: [
-              { type: "text", text: "Sincerely," },
-            ],
+            content: [{ type: "text", text: "Sincerely," }],
           },
           {
             type: "paragraph",
@@ -134,11 +143,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       content: JSON.stringify({
         type: "doc",
         content: [
-          {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Company Overview" }],
-          },
           {
             type: "heading",
             attrs: { level: 3 },
@@ -181,8 +185,15 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Enterprise Platform" },
-                      { type: "text", text: " – Cloud-based business management solution" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Enterprise Platform",
+                      },
+                      {
+                        type: "text",
+                        text: " – Cloud-based business management solution",
+                      },
                     ],
                   },
                 ],
@@ -193,8 +204,15 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Analytics Suite" },
-                      { type: "text", text: " – Data-driven insights and reporting tools" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Analytics Suite",
+                      },
+                      {
+                        type: "text",
+                        text: " – Data-driven insights and reporting tools",
+                      },
                     ],
                   },
                 ],
@@ -205,8 +223,15 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Professional Services" },
-                      { type: "text", text: " – Implementation and consulting services" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Professional Services",
+                      },
+                      {
+                        type: "text",
+                        text: " – Implementation and consulting services",
+                      },
                     ],
                   },
                 ],
@@ -223,11 +248,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       content: JSON.stringify({
         type: "doc",
         content: [
-          {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Management's Discussion & Analysis (MD&A)" }],
-          },
           {
             type: "heading",
             attrs: { level: 3 },
@@ -269,7 +289,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Strategic acquisition of TechCo Inc. to expand capabilities" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Strategic acquisition of TechCo Inc. to expand capabilities",
+                      },
+                    ],
                   },
                 ],
               },
@@ -278,7 +303,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Investment of 50M SEK in R&D initiatives" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Investment of 50M SEK in R&D initiatives",
+                      },
+                    ],
                   },
                 ],
               },
@@ -287,7 +317,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Implementation of sustainability program across operations" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Implementation of sustainability program across operations",
+                      },
+                    ],
                   },
                 ],
               },
@@ -304,14 +339,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
         type: "doc",
         content: [
           {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Highlights / Key Metrics" }],
-          },
-          {
             type: "paragraph",
             content: [
-              { type: "text", text: "Key performance indicators for fiscal year 2025:" },
+              {
+                type: "text",
+                text: "Key performance indicators for fiscal year 2025:",
+              },
             ],
           },
           {
@@ -323,7 +356,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Revenue: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Revenue: ",
+                      },
                       { type: "text", text: "125,000,000 SEK (+15% YoY)" },
                     ],
                   },
@@ -335,7 +372,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Net Profit: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Net Profit: ",
+                      },
                       { type: "text", text: "18,750,000 SEK (+12% YoY)" },
                     ],
                   },
@@ -347,7 +388,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Gross Margin: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Gross Margin: ",
+                      },
                       { type: "text", text: "42.5%" },
                     ],
                   },
@@ -359,7 +404,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Customer Base: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Customer Base: ",
+                      },
                       { type: "text", text: "2,500+ active customers" },
                     ],
                   },
@@ -371,7 +420,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Employee Count: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Employee Count: ",
+                      },
                       { type: "text", text: "450 full-time employees" },
                     ],
                   },
@@ -391,11 +444,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
         content: [
           {
             type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Financial Statements" }],
-          },
-          {
-            type: "heading",
             attrs: { level: 3 },
             content: [{ type: "text", text: "Balance Sheet" }],
           },
@@ -410,16 +458,82 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 { id: "bs-2024", label: "2024 (SEK)", align: "right" },
               ],
               rows: [
-                { id: "bs-row-1", values: { "bs-account": "Assets", "bs-2025": "", "bs-2024": "" } },
-                { id: "bs-row-2", values: { "bs-account": "  Current Assets", "bs-2025": "45,000,000", "bs-2024": "38,000,000" } },
-                { id: "bs-row-3", values: { "bs-account": "  Fixed Assets", "bs-2025": "80,000,000", "bs-2024": "72,000,000" } },
-                { id: "bs-row-4", values: { "bs-account": "Total Assets", "bs-2025": "125,000,000", "bs-2024": "110,000,000" } },
-                { id: "bs-row-5", values: { "bs-account": "", "bs-2025": "", "bs-2024": "" } },
-                { id: "bs-row-6", values: { "bs-account": "Liabilities & Equity", "bs-2025": "", "bs-2024": "" } },
-                { id: "bs-row-7", values: { "bs-account": "  Current Liabilities", "bs-2025": "25,000,000", "bs-2024": "22,000,000" } },
-                { id: "bs-row-8", values: { "bs-account": "  Long-term Debt", "bs-2025": "30,000,000", "bs-2024": "28,000,000" } },
-                { id: "bs-row-9", values: { "bs-account": "  Shareholders' Equity", "bs-2025": "70,000,000", "bs-2024": "60,000,000" } },
-                { id: "bs-row-10", values: { "bs-account": "Total Liabilities & Equity", "bs-2025": "125,000,000", "bs-2024": "110,000,000" } },
+                {
+                  id: "bs-row-1",
+                  values: {
+                    "bs-account": "Assets",
+                    "bs-2025": "",
+                    "bs-2024": "",
+                  },
+                },
+                {
+                  id: "bs-row-2",
+                  values: {
+                    "bs-account": "  Current Assets",
+                    "bs-2025": "45,000,000",
+                    "bs-2024": "38,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-3",
+                  values: {
+                    "bs-account": "  Fixed Assets",
+                    "bs-2025": "80,000,000",
+                    "bs-2024": "72,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-4",
+                  values: {
+                    "bs-account": "Total Assets",
+                    "bs-2025": "125,000,000",
+                    "bs-2024": "110,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-5",
+                  values: { "bs-account": "", "bs-2025": "", "bs-2024": "" },
+                },
+                {
+                  id: "bs-row-6",
+                  values: {
+                    "bs-account": "Liabilities & Equity",
+                    "bs-2025": "",
+                    "bs-2024": "",
+                  },
+                },
+                {
+                  id: "bs-row-7",
+                  values: {
+                    "bs-account": "  Current Liabilities",
+                    "bs-2025": "25,000,000",
+                    "bs-2024": "22,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-8",
+                  values: {
+                    "bs-account": "  Long-term Debt",
+                    "bs-2025": "30,000,000",
+                    "bs-2024": "28,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-9",
+                  values: {
+                    "bs-account": "  Shareholders' Equity",
+                    "bs-2025": "70,000,000",
+                    "bs-2024": "60,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-10",
+                  values: {
+                    "bs-account": "Total Liabilities & Equity",
+                    "bs-2025": "125,000,000",
+                    "bs-2024": "110,000,000",
+                  },
+                },
               ],
               showTotals: false,
             },
@@ -427,7 +541,9 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 3 },
-            content: [{ type: "text", text: "Income Statement (Profit & Loss)" }],
+            content: [
+              { type: "text", text: "Income Statement (Profit & Loss)" },
+            ],
           },
           {
             type: "financialReportBlock",
@@ -440,15 +556,78 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 { id: "is-2024", label: "2024 (SEK)", align: "right" },
               ],
               rows: [
-                { id: "is-row-1", values: { "is-account": "Revenue", "is-2025": "125,000,000", "is-2024": "108,700,000" } },
-                { id: "is-row-2", values: { "is-account": "Cost of Goods Sold", "is-2025": "-71,875,000", "is-2024": "-65,220,000" } },
-                { id: "is-row-3", values: { "is-account": "Gross Profit", "is-2025": "53,125,000", "is-2024": "43,480,000" } },
-                { id: "is-row-4", values: { "is-account": "Operating Expenses", "is-2025": "-28,000,000", "is-2024": "-24,000,000" } },
-                { id: "is-row-5", values: { "is-account": "Operating Income", "is-2025": "25,125,000", "is-2024": "19,480,000" } },
-                { id: "is-row-6", values: { "is-account": "Interest Expense", "is-2025": "-1,500,000", "is-2024": "-1,200,000" } },
-                { id: "is-row-7", values: { "is-account": "Income Before Tax", "is-2025": "23,625,000", "is-2024": "18,280,000" } },
-                { id: "is-row-8", values: { "is-account": "Income Tax", "is-2025": "-4,875,000", "is-2024": "-3,560,000" } },
-                { id: "is-row-9", values: { "is-account": "Net Income", "is-2025": "18,750,000", "is-2024": "14,720,000" } },
+                {
+                  id: "is-row-1",
+                  values: {
+                    "is-account": "Revenue",
+                    "is-2025": "125,000,000",
+                    "is-2024": "108,700,000",
+                  },
+                },
+                {
+                  id: "is-row-2",
+                  values: {
+                    "is-account": "Cost of Goods Sold",
+                    "is-2025": "-71,875,000",
+                    "is-2024": "-65,220,000",
+                  },
+                },
+                {
+                  id: "is-row-3",
+                  values: {
+                    "is-account": "Gross Profit",
+                    "is-2025": "53,125,000",
+                    "is-2024": "43,480,000",
+                  },
+                },
+                {
+                  id: "is-row-4",
+                  values: {
+                    "is-account": "Operating Expenses",
+                    "is-2025": "-28,000,000",
+                    "is-2024": "-24,000,000",
+                  },
+                },
+                {
+                  id: "is-row-5",
+                  values: {
+                    "is-account": "Operating Income",
+                    "is-2025": "25,125,000",
+                    "is-2024": "19,480,000",
+                  },
+                },
+                {
+                  id: "is-row-6",
+                  values: {
+                    "is-account": "Interest Expense",
+                    "is-2025": "-1,500,000",
+                    "is-2024": "-1,200,000",
+                  },
+                },
+                {
+                  id: "is-row-7",
+                  values: {
+                    "is-account": "Income Before Tax",
+                    "is-2025": "23,625,000",
+                    "is-2024": "18,280,000",
+                  },
+                },
+                {
+                  id: "is-row-8",
+                  values: {
+                    "is-account": "Income Tax",
+                    "is-2025": "-4,875,000",
+                    "is-2024": "-3,560,000",
+                  },
+                },
+                {
+                  id: "is-row-9",
+                  values: {
+                    "is-account": "Net Income",
+                    "is-2025": "18,750,000",
+                    "is-2024": "14,720,000",
+                  },
+                },
               ],
               showTotals: false,
             },
@@ -469,23 +648,130 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 { id: "cf-2024", label: "2024 (SEK)", align: "right" },
               ],
               rows: [
-                { id: "cf-row-1", values: { "cf-account": "Operating Activities", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-2", values: { "cf-account": "  Net Income", "cf-2025": "18,750,000", "cf-2024": "14,720,000" } },
-                { id: "cf-row-3", values: { "cf-account": "  Depreciation", "cf-2025": "5,000,000", "cf-2024": "4,500,000" } },
-                { id: "cf-row-4", values: { "cf-account": "  Working Capital Changes", "cf-2025": "-2,000,000", "cf-2024": "-1,500,000" } },
-                { id: "cf-row-5", values: { "cf-account": "Net Cash from Operations", "cf-2025": "21,750,000", "cf-2024": "17,720,000" } },
-                { id: "cf-row-6", values: { "cf-account": "", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-7", values: { "cf-account": "Investing Activities", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-8", values: { "cf-account": "  Capital Expenditures", "cf-2025": "-8,000,000", "cf-2024": "-6,000,000" } },
-                { id: "cf-row-9", values: { "cf-account": "  Acquisitions", "cf-2025": "-5,000,000", "cf-2024": "0" } },
-                { id: "cf-row-10", values: { "cf-account": "Net Cash from Investing", "cf-2025": "-13,000,000", "cf-2024": "-6,000,000" } },
-                { id: "cf-row-11", values: { "cf-account": "", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-12", values: { "cf-account": "Financing Activities", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-13", values: { "cf-account": "  Debt Repayment", "cf-2025": "-2,000,000", "cf-2024": "-2,000,000" } },
-                { id: "cf-row-14", values: { "cf-account": "  Dividends Paid", "cf-2025": "-4,000,000", "cf-2024": "-3,500,000" } },
-                { id: "cf-row-15", values: { "cf-account": "Net Cash from Financing", "cf-2025": "-6,000,000", "cf-2024": "-5,500,000" } },
-                { id: "cf-row-16", values: { "cf-account": "", "cf-2025": "", "cf-2024": "" } },
-                { id: "cf-row-17", values: { "cf-account": "Net Change in Cash", "cf-2025": "2,750,000", "cf-2024": "6,220,000" } },
+                {
+                  id: "cf-row-1",
+                  values: {
+                    "cf-account": "Operating Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-2",
+                  values: {
+                    "cf-account": "  Net Income",
+                    "cf-2025": "18,750,000",
+                    "cf-2024": "14,720,000",
+                  },
+                },
+                {
+                  id: "cf-row-3",
+                  values: {
+                    "cf-account": "  Depreciation",
+                    "cf-2025": "5,000,000",
+                    "cf-2024": "4,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-4",
+                  values: {
+                    "cf-account": "  Working Capital Changes",
+                    "cf-2025": "-2,000,000",
+                    "cf-2024": "-1,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-5",
+                  values: {
+                    "cf-account": "Net Cash from Operations",
+                    "cf-2025": "21,750,000",
+                    "cf-2024": "17,720,000",
+                  },
+                },
+                {
+                  id: "cf-row-6",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-7",
+                  values: {
+                    "cf-account": "Investing Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-8",
+                  values: {
+                    "cf-account": "  Capital Expenditures",
+                    "cf-2025": "-8,000,000",
+                    "cf-2024": "-6,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-9",
+                  values: {
+                    "cf-account": "  Acquisitions",
+                    "cf-2025": "-5,000,000",
+                    "cf-2024": "0",
+                  },
+                },
+                {
+                  id: "cf-row-10",
+                  values: {
+                    "cf-account": "Net Cash from Investing",
+                    "cf-2025": "-13,000,000",
+                    "cf-2024": "-6,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-11",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-12",
+                  values: {
+                    "cf-account": "Financing Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-13",
+                  values: {
+                    "cf-account": "  Debt Repayment",
+                    "cf-2025": "-2,000,000",
+                    "cf-2024": "-2,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-14",
+                  values: {
+                    "cf-account": "  Dividends Paid",
+                    "cf-2025": "-4,000,000",
+                    "cf-2024": "-3,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-15",
+                  values: {
+                    "cf-account": "Net Cash from Financing",
+                    "cf-2025": "-6,000,000",
+                    "cf-2024": "-5,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-16",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-17",
+                  values: {
+                    "cf-account": "Net Change in Cash",
+                    "cf-2025": "2,750,000",
+                    "cf-2024": "6,220,000",
+                  },
+                },
               ],
               showTotals: false,
             },
@@ -500,11 +786,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       content: JSON.stringify({
         type: "doc",
         content: [
-          {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Notes to Financial Statements" }],
-          },
           {
             type: "heading",
             attrs: { level: 3 },
@@ -536,7 +817,9 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 3 },
-            content: [{ type: "text", text: "Note 3: Related Party Transactions" }],
+            content: [
+              { type: "text", text: "Note 3: Related Party Transactions" },
+            ],
           },
           {
             type: "paragraph",
@@ -559,11 +842,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
         content: [
           {
             type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Outlook & Goals for 2026" }],
-          },
-          {
-            type: "heading",
             attrs: { level: 3 },
             content: [{ type: "text", text: "Strategic Priorities" }],
           },
@@ -575,7 +853,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Expand market presence in Asia-Pacific region" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Expand market presence in Asia-Pacific region",
+                      },
+                    ],
                   },
                 ],
               },
@@ -584,7 +867,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Launch next-generation Enterprise Platform 3.0" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Launch next-generation Enterprise Platform 3.0",
+                      },
+                    ],
                   },
                 ],
               },
@@ -593,7 +881,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Achieve carbon neutrality in operations" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Achieve carbon neutrality in operations",
+                      },
+                    ],
                   },
                 ],
               },
@@ -602,7 +895,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 content: [
                   {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Enhance customer success programs" }],
+                    content: [
+                      {
+                        type: "text",
+                        text: "Enhance customer success programs",
+                      },
+                    ],
                   },
                 ],
               },
@@ -622,7 +920,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Revenue Target: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Revenue Target: ",
+                      },
                       { type: "text", text: "145,000,000 SEK (+16% growth)" },
                     ],
                   },
@@ -634,7 +936,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Net Profit Margin: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Net Profit Margin: ",
+                      },
                       { type: "text", text: "16% (up from 15%)" },
                     ],
                   },
@@ -646,7 +952,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Customer Growth: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Customer Growth: ",
+                      },
                       { type: "text", text: "500+ new customers" },
                     ],
                   },
@@ -658,7 +968,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Employee Growth: " },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Employee Growth: ",
+                      },
                       { type: "text", text: "Expand to 550 employees" },
                     ],
                   },
@@ -678,11 +992,6 @@ export const getDefaultAnnualReportDocument = (): Document => ({
         content: [
           {
             type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Appendices" }],
-          },
-          {
-            type: "heading",
             attrs: { level: 3 },
             content: [{ type: "text", text: "Appendix A: Board of Directors" }],
           },
@@ -695,7 +1004,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Anna Svensson" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Anna Svensson",
+                      },
                       { type: "text", text: " – Chairperson" },
                     ],
                   },
@@ -707,7 +1020,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Erik Johansson" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Erik Johansson",
+                      },
                       { type: "text", text: " – Board Member" },
                     ],
                   },
@@ -719,7 +1036,11 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                   {
                     type: "paragraph",
                     content: [
-                      { type: "text", marks: [{ type: "bold" }], text: "Maria Lindberg" },
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Maria Lindberg",
+                      },
                       { type: "text", text: " – Board Member" },
                     ],
                   },
@@ -730,26 +1051,40 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 3 },
-            content: [{ type: "text", text: "Appendix B: Company Information" }],
+            content: [
+              { type: "text", text: "Appendix B: Company Information" },
+            ],
           },
           {
             type: "paragraph",
             content: [
-              { type: "text", marks: [{ type: "bold" }], text: "Registered Name: " },
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Registered Name: ",
+              },
               { type: "text", text: "CompanyName" },
             ],
           },
           {
             type: "paragraph",
             content: [
-              { type: "text", marks: [{ type: "bold" }], text: "Organization Number: " },
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Organization Number: ",
+              },
               { type: "text", text: "OrgNumber" },
             ],
           },
           {
             type: "paragraph",
             content: [
-              { type: "text", marks: [{ type: "bold" }], text: "Registered Office: " },
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Registered Office: ",
+              },
               { type: "text", text: "Stockholm, Sweden" },
             ],
           },
@@ -763,7 +1098,9 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 3 },
-            content: [{ type: "text", text: "Appendix C: Auditor's Statement" }],
+            content: [
+              { type: "text", text: "Appendix C: Auditor's Statement" },
+            ],
           },
           {
             type: "paragraph",
@@ -785,7 +1122,8 @@ export const getDefaultAnnualReportDocument = (): Document => ({
   },
 });
 
-export const getSampleDocument = (): Document => getDefaultAnnualReportDocument();
+export const getSampleDocument = (): Document =>
+  getDefaultAnnualReportDocument();
 
 export const getSampleTemplates = (): Template[] => [
   {
