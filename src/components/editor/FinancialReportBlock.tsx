@@ -32,6 +32,11 @@ import type {
   FinancialReportRow,
 } from "@/types/document";
 
+/** Legacy row format had accountNumber at top level */
+type LegacyFinancialReportRow = FinancialReportRow & {
+  accountNumber?: string;
+};
+
 interface FinancialReportBlockAttrs {
   leftColumns?: FinancialReportColumn[];
   rightColumns?: FinancialReportColumn[];
@@ -55,15 +60,17 @@ const FinancialReportNodeView = ({
   // Migration logic: convert old structure to new structure
   const migrateAttrs = useCallback((attrs: FinancialReportBlockAttrs) => {
     // If new structure exists, use it
-    if (attrs.leftColumns && attrs.rightColumns) {
+    const leftCols = attrs.leftColumns;
+    const rightCols = attrs.rightColumns;
+    if (leftCols && rightCols) {
       return {
-        leftColumns: attrs.leftColumns,
-        rightColumns: attrs.rightColumns,
+        leftColumns: leftCols,
+        rightColumns: rightCols,
         rows: attrs.rows.map((row) => {
           // Ensure all column values exist
           const allColIds = [
-            ...attrs.leftColumns.map((c) => c.id),
-            ...attrs.rightColumns.map((c) => c.id),
+            ...leftCols.map((c) => c.id),
+            ...rightCols.map((c) => c.id),
           ];
           const values = { ...row.values };
           allColIds.forEach((colId) => {
@@ -80,10 +87,6 @@ const FinancialReportNodeView = ({
     // Migrate from old structure
     const accountNumberColumn = attrs.accountNumberColumn || {
       label: "Account #",
-      align: "left" as const,
-    };
-    const accountNameColumn = attrs.accountNameColumn || {
-      label: "Account Name",
       align: "left" as const,
     };
     const oldColumns = attrs.columns || [];
@@ -117,8 +120,9 @@ const FinancialReportNodeView = ({
       const values: Record<string, string> = {};
 
       // Add left column values (from accountNumber)
+      const legacyRow = row as LegacyFinancialReportRow;
       values[leftColumns[0].id] =
-        (row as any).accountNumber || row.values[leftColumns[0].id] || "";
+        legacyRow.accountNumber ?? row.values[leftColumns[0].id] ?? "";
 
       // Add right column values
       rightColumns.forEach((col) => {

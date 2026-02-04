@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";

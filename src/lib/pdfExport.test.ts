@@ -23,6 +23,7 @@ vi.mock("html2canvas", () => ({
 }));
 
 import { exportToPDF } from "./pdfExport";
+
 import html2canvas from "html2canvas";
 
 describe("exportToPDF", () => {

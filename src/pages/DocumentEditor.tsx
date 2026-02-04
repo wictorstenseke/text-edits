@@ -50,6 +50,11 @@ import type {
   FinancialReportRow,
 } from "@/types/document";
 
+/** Legacy row format had accountNumber at top level */
+type LegacyFinancialReportRow = FinancialReportRow & {
+  accountNumber?: string;
+};
+
 interface TipTapNode {
   type: string;
   text?: string;
@@ -271,15 +276,6 @@ export const DocumentEditor = () => {
     setDocument((prev) => ({
       ...prev,
       sections: reorderedSections,
-    }));
-  };
-
-  const handleRenameSection = (sectionId: string, newTitle: string) => {
-    setDocument((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === sectionId ? { ...s, title: newTitle } : s
-      ),
     }));
   };
 
@@ -632,12 +628,13 @@ export const DocumentEditor = () => {
                   {rows.map((row) => {
                     // Migrate row data if needed
                     const rowValues = { ...row.values };
-                    if ((row as any).accountNumber !== undefined) {
+                    const legacyRow = row as LegacyFinancialReportRow;
+                    if (legacyRow.accountNumber !== undefined) {
                       // Old structure - migrate
                       if (leftColumns.length > 0) {
                         rowValues[leftColumns[0].id] =
-                          (row as any).accountNumber ||
-                          rowValues[leftColumns[0].id] ||
+                          legacyRow.accountNumber ??
+                          rowValues[leftColumns[0].id] ??
                           "";
                       }
                     }
@@ -789,7 +786,7 @@ export const DocumentEditor = () => {
               </Button>
             </div>
             <div className="space-y-1">
-              {document.sections.map((section, index) => (
+              {document.sections.map((section) => (
                 <div
                   key={section.id}
                   className={cn(
@@ -999,7 +996,7 @@ export const DocumentEditor = () => {
             </div>
 
             <div className="space-y-1">
-              {document.sections.map((section, index) => (
+              {document.sections.map((section, sectionIndex) => (
                 <div
                   key={section.id}
                   className="flex items-center justify-between gap-2 rounded-md border px-2 py-1.5"
@@ -1015,7 +1012,7 @@ export const DocumentEditor = () => {
                       size="icon-sm"
                       variant="ghost"
                       onClick={() => handleReorderSection(section.id, "up")}
-                      disabled={index === 0}
+                      disabled={sectionIndex === 0}
                       aria-label="Move section up"
                       title="Move up"
                       className="h-7 w-7"
@@ -1026,7 +1023,7 @@ export const DocumentEditor = () => {
                       size="icon-sm"
                       variant="ghost"
                       onClick={() => handleReorderSection(section.id, "down")}
-                      disabled={index === document.sections.length - 1}
+                      disabled={sectionIndex === document.sections.length - 1}
                       aria-label="Move section down"
                       title="Move down"
                       className="h-7 w-7"
