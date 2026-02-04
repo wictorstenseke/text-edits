@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Landing } from "@/pages/Landing";
+import { DocumentEditor } from "@/pages/DocumentEditor";
 
 export const Route = createFileRoute("/")({
-  component: Landing,
+  component: DocumentEditor,
 });
 
