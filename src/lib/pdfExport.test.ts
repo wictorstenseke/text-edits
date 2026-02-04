@@ -87,12 +87,10 @@ describe("exportToPDF", () => {
 
     // Track what elements are passed to html2canvas and capture their styles
     let capturedElement: HTMLElement | null = null;
-    vi.mocked(html2canvas).mockImplementation(
-      async (element: HTMLElement) => {
-        capturedElement = element;
-        return canvasStub;
-      }
-    );
+    vi.mocked(html2canvas).mockImplementation(async (element: HTMLElement) => {
+      capturedElement = element;
+      return canvasStub;
+    });
 
     const doc: Document = {
       id: "doc-1",
