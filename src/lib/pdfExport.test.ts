@@ -160,4 +160,139 @@ describe("exportToPDF", () => {
       exportToPDF(doc, null as unknown as HTMLElement)
     ).rejects.toThrow("Failed to generate PDF. Please try again.");
   });
+
+  it("should handle paragraphs with line breaks", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "Line 1<br>Line 2<br>Line 3";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered for each line
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Line 1");
+    expect(textCalls).toContain("Line 2");
+    expect(textCalls).toContain("Line 3");
+  });
+
+  it("should handle empty paragraphs as blank lines", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const p1 = document.createElement("p");
+    p1.textContent = "First paragraph";
+    const p2 = document.createElement("p");
+    // Empty paragraph
+    const p3 = document.createElement("p");
+    p3.textContent = "Third paragraph";
+    
+    container.appendChild(p1);
+    container.appendChild(p2);
+    container.appendChild(p3);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered for non-empty paragraphs
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("First paragraph");
+    expect(textCalls).toContain("Third paragraph");
+    // Empty paragraph should create vertical space - we can't easily verify
+    // y-coordinate changes with current mock structure, but we can verify
+    // that the export completed successfully without throwing
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it("should handle consecutive line breaks as empty lines", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "Line 1<br><br>Line 3";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify text was rendered
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Line 1");
+    expect(textCalls).toContain("Line 3");
+  });
+
+  it("should handle tables with empty cells", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const table = document.createElement("table");
+    const tbody = document.createElement("tbody");
+    
+    // Header row
+    const headerRow = document.createElement("tr");
+    const th1 = document.createElement("th");
+    th1.textContent = "Column 1";
+    const th2 = document.createElement("th");
+    th2.textContent = "Column 2";
+    headerRow.appendChild(th1);
+    headerRow.appendChild(th2);
+    tbody.appendChild(headerRow);
+    
+    // Data row with one empty cell
+    const dataRow1 = document.createElement("tr");
+    const td1 = document.createElement("td");
+    td1.textContent = "Value 1";
+    const td2 = document.createElement("td");
+    // Empty cell
+    dataRow1.appendChild(td1);
+    dataRow1.appendChild(td2);
+    tbody.appendChild(dataRow1);
+    
+    // Completely empty row
+    const dataRow2 = document.createElement("tr");
+    const td3 = document.createElement("td");
+    const td4 = document.createElement("td");
+    dataRow2.appendChild(td3);
+    dataRow2.appendChild(td4);
+    tbody.appendChild(dataRow2);
+    
+    table.appendChild(tbody);
+    container.appendChild(table);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify table was rendered - check for headers and values
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("Column 1");
+    expect(textCalls).toContain("Column 2");
+    expect(textCalls).toContain("Value 1");
+    
+    // Verify borders were drawn for all cells (including empty ones)
+    // rectMock should be called for each cell (6 cells total: 2 header + 2 + 2)
+    expect(rectMock.mock.calls.length).toBe(6);
+  });
 });

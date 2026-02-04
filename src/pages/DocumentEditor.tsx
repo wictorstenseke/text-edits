@@ -460,6 +460,8 @@ export const DocumentEditor = () => {
         );
       case "listItem":
         return <li>{children}</li>;
+      case "hardBreak":
+        return <br />;
       case "table":
         return (
           <table className="border-collapse border border-gray-300 mb-2 w-full">
