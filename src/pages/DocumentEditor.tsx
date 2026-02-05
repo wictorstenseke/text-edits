@@ -199,33 +199,41 @@ export const DocumentEditor = () => {
 
     // Only smooth-scroll when navigating from the left sidebar, not when clicking in the document
     if (scrollToSection) {
-      const sanitizedId = CSS.escape(sectionId);
-      const sectionElement = window.document.querySelector(
-        `[data-section-id="${sanitizedId}"]`
-      );
-      if (sectionElement && scrollContainerRef.current) {
-        const container = scrollContainerRef.current;
-        const containerRect = container.getBoundingClientRect();
-        const sectionRect = (
-          sectionElement as HTMLElement
-        ).getBoundingClientRect();
+      // Defer scroll until after React commits and layout settles. Without this,
+      // getBoundingClientRect runs against stale DOM (before selectedSectionId
+      // applies), causing ~16px offset that requires a second click to correct.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const sanitizedId = CSS.escape(sectionId);
+          const sectionElement = window.document.querySelector(
+            `[data-section-id="${sanitizedId}"]`
+          );
+          const container = scrollContainerRef.current;
+          if (sectionElement && container) {
+            const containerRect = container.getBoundingClientRect();
+            const sectionRect = (
+              sectionElement as HTMLElement
+            ).getBoundingClientRect();
 
-        const offsetWithinContainer = sectionRect.top - containerRect.top;
-        const desiredTopOffset = 16;
-        const rawTargetScrollTop =
-          container.scrollTop + offsetWithinContainer - desiredTopOffset;
+            const offsetWithinContainer = sectionRect.top - containerRect.top;
+            const desiredTopOffset = 16;
+            const rawTargetScrollTop =
+              container.scrollTop + offsetWithinContainer - desiredTopOffset;
 
-        const maxScrollTop = container.scrollHeight - container.clientHeight;
-        const clampedTargetScrollTop = Math.min(
-          Math.max(rawTargetScrollTop, 0),
-          Math.max(maxScrollTop, 0)
-        );
+            const maxScrollTop =
+              container.scrollHeight - container.clientHeight;
+            const clampedTargetScrollTop = Math.min(
+              Math.max(rawTargetScrollTop, 0),
+              Math.max(maxScrollTop, 0)
+            );
 
-        container.scrollTo({
-          top: clampedTargetScrollTop,
-          behavior: "smooth",
+            container.scrollTo({
+              top: clampedTargetScrollTop,
+              behavior: "smooth",
+            });
+          }
         });
-      }
+      });
     }
   };
 
