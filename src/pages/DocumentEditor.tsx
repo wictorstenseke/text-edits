@@ -134,8 +134,8 @@ export const DocumentEditor = () => {
   };
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(null);
+  const [tempSections, setTempSections] = useState<typeof document.sections | null>(null);
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
@@ -303,6 +303,7 @@ export const DocumentEditor = () => {
 
   const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
     setDraggedSectionId(sectionId);
+    setTempSections(null);
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -315,44 +316,44 @@ export const DocumentEditor = () => {
     const mouseY = e.clientY - rect.top;
     const isTopHalf = mouseY < rect.height / 2;
     
-    setDragOverIndex(index);
     setDropPosition(isTopHalf ? "above" : "below");
+    
+    // Live reordering preview
+    if (draggedSectionId) {
+      const dragIndex = document.sections.findIndex((s) => s.id === draggedSectionId);
+      if (dragIndex === -1) return;
+      
+      let finalIndex = index;
+      if (isTopHalf) {
+        finalIndex = dragIndex < index ? index - 1 : index;
+      } else {
+        finalIndex = dragIndex < index ? index : index + 1;
+      }
+      
+      if (finalIndex !== dragIndex) {
+        const newSections = [...document.sections];
+        const [draggedSection] = newSections.splice(dragIndex, 1);
+        newSections.splice(finalIndex, 0, draggedSection);
+        setTempSections(newSections);
+      } else {
+        setTempSections(null);
+      }
+    }
   };
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number): void => {
+  const handleDrop = (e: React.DragEvent): void => {
     e.preventDefault();
-    if (!draggedSectionId || !dropPosition) return;
+    if (!draggedSectionId || !dropPosition || !tempSections) return;
 
     const dragIndex = document.sections.findIndex((s) => s.id === draggedSectionId);
     if (dragIndex === -1) {
       setDraggedSectionId(null);
-      setDragOverIndex(null);
       setDropPosition(null);
+      setTempSections(null);
       return;
     }
 
-    // Calculate final index based on drop position and drag direction
-    let finalIndex = dropIndex;
-    if (dropPosition === "below") {
-      finalIndex = dragIndex < dropIndex ? dropIndex : dropIndex + 1;
-    } else {
-      // dropPosition === "above"
-      finalIndex = dragIndex < dropIndex ? dropIndex - 1 : dropIndex;
-    }
-
-    // Skip if no actual movement
-    if (finalIndex === dragIndex) {
-      setDraggedSectionId(null);
-      setDragOverIndex(null);
-      setDropPosition(null);
-      return;
-    }
-
-    const newSections = [...document.sections];
-    const [draggedSection] = newSections.splice(dragIndex, 1);
-    newSections.splice(finalIndex, 0, draggedSection);
-
-    const reorderedSections = newSections.map((s, i) => ({
+    const reorderedSections = tempSections.map((s, i) => ({
       ...s,
       order: i,
     }));
@@ -363,14 +364,14 @@ export const DocumentEditor = () => {
     }));
 
     setDraggedSectionId(null);
-    setDragOverIndex(null);
     setDropPosition(null);
+    setTempSections(null);
   };
 
   const handleDragEnd = (): void => {
     setDraggedSectionId(null);
-    setDragOverIndex(null);
     setDropPosition(null);
+    setTempSections(null);
   };
 
   const handleCreateFromTemplate = useCallback((template: Template) => {
@@ -1219,19 +1220,17 @@ export const DocumentEditor = () => {
             </div>
 
             <div className="space-y-1">
-              {document.sections.map((section, sectionIndex) => (
+              {(tempSections || document.sections).map((section, sectionIndex) => (
                 <div
                   key={section.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, section.id)}
                   onDragOver={(e) => handleDragOver(e, sectionIndex)}
-                  onDrop={(e) => handleDrop(e, sectionIndex)}
+                  onDrop={(e) => handleDrop(e)}
                   onDragEnd={handleDragEnd}
                   className={cn(
                     "flex items-center gap-2 rounded-md border px-2 py-1.5 transition-all cursor-move",
-                    draggedSectionId === section.id && "opacity-50 bg-accent/20",
-                    dragOverIndex === sectionIndex && dropPosition === "above" && "border-t-4 border-primary",
-                    dragOverIndex === sectionIndex && dropPosition === "below" && "border-b-4 border-primary"
+                    draggedSectionId === section.id && "opacity-50 bg-accent/20"
                   )}
                 >
                   <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
