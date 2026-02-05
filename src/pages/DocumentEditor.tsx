@@ -1223,33 +1223,37 @@ export const DocumentEditor = () => {
               {(tempSections || document.sections).map((section, sectionIndex) => (
                 <div
                   key={section.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, section.id)}
-                  onDragOver={(e) => handleDragOver(e, sectionIndex)}
-                  onDrop={(e) => handleDrop(e)}
-                  onDragEnd={handleDragEnd}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md border px-2 py-1.5 transition-all cursor-move",
-                    draggedSectionId === section.id && "opacity-50 bg-accent/20"
-                  )}
+                  className="relative"
                 >
-                  <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">
-                      {section.title}
-                    </div>
-                  </div>
-
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => handleRemoveSection(section.id)}
-                    aria-label="Remove section"
-                    title="Remove"
-                    className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, section.id)}
+                    onDragOver={(e) => handleDragOver(e, sectionIndex)}
+                    onDrop={(e) => handleDrop(e)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md border px-2 py-1.5 transition-all cursor-move",
+                      draggedSectionId === section.id && "opacity-20 scale-95"
+                    )}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                    <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {section.title}
+                      </div>
+                    </div>
+
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveSection(section.id)}
+                      aria-label="Remove section"
+                      title="Remove"
+                      className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
