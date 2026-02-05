@@ -16,13 +16,13 @@ import type { Document } from "@/types/document";
  * with appropriate formatting (headings, lists, paragraphs, tables).
  */
 
-/** A4 dimensions in mm (default) */
+/** PDF page height in mm */
 const PDF_HEIGHT = 297;
 
 /** Page width configurations in mm (converted from px at 96dpi) */
 type PageWidthOption = "narrow" | "medium" | "wide";
 const PAGE_WIDTH_CONFIG: Record<PageWidthOption, { width: number; padding: number }> = {
-  narrow: { width: 210, padding: 15 }, // 178mm content, A4
+  narrow: { width: 210, padding: 15 }, // A4 portrait, 178mm content
   medium: { width: 260, padding: 12 }, // ~237mm content
   wide: { width: 330, padding: 12 },   // ~305mm content
 };
@@ -46,6 +46,10 @@ const FONT_SIZES = {
 
 /** Line height multiplier */
 const LINE_HEIGHT = 1.4;
+
+/** Default image dimensions in pixels when not specified */
+const DEFAULT_IMAGE_WIDTH_PX = 200;
+const DEFAULT_IMAGE_HEIGHT_PX = 150;
 
 /** PDF export options */
 export interface PDFExportOptions {
@@ -327,19 +331,16 @@ const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => 
   const { pdf, padding, contentWidth } = ctx;
   const maxImageHeight = getMaxImageHeight(padding);
 
-  // Get image dimensions
-  let imgWidthPx = imgElement.width || imgElement.naturalWidth || 0;
-  let imgHeightPx = imgElement.height || imgElement.naturalHeight || 0;
-
-  // Get width/height from attributes if not available
-  if (!imgWidthPx) {
-    const widthAttr = imgElement.getAttribute("width");
-    imgWidthPx = widthAttr ? parseInt(widthAttr, 10) : 200;
-  }
-  if (!imgHeightPx) {
-    const heightAttr = imgElement.getAttribute("height");
-    imgHeightPx = heightAttr ? parseInt(heightAttr, 10) : 150;
-  }
+  // Get image dimensions - prioritize attributes, then DOM properties, then defaults
+  const widthAttr = imgElement.getAttribute("width");
+  const heightAttr = imgElement.getAttribute("height");
+  
+  const imgWidthPx = widthAttr 
+    ? parseInt(widthAttr, 10) 
+    : (imgElement.width || imgElement.naturalWidth || DEFAULT_IMAGE_WIDTH_PX);
+  const imgHeightPx = heightAttr 
+    ? parseInt(heightAttr, 10) 
+    : (imgElement.height || imgElement.naturalHeight || DEFAULT_IMAGE_HEIGHT_PX);
 
   // Convert to mm
   let imgWidthMm = imgWidthPx * PX_TO_MM;
@@ -382,9 +383,10 @@ const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => 
 
   // Try to add image to PDF
   try {
-    // Determine image format from src
+    // Determine image format from src (use lowercase for consistent matching)
+    const srcLower = src.toLowerCase();
     let format: "JPEG" | "PNG" = "PNG";
-    if (src.toLowerCase().includes(".jpg") || src.toLowerCase().includes(".jpeg") || src.includes("data:image/jpeg")) {
+    if (srcLower.includes(".jpg") || srcLower.includes(".jpeg") || srcLower.includes("data:image/jpeg")) {
       format = "JPEG";
     }
 
@@ -660,12 +662,12 @@ export const exportToPDF = async (
     const fontFamilyOption = options.fontFamily || "sans";
     const fontFamily = FONT_FAMILY_MAP[fontFamilyOption];
 
-    // Determine page orientation based on width
-    const orientation = pdfWidth > 210 ? "landscape" : "portrait";
-
     // Create a new jsPDF instance with custom page size
+    // For A4 (narrow), use the built-in "a4" format
+    // For wider pages, use custom dimensions with portrait orientation
+    // (orientation only affects A4/letter formats, custom sizes ignore it)
     const pdf = new jsPDF({
-      orientation,
+      orientation: "portrait",
       unit: "mm",
       format: pdfWidth <= 210 ? "a4" : [pdfWidth, PDF_HEIGHT],
     });
