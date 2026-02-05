@@ -134,6 +134,7 @@ export const DocumentEditor = () => {
   };
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [draggedSectionOriginalIndex, setDraggedSectionOriginalIndex] = useState<number | null>(null);
   const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(null);
   const [tempSections, setTempSections] = useState<typeof document.sections | null>(null);
 
@@ -302,7 +303,9 @@ export const DocumentEditor = () => {
   }, [document.sections.length, manageNewSectionTitle]);
 
   const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
+    const dragIndex = document.sections.findIndex((s) => s.id === sectionId);
     setDraggedSectionId(sectionId);
+    setDraggedSectionOriginalIndex(dragIndex);
     setTempSections(null);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -330,12 +333,20 @@ export const DocumentEditor = () => {
         finalIndex = dragIndex < index ? index : index + 1;
       }
       
+      // Only update if position actually changes
       if (finalIndex !== dragIndex) {
         const newSections = [...document.sections];
         const [draggedSection] = newSections.splice(dragIndex, 1);
         newSections.splice(finalIndex, 0, draggedSection);
-        setTempSections(newSections);
-      } else {
+        
+        // Check if this is actually different from current tempSections
+        const currentSections = tempSections || document.sections;
+        const isDifferent = !currentSections.every((s, i) => s.id === newSections[i]?.id);
+        
+        if (isDifferent) {
+          setTempSections(newSections);
+        }
+      } else if (tempSections) {
         setTempSections(null);
       }
     }
@@ -370,6 +381,7 @@ export const DocumentEditor = () => {
 
   const handleDragEnd = (): void => {
     setDraggedSectionId(null);
+    setDraggedSectionOriginalIndex(null);
     setDropPosition(null);
     setTempSections(null);
   };
@@ -1219,41 +1231,38 @@ export const DocumentEditor = () => {
               <Button onClick={handleAddSectionFromManage}>Add</Button>
             </div>
 
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {(tempSections || document.sections).map((section, sectionIndex) => (
                 <div
                   key={section.id}
-                  className="relative"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, section.id)}
+                  onDragOver={(e) => handleDragOver(e, sectionIndex)}
+                  onDrop={(e) => handleDrop(e)}
+                  onDragEnd={handleDragEnd}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
+                    "transition-all duration-200 ease-out",
+                    draggedSectionId === section.id && "opacity-40 scale-95"
+                  )}
                 >
-                  <div
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, section.id)}
-                    onDragOver={(e) => handleDragOver(e, sectionIndex)}
-                    onDrop={(e) => handleDrop(e)}
-                    onDragEnd={handleDragEnd}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md border px-2 py-1.5 transition-all cursor-move",
-                      draggedSectionId === section.id && "opacity-20 scale-95"
-                    )}
-                  >
-                    <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {section.title}
-                      </div>
+                  <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">
+                      {section.title}
                     </div>
-
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => handleRemoveSection(section.id)}
-                      aria-label="Remove section"
-                      title="Remove"
-                      className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
                   </div>
+
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => handleRemoveSection(section.id)}
+                    aria-label="Remove section"
+                    title="Remove"
+                    className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               ))}
             </div>
