@@ -81,6 +81,7 @@ interface TipTapNode {
 }
 
 export const DocumentEditor = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const documentContainerRef = useRef<HTMLDivElement>(null);
   const [document, setDocument] = useState<Document>(loadDocument());
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
@@ -101,6 +102,10 @@ export const DocumentEditor = () => {
   const [newTagKey, setNewTagKey] = useState("");
   const [newTagValue, setNewTagValue] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [pendingDeleteSection, setPendingDeleteSection] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
     "medium"
   );
@@ -198,8 +203,28 @@ export const DocumentEditor = () => {
       const sectionElement = window.document.querySelector(
         `[data-section-id="${sanitizedId}"]`
       );
-      if (sectionElement) {
-        sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (sectionElement && scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const sectionRect = (
+          sectionElement as HTMLElement
+        ).getBoundingClientRect();
+
+        const offsetWithinContainer = sectionRect.top - containerRect.top;
+        const desiredTopOffset = 16;
+        const rawTargetScrollTop =
+          container.scrollTop + offsetWithinContainer - desiredTopOffset;
+
+        const maxScrollTop = container.scrollHeight - container.clientHeight;
+        const clampedTargetScrollTop = Math.min(
+          Math.max(rawTargetScrollTop, 0),
+          Math.max(maxScrollTop, 0)
+        );
+
+        container.scrollTo({
+          top: clampedTargetScrollTop,
+          behavior: "smooth",
+        });
       }
     }
   };
@@ -1040,7 +1065,10 @@ export const DocumentEditor = () => {
         </div>
 
         {/* CENTER - Document Preview with Inline Editing */}
-        <div className="flex-1 overflow-y-auto bg-muted/80">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto bg-muted/80"
+        >
           <div
             ref={documentContainerRef}
             className={cn(
@@ -1263,7 +1291,12 @@ export const DocumentEditor = () => {
                     <Button
                       size="icon-sm"
                       variant="ghost"
-                      onClick={() => handleRemoveSection(section.id)}
+                      onClick={() =>
+                        setPendingDeleteSection({
+                          id: section.id,
+                          title: section.title,
+                        })
+                      }
                       aria-label="Remove section"
                       title="Remove"
                       className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
@@ -1378,6 +1411,52 @@ export const DocumentEditor = () => {
             </Button>
             <Button variant="destructive" onClick={handleResetDocument}>
               Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Remove Section Dialog */}
+      <Dialog
+        open={pendingDeleteSection !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDeleteSection(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove section</DialogTitle>
+            <DialogDescription>
+              This will permanently remove{" "}
+              {pendingDeleteSection ? (
+                <span className="font-semibold">
+                  {pendingDeleteSection.title || "this section"}
+                </span>
+              ) : (
+                "this section"
+              )}
+              . This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingDeleteSection(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (pendingDeleteSection) {
+                  handleRemoveSection(pendingDeleteSection.id);
+                }
+                setPendingDeleteSection(null);
+              }}
+            >
+              Remove
             </Button>
           </DialogFooter>
         </DialogContent>
