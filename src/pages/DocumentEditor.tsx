@@ -17,7 +17,8 @@ import {
   FileText,
   Tag as TagIcon,
   PlusCircle,
-  Download,
+  ArrowUpFromLine,
+  RotateCcw,
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
@@ -33,6 +34,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   getSampleDocument,
   loadDocument,
@@ -87,6 +95,7 @@ export const DocumentEditor = () => {
   const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
     "medium"
   );
+  const [isTagPanelOpen, setIsTagPanelOpen] = useState(false);
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
@@ -740,56 +749,102 @@ export const DocumentEditor = () => {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="border-b p-4 bg-background">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <FileText className="h-6 w-6" />
-            <Input
-              value={document.title}
-              onChange={(e) =>
-                setDocument((prev) => ({ ...prev, title: e.target.value }))
-              }
-              className="text-lg font-semibold border-0 px-0 focus-visible:ring-0"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 mr-2">
-              <span className="text-sm text-muted-foreground mr-1">
-                Document width:
-              </span>
-              <Button
-                onClick={handleDecreasePageWidth}
-                variant="outline"
-                size="icon"
-                title="Decrease document width"
-                aria-label="Decrease document width"
-                disabled={pageWidthIndex <= 0}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={handleIncreasePageWidth}
-                variant="outline"
-                size="icon"
-                title="Increase document width"
-                aria-label="Increase document width"
-                disabled={pageWidthIndex >= pageWidthOptions.length - 1}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+        <TooltipProvider>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <FileText className="h-6 w-6" />
+              <Input
+                value={document.title}
+                onChange={(e) =>
+                  setDocument((prev) => ({ ...prev, title: e.target.value }))
+                }
+                className="text-lg font-semibold border-0 px-0 focus-visible:ring-0"
+              />
             </div>
-            <Button onClick={handleExportPDF} variant="default" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
-            <Button
-              onClick={() => setResetDialogOpen(true)}
-              variant="outline"
-              size="sm"
-            >
-              Återställ
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Document width
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleDecreasePageWidth}
+                      variant="outline"
+                      size="icon"
+                      aria-label="Decrease document width"
+                      disabled={pageWidthIndex <= 0}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Decrease width</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleIncreasePageWidth}
+                      variant="outline"
+                      size="icon"
+                      aria-label="Increase document width"
+                      disabled={pageWidthIndex >= pageWidthOptions.length - 1}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Increase width</TooltipContent>
+                </Tooltip>
+              </div>
+              <Separator orientation="vertical" className="mx-2 h-8" />
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setResetDialogOpen(true)}
+                      variant="outline"
+                      size="icon"
+                      aria-label="Reset document"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Reset document</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleExportPDF}
+                      variant="outline"
+                      size="icon"
+                      aria-label="Export PDF"
+                    >
+                      <ArrowUpFromLine className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Export PDF</TooltipContent>
+                </Tooltip>
+              </div>
+              <Separator orientation="vertical" className="mx-2 h-8" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setIsTagPanelOpen((prev) => !prev)}
+                    variant={isTagPanelOpen ? "default" : "outline"}
+                    size="icon"
+                    aria-label={
+                      isTagPanelOpen ? "Hide tag panel" : "Show tag panel"
+                    }
+                  >
+                    <TagIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isTagPanelOpen ? "Hide tag panel" : "Show tag panel"}
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
       </div>
 
       {/* Main Content - Three Panels */}
@@ -847,7 +902,7 @@ export const DocumentEditor = () => {
         </div>
 
         {/* CENTER - Document Preview with Inline Editing */}
-        <div className="flex-1 overflow-y-auto bg-muted/30">
+        <div className="flex-1 overflow-y-auto bg-muted/80">
           <div
             ref={documentContainerRef}
             className={cn(
@@ -867,8 +922,8 @@ export const DocumentEditor = () => {
                   editingSectionId === section.id
                     ? "ring-2 ring-primary bg-white"
                     : selectedSectionId === section.id
-                      ? "ring-2 ring-primary/50 bg-accent/30 cursor-pointer"
-                      : "hover:bg-accent/30 cursor-pointer"
+                      ? "ring-2 ring-primary/50 bg-accent/50 cursor-pointer"
+                      : "hover:bg-accent/50 cursor-pointer"
                 )}
                 onClick={() => {
                   if (editingSectionId !== section.id) {
@@ -927,62 +982,66 @@ export const DocumentEditor = () => {
         </div>
 
         {/* RIGHT PANEL - Tags Only */}
-        <div className="w-80 border-l bg-background flex flex-col overflow-hidden">
-          {/* Tag Library */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="flex items-center justify-between mb-3">
-              <Label className="text-sm font-semibold flex items-center gap-2">
-                <TagIcon className="h-4 w-4" />
-                Tag Library
-              </Label>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={() => setNewTagDialogOpen(true)}
-                title="Add new tag"
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Type @ in the editor to insert a tag
-            </p>
-            <div className="space-y-2">
-              {Object.entries(document.tagValues).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
+        {isTagPanelOpen && (
+          <div className="w-80 border-l bg-background flex flex-col overflow-hidden">
+            {/* Tag Library */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <TagIcon className="h-4 w-4" />
+                  Tag Library
+                </Label>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setNewTagDialogOpen(true)}
+                  title="Add new tag"
                 >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Type @ in the editor to insert a tag
+              </p>
+              <div className="space-y-2">
+                {Object.entries(document.tagValues).map(([key, value]) => (
                   <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => handleEditTag(key)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleEditTag(key);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
+                    key={key}
+                    className="flex items-center justify-between p-2 rounded bg-muted hover:bg-accent group"
                   >
-                    <div className="text-xs font-mono font-semibold">{key}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {value}
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => handleEditTag(key)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          handleEditTag(key);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="text-xs font-mono font-semibold">
+                        {key}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {value}
+                      </div>
                     </div>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteTag(key)}
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                      title="Delete tag"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => handleDeleteTag(key)}
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                    title="Delete tag"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Manage Sections Dialog */}
@@ -1158,18 +1217,18 @@ export const DocumentEditor = () => {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Återställ dokument</DialogTitle>
+            <DialogTitle>Reset document</DialogTitle>
             <DialogDescription>
-              Detta kommer återställa allt innehåll till startläget. Det går
-              inte att ångra.
+              This will reset all content to the initial state. This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetDialogOpen(false)}>
-              Avbryt
+              Cancel
             </Button>
             <Button variant="destructive" onClick={handleResetDocument}>
-              Återställ
+              Reset
             </Button>
           </DialogFooter>
         </DialogContent>
