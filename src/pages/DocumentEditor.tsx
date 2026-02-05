@@ -284,7 +284,12 @@ export const DocumentEditor = () => {
     setSelectedSectionId(resetDocument.sections[0]?.id || null);
     setEditingSectionId(null);
     setResetDialogOpen(false);
-  }, []);
+  }, [
+    setDocument,
+    setEditingSectionId,
+    setResetDialogOpen,
+    setSelectedSectionId,
+  ]);
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
@@ -328,7 +333,13 @@ export const DocumentEditor = () => {
 
     setManageNewSectionTitle("");
     setSelectedSectionId(newSection.id);
-  }, [document.sections.length, manageNewSectionTitle]);
+  }, [
+    document.sections.length,
+    manageNewSectionTitle,
+    setDocument,
+    setManageNewSectionTitle,
+    setSelectedSectionId,
+  ]);
 
   const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
     setDraggedSectionId(sectionId);
@@ -417,30 +428,33 @@ export const DocumentEditor = () => {
     setTempSections(null);
   };
 
-  const handleCreateFromTemplate = useCallback((template: Template) => {
-    const timestamp = Date.now();
-    const newSections: Section[] = template.sections.map((ts, index) => ({
-      id: `section-${timestamp}-${index}`,
-      title: ts.title,
-      order: index,
-      content:
-        ts.content ||
-        JSON.stringify({
-          type: "doc",
-          content: [{ type: "paragraph" }],
-        }),
-    }));
+  const handleCreateFromTemplate = useCallback(
+    (template: Template) => {
+      const timestamp = Date.now();
+      const newSections: Section[] = template.sections.map((ts, index) => ({
+        id: `section-${timestamp}-${index}`,
+        title: ts.title,
+        order: index,
+        content:
+          ts.content ||
+          JSON.stringify({
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          }),
+      }));
 
-    setDocument({
-      id: `doc-${timestamp}`,
-      title: template.name,
-      sections: newSections,
-      tagValues: {},
-    });
+      setDocument({
+        id: `doc-${timestamp}`,
+        title: template.name,
+        sections: newSections,
+        tagValues: {},
+      });
 
-    setSelectedSectionId(newSections[0]?.id || null);
-    setTemplateDialogOpen(false);
-  }, []);
+      setSelectedSectionId(newSections[0]?.id || null);
+      setTemplateDialogOpen(false);
+    },
+    [setDocument, setSelectedSectionId, setTemplateDialogOpen]
+  );
 
   const handleEditTag = (key: string) => {
     setEditingTagKey(key);
