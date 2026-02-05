@@ -79,6 +79,9 @@ const TABLE_PRESETS: { rows: number; cols: number; label: string }[] = [
   { rows: 6, cols: 6, label: "6×6" },
 ];
 
+const TEST_IMAGE_URL =
+  "https://www.freepnglogos.com/uploads/logo-3d-png/3d-company-logos-design-logo-online-2.png";
+
 const MenuButton = ({
   onClick,
   active,
@@ -121,7 +124,7 @@ export const InlineSectionEditor = ({
   const [editableTitle, setEditableTitle] = useState(title);
 
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState(TEST_IMAGE_URL);
   const [imageAlt, setImageAlt] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const tagMentionExtension = useMemo(
@@ -167,10 +170,10 @@ export const InlineSectionEditor = ({
     if (!editor) return;
     const selectionHandler = () => setSelectionTick((tick) => tick + 1);
     const transactionHandler = () => setSelectionTick((tick) => tick + 1);
-    
+
     editor.on("selectionUpdate", selectionHandler);
     editor.on("transaction", transactionHandler);
-    
+
     return () => {
       editor.off("selectionUpdate", selectionHandler);
       editor.off("transaction", transactionHandler);
@@ -325,185 +328,207 @@ export const InlineSectionEditor = ({
               {!editor.isActive("resizableImage") && (
                 <>
                   <MenuButton
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.dispatchEvent(
-                      new CustomEvent("financial-report-toggle-format", {
-                        detail: { type: "bold" },
-                      })
-                    );
-                  }
-                  editor.chain().focus().toggleBold().run();
-                }}
-                active={editor.isActive("bold")}
-                title="Bold"
-              >
-                <Bold className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.dispatchEvent(
-                      new CustomEvent("financial-report-toggle-format", {
-                        detail: { type: "italic" },
-                      })
-                    );
-                  }
-                  editor.chain().focus().toggleItalic().run();
-                }}
-                active={editor.isActive("italic")}
-                title="Italic"
-              >
-                <Italic className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.dispatchEvent(
-                      new CustomEvent("financial-report-toggle-format", {
-                        detail: { type: "strike" },
-                      })
-                    );
-                  }
-                  editor.chain().focus().toggleStrike().run();
-                }}
-                active={editor.isActive("strike")}
-                title="Strikethrough"
-              >
-                <Strikethrough className="h-4 w-4" />
-              </MenuButton>
-
-              <Separator orientation="vertical" className="h-6 mx-1" />
-
-              <MenuButton
-                onClick={() => editor.chain().focus().setTextAlign("left").run()}
-                active={editor.isActive({ textAlign: "left" })}
-                title="Align Left"
-              >
-                <AlignLeft className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() => editor.chain().focus().setTextAlign("center").run()}
-                active={editor.isActive({ textAlign: "center" })}
-                title="Align Center"
-              >
-                <AlignCenter className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() => editor.chain().focus().setTextAlign("right").run()}
-                active={editor.isActive({ textAlign: "right" })}
-                title="Align Right"
-              >
-                <AlignRight className="h-4 w-4" />
-              </MenuButton>
-
-              <Separator orientation="vertical" className="h-6 mx-1" />
-
-              <MenuButton
-                onClick={() =>
-                  editor
-                    .chain()
-                    .focus()
-                    .toggleList("bulletList", "listItem")
-                    .run()
-                }
-                active={editor.isActive("bulletList")}
-                title="Bullet List"
-              >
-                <List className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() =>
-                  editor
-                    .chain()
-                    .focus()
-                    .toggleList("orderedList", "listItem")
-                    .run()
-                }
-                active={editor.isActive("orderedList")}
-                title="Numbered List"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </MenuButton>
-
-              <Separator orientation="vertical" className="h-6 mx-1" />
-
-              <MenuButton
-                onClick={addLink}
-                active={editor.isActive("link")}
-                title="Add Link"
-              >
-                <Link2 className="h-4 w-4" />
-              </MenuButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    title="Insert Table"
-                    className="h-7 w-7"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("financial-report-toggle-format", {
+                            detail: { type: "bold" },
+                          })
+                        );
+                      }
+                      editor.chain().focus().toggleBold().run();
+                    }}
+                    active={editor.isActive("bold")}
+                    title="Bold"
                   >
-                    <TableIcon className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {TABLE_PRESETS.map(({ rows, cols, label }) => (
-                    <DropdownMenuItem
-                      key={label}
-                      onSelect={() => insertTable(rows, cols, true)}
-                    >
-                      {label} table
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuItem onSelect={() => setTableDialogOpen(true)}>
-                    Custom size…
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <MenuButton
-                onClick={insertFinancialReport}
-                title="Insert Financial Report"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() => editor.chain().focus().insertPageBreak().run()}
-                title="Insert Page Break"
-              >
-                <SeparatorHorizontal className="h-4 w-4" />
-              </MenuButton>
+                    <Bold className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("financial-report-toggle-format", {
+                            detail: { type: "italic" },
+                          })
+                        );
+                      }
+                      editor.chain().focus().toggleItalic().run();
+                    }}
+                    active={editor.isActive("italic")}
+                    title="Italic"
+                  >
+                    <Italic className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("financial-report-toggle-format", {
+                            detail: { type: "strike" },
+                          })
+                        );
+                      }
+                      editor.chain().focus().toggleStrike().run();
+                    }}
+                    active={editor.isActive("strike")}
+                    title="Strikethrough"
+                  >
+                    <Strikethrough className="h-4 w-4" />
+                  </MenuButton>
 
-              <Separator orientation="vertical" className="h-6 mx-1" />
+                  <Separator orientation="vertical" className="h-6 mx-1" />
 
-              <MenuButton
-                onClick={() => setImageDialogOpen(true)}
-                title="Insert Image"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().setTextAlign("left").run()
+                    }
+                    active={editor.isActive({ textAlign: "left" })}
+                    title="Align Left"
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().setTextAlign("center").run()
+                    }
+                    active={editor.isActive({ textAlign: "center" })}
+                    title="Align Center"
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().setTextAlign("right").run()
+                    }
+                    active={editor.isActive({ textAlign: "right" })}
+                    title="Align Right"
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </MenuButton>
+
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+
+                  <MenuButton
+                    onClick={() =>
+                      editor
+                        .chain()
+                        .focus()
+                        .toggleList("bulletList", "listItem")
+                        .run()
+                    }
+                    active={editor.isActive("bulletList")}
+                    title="Bullet List"
+                  >
+                    <List className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor
+                        .chain()
+                        .focus()
+                        .toggleList("orderedList", "listItem")
+                        .run()
+                    }
+                    active={editor.isActive("orderedList")}
+                    title="Numbered List"
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </MenuButton>
+
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+
+                  <MenuButton
+                    onClick={addLink}
+                    active={editor.isActive("link")}
+                    title="Add Link"
+                  >
+                    <Link2 className="h-4 w-4" />
+                  </MenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Insert Table"
+                        className="h-7 w-7"
+                      >
+                        <TableIcon className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {TABLE_PRESETS.map(({ rows, cols, label }) => (
+                        <DropdownMenuItem
+                          key={label}
+                          onSelect={() => insertTable(rows, cols, true)}
+                        >
+                          {label} table
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuItem
+                        onSelect={() => setTableDialogOpen(true)}
+                      >
+                        Custom size…
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <MenuButton
+                    onClick={insertFinancialReport}
+                    title="Insert Financial Report"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().insertPageBreak().run()
+                    }
+                    title="Insert Page Break"
+                  >
+                    <SeparatorHorizontal className="h-4 w-4" />
+                  </MenuButton>
+
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+
+                  <MenuButton
+                    onClick={() => setImageDialogOpen(true)}
+                    title="Insert Image"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                  </MenuButton>
                 </>
               )}
 
               {editor.isActive("resizableImage") && (
                 <>
                   <MenuButton
-                    onClick={() => editor.chain().focus().setImageAlign("left").run()}
-                    active={editor.getAttributes("resizableImage").align === "left"}
+                    onClick={() =>
+                      editor.chain().focus().setImageAlign("left").run()
+                    }
+                    active={
+                      editor.getAttributes("resizableImage").align === "left"
+                    }
                     title="Align Image Left"
                   >
                     <AlignLeft className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
-                    onClick={() => editor.chain().focus().setImageAlign("center").run()}
-                    active={editor.getAttributes("resizableImage").align === "center"}
+                    onClick={() =>
+                      editor.chain().focus().setImageAlign("center").run()
+                    }
+                    active={
+                      editor.getAttributes("resizableImage").align === "center"
+                    }
                     title="Align Image Center"
                   >
                     <AlignCenter className="h-4 w-4" />
                   </MenuButton>
                   <MenuButton
-                    onClick={() => editor.chain().focus().setImageAlign("right").run()}
-                    active={editor.getAttributes("resizableImage").align === "right"}
+                    onClick={() =>
+                      editor.chain().focus().setImageAlign("right").run()
+                    }
+                    active={
+                      editor.getAttributes("resizableImage").align === "right"
+                    }
                     title="Align Image Right"
                   >
                     <AlignRight className="h-4 w-4" />
@@ -710,7 +735,7 @@ export const InlineSectionEditor = ({
               variant="outline"
               onClick={() => {
                 setImageDialogOpen(false);
-                setImageUrl("");
+                setImageUrl(TEST_IMAGE_URL);
                 setImageAlt("");
                 setImageFile(null);
               }}
