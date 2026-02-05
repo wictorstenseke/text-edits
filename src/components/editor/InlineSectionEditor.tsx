@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useState } from "react";
 
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table/kit";
+import TextAlign from "@tiptap/extension-text-align";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -27,8 +28,14 @@ import {
   Redo,
   Check,
   X,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
+import "tiptap-extension-resizable-image/styles.css";
 
+import { ImageResizeWithAlign } from "./ImageResizeWithAlign";
 import {
   createTagMentionExtension,
   FinancialReportBlockExtension,
@@ -112,6 +119,11 @@ export const InlineSectionEditor = ({
   const [tableCols, setTableCols] = useState(3);
   const [tableHeaderRow, setTableHeaderRow] = useState(true);
   const [editableTitle, setEditableTitle] = useState(title);
+
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const tagMentionExtension = useMemo(
     () => createTagMentionExtension(tags),
     [tags]
@@ -124,6 +136,11 @@ export const InlineSectionEditor = ({
       }),
       TableKit.configure({
         table: { resizable: true },
+      }),
+      ImageResizeWithAlign,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right"],
       }),
       Placeholder.configure({
         placeholder: "Start typing... (use @ to insert tags)",
@@ -148,10 +165,15 @@ export const InlineSectionEditor = ({
   const [, setSelectionTick] = useState(0);
   useEffect(() => {
     if (!editor) return;
-    const handler = () => setSelectionTick((tick) => tick + 1);
-    editor.on("selectionUpdate", handler);
+    const selectionHandler = () => setSelectionTick((tick) => tick + 1);
+    const transactionHandler = () => setSelectionTick((tick) => tick + 1);
+    
+    editor.on("selectionUpdate", selectionHandler);
+    editor.on("transaction", transactionHandler);
+    
     return () => {
-      editor.off("selectionUpdate", handler);
+      editor.off("selectionUpdate", selectionHandler);
+      editor.off("transaction", transactionHandler);
     };
   }, [editor]);
 
@@ -194,6 +216,47 @@ export const InlineSectionEditor = ({
       .run();
   };
 
+  const handleInsertImage = () => {
+    if (!editor) return;
+
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          editor
+            .chain()
+            .focus()
+            .setResizableImage({
+              src: dataUrl,
+              alt: imageAlt,
+              "data-keep-ratio": true,
+            })
+            .run();
+          setImageDialogOpen(false);
+          setImageUrl("");
+          setImageAlt("");
+          setImageFile(null);
+        }
+      };
+      reader.readAsDataURL(imageFile);
+    } else if (imageUrl.trim()) {
+      editor
+        .chain()
+        .focus()
+        .setResizableImage({
+          src: imageUrl,
+          alt: imageAlt,
+          "data-keep-ratio": true,
+        })
+        .run();
+      setImageDialogOpen(false);
+      setImageUrl("");
+      setImageAlt("");
+      setImageFile(null);
+    }
+  };
+
   const handleSave = useCallback(() => {
     if (editor) {
       onSave(JSON.stringify(editor.getJSON()), editableTitle);
@@ -225,37 +288,43 @@ export const InlineSectionEditor = ({
         <div className="border bg-white px-2 py-1 rounded-md mb-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1">
-              <MenuButton
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level: 1 }).run()
-                }
-                active={editor.isActive("heading", { level: 1 })}
-                title="Heading 1"
-              >
-                <Heading1 className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level: 2 }).run()
-                }
-                active={editor.isActive("heading", { level: 2 })}
-                title="Heading 2"
-              >
-                <Heading2 className="h-4 w-4" />
-              </MenuButton>
-              <MenuButton
-                onClick={() =>
-                  editor.chain().focus().toggleHeading({ level: 3 }).run()
-                }
-                active={editor.isActive("heading", { level: 3 })}
-                title="Heading 3"
-              >
-                <Heading3 className="h-4 w-4" />
-              </MenuButton>
+              {!editor.isActive("resizableImage") && (
+                <>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level: 1 }).run()
+                    }
+                    active={editor.isActive("heading", { level: 1 })}
+                    title="Heading 1"
+                  >
+                    <Heading1 className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    active={editor.isActive("heading", { level: 2 })}
+                    title="Heading 2"
+                  >
+                    <Heading2 className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level: 3 }).run()
+                    }
+                    active={editor.isActive("heading", { level: 3 })}
+                    title="Heading 3"
+                  >
+                    <Heading3 className="h-4 w-4" />
+                  </MenuButton>
 
-              <Separator orientation="vertical" className="h-6 mx-1" />
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+                </>
+              )}
 
-              <MenuButton
+              {!editor.isActive("resizableImage") && (
+                <>
+                  <MenuButton
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     window.dispatchEvent(
@@ -302,6 +371,30 @@ export const InlineSectionEditor = ({
                 title="Strikethrough"
               >
                 <Strikethrough className="h-4 w-4" />
+              </MenuButton>
+
+              <Separator orientation="vertical" className="h-6 mx-1" />
+
+              <MenuButton
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                active={editor.isActive({ textAlign: "left" })}
+                title="Align Left"
+              >
+                <AlignLeft className="h-4 w-4" />
+              </MenuButton>
+              <MenuButton
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                active={editor.isActive({ textAlign: "center" })}
+                title="Align Center"
+              >
+                <AlignCenter className="h-4 w-4" />
+              </MenuButton>
+              <MenuButton
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                active={editor.isActive({ textAlign: "right" })}
+                title="Align Right"
+              >
+                <AlignRight className="h-4 w-4" />
               </MenuButton>
 
               <Separator orientation="vertical" className="h-6 mx-1" />
@@ -380,6 +473,43 @@ export const InlineSectionEditor = ({
               >
                 <SeparatorHorizontal className="h-4 w-4" />
               </MenuButton>
+
+              <Separator orientation="vertical" className="h-6 mx-1" />
+
+              <MenuButton
+                onClick={() => setImageDialogOpen(true)}
+                title="Insert Image"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </MenuButton>
+                </>
+              )}
+
+              {editor.isActive("resizableImage") && (
+                <>
+                  <MenuButton
+                    onClick={() => editor.chain().focus().setImageAlign("left").run()}
+                    active={editor.getAttributes("resizableImage").align === "left"}
+                    title="Align Image Left"
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() => editor.chain().focus().setImageAlign("center").run()}
+                    active={editor.getAttributes("resizableImage").align === "center"}
+                    title="Align Image Center"
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </MenuButton>
+                  <MenuButton
+                    onClick={() => editor.chain().focus().setImageAlign("right").run()}
+                    active={editor.getAttributes("resizableImage").align === "right"}
+                    title="Align Image Right"
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </MenuButton>
+                </>
+              )}
 
               <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -530,6 +660,74 @@ export const InlineSectionEditor = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Insert image</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="inline-image-url">Image URL</Label>
+              <Input
+                id="inline-image-url"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                disabled={!!imageFile}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Separator className="flex-1" />
+              <span className="text-sm text-muted-foreground">OR</span>
+              <Separator className="flex-1" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="inline-image-file">Upload file</Label>
+              <Input
+                id="inline-image-file"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                disabled={!!imageUrl.trim()}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="inline-image-alt">Alt text (optional)</Label>
+              <Input
+                id="inline-image-alt"
+                type="text"
+                placeholder="Description of the image"
+                value={imageAlt}
+                onChange={(e) => setImageAlt(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setImageDialogOpen(false);
+                setImageUrl("");
+                setImageAlt("");
+                setImageFile(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleInsertImage}
+              disabled={!imageUrl.trim() && !imageFile}
+            >
+              Insert image
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="sr-only">
         <Button onClick={handleSave} title="Save (Ctrl+S)">
           Save

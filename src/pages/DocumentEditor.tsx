@@ -608,21 +608,39 @@ export const DocumentEditor = () => {
             return child.type !== "hardBreak";
           });
 
+        const textAlign = node.attrs?.textAlign as string;
+        const alignClass =
+          textAlign === "center"
+            ? "text-center"
+            : textAlign === "right"
+              ? "text-right"
+              : "text-left";
+
         if (!hasMeaningfulContent) {
           // Render a non-empty paragraph so typography styles don't collapse it
-          return <p className="mb-2">&nbsp;</p>;
+          return <p className={cn("mb-2", alignClass)}>&nbsp;</p>;
         }
 
-        return <p className="mb-2">{children}</p>;
+        return <p className={cn("mb-2", alignClass)}>{children}</p>;
       }
       case "heading": {
         const level = (node.attrs?.level as number) || 1;
-        const className =
+        const textAlign = node.attrs?.textAlign as string;
+        const alignClass =
+          textAlign === "center"
+            ? "text-center"
+            : textAlign === "right"
+              ? "text-right"
+              : "text-left";
+
+        const className = cn(
           level === 1
             ? "text-xl font-semibold mb-3"
             : level === 2
               ? "text-lg font-semibold mb-2"
-              : "text-base font-semibold mb-2";
+              : "text-base font-semibold mb-2",
+          alignClass
+        );
 
         if (level === 1) {
           return <h1 className={className}>{children}</h1>;
@@ -891,6 +909,40 @@ export const DocumentEditor = () => {
             <div className="flex-1 border-t-2 border-dashed border-muted-foreground/30" />
           </div>
         );
+      case "image":
+      case "imageResize":
+      case "resizableImage": {
+        const src = node.attrs?.src as string;
+        const alt = node.attrs?.alt as string;
+        const title = node.attrs?.title as string;
+        const width = node.attrs?.width as number;
+        const height = node.attrs?.height as number;
+        const align = node.attrs?.align as string;
+
+        if (!src) return null;
+
+        return (
+          <span
+            className={cn(
+              "block my-2",
+              align === "center"
+                ? "text-center"
+                : align === "right"
+                  ? "text-right"
+                  : "text-left"
+            )}
+          >
+            <img
+              src={src}
+              alt={alt || ""}
+              title={title}
+              width={width}
+              height={height}
+              className="max-w-full h-auto inline-block"
+            />
+          </span>
+        );
+      }
       default:
         return children;
     }

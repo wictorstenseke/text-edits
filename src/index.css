@@ -306,6 +306,38 @@
   text-decoration: none;
 }
 
+/* Image Styles */
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.5rem 0;
+}
+
+/* Image wrapper for alignment */
+.tiptap .image-wrapper {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.tiptap .image-wrapper img {
+  display: inline-block;
+  margin: 0;
+}
+
+/* Apply alignment to ResizableImage wrapper */
+.tiptap [data-node-view-wrapper][data-align="left"] {
+  text-align: left;
+}
+
+.tiptap [data-node-view-wrapper][data-align="center"] {
+  text-align: center;
+}
+
+.tiptap [data-node-view-wrapper][data-align="right"] {
+  text-align: right;
+}
+
 /* Tag Mention Styles */
 .tiptap .tag-mention,
 .tiptap span[data-type="mention"] {

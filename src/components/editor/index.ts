@@ -15,3 +15,5 @@ export {
 export { InlineSectionEditor } from "./InlineSectionEditor";
 
 export { PageBreakExtension } from "./PageBreak";
+
+export { ImageResizeWithAlign } from "./ImageResizeWithAlign";
