@@ -1,8 +1,11 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 
+import { Extension } from "@tiptap/core";
 import { Mention } from "@tiptap/extension-mention";
 import { type NodeViewRendererProps } from "@tiptap/react";
 import { createRoot, type Root } from "react-dom/client";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
 import { cn } from "@/lib/utils";
 
@@ -109,19 +112,109 @@ export const TagSuggestionList = forwardRef<
 
 TagSuggestionList.displayName = "TagSuggestionList";
 
+// Extension to highlight freetext tag names in edit mode
+export const createTagHighlightExtension = (tags: TagItem[]) => {
+  const tagKeys = tags.map((tag) => tag.key);
+
+  return Extension.create({
+    name: "tagHighlight",
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          key: new PluginKey("tagHighlight"),
+          state: {
+            init() {
+              return DecorationSet.empty;
+            },
+            apply(tr, decorationSet) {
+              const decorations: Decoration[] = [];
+
+              // Only apply decorations if document changed
+              if (!tr.docChanged && decorationSet.size > 0) {
+                return decorationSet;
+              }
+
+              // Track mention node positions to avoid highlighting inside them
+              const mentionRanges: Array<{ from: number; to: number }> = [];
+              tr.doc.descendants((node, pos) => {
+                if (node.type.name === "mention") {
+                  mentionRanges.push({ from: pos, to: pos + node.nodeSize });
+                  return false; // Don't descend into mention nodes
+                }
+              });
+
+              // Check if a position is inside a mention node
+              const isInsideMention = (pos: number): boolean => {
+                return mentionRanges.some(
+                  (range) => pos >= range.from && pos < range.to
+                );
+              };
+
+              tr.doc.descendants((node, pos) => {
+                // Only process text nodes
+                if (node.isText) {
+                  const text = node.text || "";
+
+                  // Check each tag key
+                  tagKeys.forEach((tagKey) => {
+                    // Escape special regex characters
+                    const escapedKey = tagKey.replace(
+                      /[.*+?^${}()|[\]\\]/g,
+                      "\\$&"
+                    );
+                    const regex = new RegExp(`\\b${escapedKey}\\b`, "g");
+                    let match;
+
+                    while ((match = regex.exec(text)) !== null) {
+                      const from = pos + match.index;
+                      const to = from + match[0].length;
+
+                      // Skip if this text is inside a mention node
+                      if (isInsideMention(from)) {
+                        continue;
+                      }
+
+                      // Create decoration with yellow highlight
+                      decorations.push(
+                        Decoration.inline(from, to, {
+                          class: "tag-freetext-highlight",
+                          "data-tag-key": tagKey,
+                        })
+                      );
+                    }
+                  });
+                }
+              });
+
+              return DecorationSet.create(tr.doc, decorations);
+            },
+          },
+          props: {
+            decorations(state) {
+              return this.getState(state);
+            },
+          },
+        }),
+      ];
+    },
+  });
+};
+
 export const createTagMentionExtension = (tags: TagItem[]) => {
   return Mention.configure({
     HTMLAttributes: {
-      class: "tag-mention",
+      class: "tag-mention tag-mention-edit",
     },
     renderText({ node }) {
-      return node.attrs.label ?? node.attrs.id;
+      const tagKey = node.attrs.id as string;
+      return `/${tagKey}`;
     },
     renderHTML({ node }) {
-      return node.attrs.label ?? node.attrs.id;
+      const tagKey = node.attrs.id as string;
+      return `/${tagKey}`;
     },
     suggestion: {
-      char: "@",
+      char: "/",
       items: ({ query }) => {
         return tags
           .filter(
@@ -233,15 +326,14 @@ export const TagPill = ({
 // NodeView component for tag mentions in TipTap
 export const TagMentionNodeView = ({ node }: NodeViewRendererProps) => {
   const tagKey = node.attrs.id as string;
-  const tagValue = (node.attrs.label as string) || tagKey;
 
   return (
     <span
-      className="tag-pill inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-primary/10 text-primary text-sm font-medium border border-primary/20"
+      className="tag-mention-edit bg-yellow-200 dark:bg-yellow-900/30 px-1 rounded"
       data-tag-key={tagKey}
       contentEditable={false}
     >
-      {tagValue}
+      /{tagKey}
     </span>
   );
 };

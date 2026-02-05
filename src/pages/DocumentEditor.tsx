@@ -677,15 +677,12 @@ export const DocumentEditor = () => {
       case "tableCell":
         return <td className="border border-gray-300 px-2 py-1">{children}</td>;
       case "mention": {
-        // Render tag pill
+        // Render tag as plain text with resolved value (no pill styling)
         const tagKey = node.attrs?.id as string;
         const resolvedValue =
           tagValues[tagKey] || (node.attrs?.label as string) || tagKey;
-        return (
-          <span className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded bg-primary/10 text-primary text-sm font-medium border border-primary/20">
-            {resolvedValue}
-          </span>
-        );
+        // Return plain text fragment - parent node styling (heading, bold, etc.) will apply
+        return <>{resolvedValue}</>;
       }
       case "financialReportBlock": {
         // Render financial report block in read-only mode

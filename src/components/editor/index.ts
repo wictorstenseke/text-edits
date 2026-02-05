@@ -1,6 +1,7 @@
 export {
   TagSuggestionList,
   createTagMentionExtension,
+  createTagHighlightExtension,
   TagPill,
   TagMentionNodeView,
   type TagItem,

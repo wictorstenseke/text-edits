@@ -387,7 +387,7 @@ export const TipTapEditor = ({
         table: { resizable: true },
       }),
       Placeholder.configure({
-        placeholder: "Start typing... (use @ to insert tags)",
+        placeholder: "Start typing... (use / to insert tags)",
       }),
       createTagMentionExtension(tags),
       FinancialReportBlockExtension,

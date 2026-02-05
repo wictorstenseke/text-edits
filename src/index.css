@@ -338,27 +338,43 @@
   text-align: right;
 }
 
-/* Tag Mention Styles */
+/* Tag Mention Styles - Edit Mode */
 .tiptap .tag-mention,
-.tiptap span[data-type="mention"] {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.375rem;
-  margin: 0 0.125rem;
+.tiptap span[data-type="mention"],
+.tiptap .tag-mention-edit {
+  display: inline;
+  padding: 0.125rem 0.25rem;
+  margin: 0;
   border-radius: 0.25rem;
-  background-color: oklch(0.205 0 0 / 10%);
-  color: oklch(0.205 0 0);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: 1px solid oklch(0.205 0 0 / 20%);
+  background-color: rgb(254 240 138); /* yellow-200 */
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   white-space: nowrap;
 }
 
 .dark .tiptap .tag-mention,
-.dark .tiptap span[data-type="mention"] {
-  background-color: oklch(0.87 0 0 / 10%);
-  color: oklch(0.87 0 0);
-  border-color: oklch(0.87 0 0 / 20%);
+.dark .tiptap span[data-type="mention"],
+.dark .tiptap .tag-mention-edit {
+  background-color: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+  color: inherit;
+}
+
+/* Freetext tag highlight in edit mode */
+.tiptap .tag-freetext-highlight {
+  display: inline;
+  padding: 0.125rem 0.25rem;
+  margin: 0;
+  border-radius: 0.25rem;
+  background-color: rgb(254 240 138); /* yellow-200 */
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.dark .tiptap .tag-freetext-highlight {
+  background-color: rgb(113 63 18 / 0.3); /* yellow-900/30 */
+  color: inherit;
 }
 
 /* Financial Report Block in TipTap */

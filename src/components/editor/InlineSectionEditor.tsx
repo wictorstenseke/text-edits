@@ -35,9 +35,9 @@ import {
 } from "lucide-react";
 import "tiptap-extension-resizable-image/styles.css";
 
-import { ImageResizeWithAlign } from "./ImageResizeWithAlign";
 import {
   createTagMentionExtension,
+  createTagHighlightExtension,
   FinancialReportBlockExtension,
   PageBreakExtension,
   type TagItem,
@@ -60,6 +60,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+
+import { ImageResizeWithAlign } from "./ImageResizeWithAlign";
 
 interface InlineSectionEditorProps {
   content: string;
@@ -132,6 +134,11 @@ export const InlineSectionEditor = ({
     [tags]
   );
 
+  const tagHighlightExtension = useMemo(
+    () => createTagHighlightExtension(tags),
+    [tags]
+  );
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -146,9 +153,10 @@ export const InlineSectionEditor = ({
         alignments: ["left", "center", "right"],
       }),
       Placeholder.configure({
-        placeholder: "Start typing... (use @ to insert tags)",
+        placeholder: "Start typing... (use / to insert tags)",
       }),
       tagMentionExtension,
+      tagHighlightExtension,
       FinancialReportBlockExtension,
       PageBreakExtension,
     ],

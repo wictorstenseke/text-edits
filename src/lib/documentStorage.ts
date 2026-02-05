@@ -16,7 +16,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 1 },
-            content: [{ type: "text", text: "CompanyName" }],
+            content: [
+              {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
+            ],
           },
           {
             type: "heading",
@@ -152,8 +157,12 @@ export const getDefaultAnnualReportDocument = (): Document => ({
             type: "paragraph",
             content: [
               {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
+              {
                 type: "text",
-                text: "CompanyName is a leading provider of innovative solutions in the technology sector. Founded in 2010, we have grown to serve customers in over 50 countries worldwide.",
+                text: " is a leading provider of innovative solutions in the technology sector. Founded in 2010, we have grown to serve customers in over 50 countries worldwide.",
               },
             ],
           },
@@ -1063,7 +1072,10 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 marks: [{ type: "bold" }],
                 text: "Registered Name: ",
               },
-              { type: "text", text: "CompanyName" },
+              {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
             ],
           },
           {
@@ -1074,7 +1086,10 @@ export const getDefaultAnnualReportDocument = (): Document => ({
                 marks: [{ type: "bold" }],
                 text: "Organization Number: ",
               },
-              { type: "text", text: "OrgNumber" },
+              {
+                type: "mention",
+                attrs: { id: "OrgNumber", label: "556xxx-xxxx" },
+              },
             ],
           },
           {
@@ -1092,7 +1107,10 @@ export const getDefaultAnnualReportDocument = (): Document => ({
             type: "paragraph",
             content: [
               { type: "text", marks: [{ type: "bold" }], text: "Contact: " },
-              { type: "text", text: "ContactEmail" },
+              {
+                type: "mention",
+                attrs: { id: "ContactEmail", label: "info@acme.se" },
+              },
             ],
           },
           {
