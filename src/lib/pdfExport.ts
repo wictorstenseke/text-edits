@@ -16,11 +16,24 @@ import type { Document } from "@/types/document";
  * with appropriate formatting (headings, lists, paragraphs, tables).
  */
 
-/** A4 dimensions in mm */
-const PDF_WIDTH = 210;
+/** A4 dimensions in mm (default) */
 const PDF_HEIGHT = 297;
-const PADDING = 15;
-const CONTENT_WIDTH = PDF_WIDTH - 2 * PADDING;
+
+/** Page width configurations in mm (converted from px at 96dpi) */
+type PageWidthOption = "narrow" | "medium" | "wide";
+const PAGE_WIDTH_CONFIG: Record<PageWidthOption, { width: number; padding: number }> = {
+  narrow: { width: 210, padding: 15 }, // 178mm content, A4
+  medium: { width: 260, padding: 12 }, // ~237mm content
+  wide: { width: 330, padding: 12 },   // ~305mm content
+};
+
+/** Font family mapping from document to jsPDF */
+type FontFamilyOption = "sans" | "serif" | "mono";
+const FONT_FAMILY_MAP: Record<FontFamilyOption, string> = {
+  sans: "helvetica",
+  serif: "times",
+  mono: "courier",
+};
 
 /** Font sizes in points */
 const FONT_SIZES = {
@@ -34,9 +47,19 @@ const FONT_SIZES = {
 /** Line height multiplier */
 const LINE_HEIGHT = 1.4;
 
+/** PDF export options */
+export interface PDFExportOptions {
+  pageWidth?: PageWidthOption;
+  fontFamily?: FontFamilyOption;
+}
+
 interface RenderContext {
   pdf: jsPDF;
   y: number;
+  pdfWidth: number;
+  contentWidth: number;
+  padding: number;
+  fontFamily: string;
 }
 
 /**
@@ -44,10 +67,10 @@ interface RenderContext {
  * Returns the updated y position.
  */
 const ensureSpace = (ctx: RenderContext, neededHeight: number): number => {
-  const maxY = PDF_HEIGHT - PADDING;
+  const maxY = PDF_HEIGHT - ctx.padding;
   if (ctx.y + neededHeight > maxY) {
     ctx.pdf.addPage();
-    return PADDING;
+    return ctx.padding;
   }
   return ctx.y;
 };
@@ -161,16 +184,16 @@ const renderTextBlock = (
   fontStyle: "normal" | "bold" | "italic" = "normal",
   indent: number = 0
 ): void => {
-  const { pdf } = ctx;
+  const { pdf, contentWidth, padding, fontFamily } = ctx;
   pdf.setFontSize(fontSize);
-  pdf.setFont("helvetica", fontStyle);
+  pdf.setFont(fontFamily, fontStyle);
 
   const lineHeightMm = fontSize * LINE_HEIGHT * 0.352778; // pt to mm
-  const lines = wrapText(pdf, text, CONTENT_WIDTH, indent);
+  const lines = wrapText(pdf, text, contentWidth, indent);
 
   for (const line of lines) {
     ctx.y = ensureSpace(ctx, lineHeightMm);
-    pdf.text(line, PADDING + indent, ctx.y);
+    pdf.text(line, padding + indent, ctx.y);
     ctx.y += lineHeightMm;
   }
 };
@@ -179,12 +202,12 @@ const renderTextBlock = (
  * Renders a table from a DOM table element.
  */
 const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
-  const { pdf } = ctx;
+  const { pdf, contentWidth, padding, fontFamily } = ctx;
   const rows = tableElement.querySelectorAll("tr");
   if (rows.length === 0) return;
 
   pdf.setFontSize(FONT_SIZES.small);
-  pdf.setFont("helvetica", "normal");
+  pdf.setFont(fontFamily, "normal");
 
   const lineHeightMm = FONT_SIZES.small * LINE_HEIGHT * 0.352778;
   const cellPadding = 2;
@@ -195,7 +218,7 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
   const numCols = cells.length;
   if (numCols === 0) return;
 
-  const colWidth = CONTENT_WIDTH / numCols;
+  const colWidth = contentWidth / numCols;
 
   // Render each row
   rows.forEach((row, rowIndex) => {
@@ -205,14 +228,14 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
     const isHeader = row.querySelector("th") !== null;
 
     if (isHeader) {
-      pdf.setFont("helvetica", "bold");
+      pdf.setFont(fontFamily, "bold");
     } else {
-      pdf.setFont("helvetica", "normal");
+      pdf.setFont(fontFamily, "normal");
     }
 
     rowCells.forEach((cell, colIndex) => {
       const cellText = getTextContent(cell).replace(/\s+/g, " ").trim();
-      const x = PADDING + colIndex * colWidth + cellPadding;
+      const x = padding + colIndex * colWidth + cellPadding;
 
       // Truncate text if too wide using simple character estimation
       let displayText = cellText;
@@ -231,7 +254,7 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
       // Draw cell border
       pdf.setDrawColor(200);
       pdf.rect(
-        PADDING + colIndex * colWidth,
+        padding + colIndex * colWidth,
         ctx.y - lineHeightMm + cellPadding,
         colWidth,
         lineHeightMm + cellPadding
@@ -242,9 +265,9 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
     if (rowIndex === 0 && isHeader) {
       pdf.setDrawColor(100);
       pdf.line(
-        PADDING,
+        padding,
         ctx.y + cellPadding,
-        PADDING + CONTENT_WIDTH,
+        padding + contentWidth,
         ctx.y + cellPadding
       );
     }
@@ -253,6 +276,137 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
   });
 
   ctx.y += 4; // Space after table
+};
+
+/** Pixels to mm conversion factor at 96 DPI */
+const PX_TO_MM = 0.264583;
+
+/** Max height for images to fit on a page */
+const getMaxImageHeight = (padding: number): number => PDF_HEIGHT - 2 * padding - 10;
+
+/**
+ * Gets the alignment from an image element or its parent wrapper.
+ */
+const getImageAlignment = (imgElement: HTMLImageElement): "left" | "center" | "right" => {
+  // Check data-align attribute on the image
+  const dataAlign = imgElement.getAttribute("data-align");
+  if (dataAlign === "center" || dataAlign === "right" || dataAlign === "left") {
+    return dataAlign;
+  }
+
+  // Check parent wrapper for alignment
+  const parent = imgElement.parentElement;
+  if (parent) {
+    // Check for text-align style on parent
+    const textAlign = parent.style.textAlign;
+    if (textAlign === "center" || textAlign === "right") {
+      return textAlign;
+    }
+
+    // Check for data-align on parent
+    const parentDataAlign = parent.getAttribute("data-align");
+    if (parentDataAlign === "center" || parentDataAlign === "right" || parentDataAlign === "left") {
+      return parentDataAlign;
+    }
+
+    // Check for alignment classes on parent
+    if (parent.classList.contains("text-center")) return "center";
+    if (parent.classList.contains("text-right")) return "right";
+  }
+
+  return "left";
+};
+
+/**
+ * Renders an image to PDF.
+ */
+const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => {
+  const src = imgElement.getAttribute("src");
+  if (!src) return;
+
+  const { pdf, padding, contentWidth } = ctx;
+  const maxImageHeight = getMaxImageHeight(padding);
+
+  // Get image dimensions
+  let imgWidthPx = imgElement.width || imgElement.naturalWidth || 0;
+  let imgHeightPx = imgElement.height || imgElement.naturalHeight || 0;
+
+  // Get width/height from attributes if not available
+  if (!imgWidthPx) {
+    const widthAttr = imgElement.getAttribute("width");
+    imgWidthPx = widthAttr ? parseInt(widthAttr, 10) : 200;
+  }
+  if (!imgHeightPx) {
+    const heightAttr = imgElement.getAttribute("height");
+    imgHeightPx = heightAttr ? parseInt(heightAttr, 10) : 150;
+  }
+
+  // Convert to mm
+  let imgWidthMm = imgWidthPx * PX_TO_MM;
+  let imgHeightMm = imgHeightPx * PX_TO_MM;
+
+  // Scale down if wider than content width
+  if (imgWidthMm > contentWidth) {
+    const scale = contentWidth / imgWidthMm;
+    imgWidthMm = contentWidth;
+    imgHeightMm = imgHeightMm * scale;
+  }
+
+  // Scale down if taller than max height
+  if (imgHeightMm > maxImageHeight) {
+    const scale = maxImageHeight / imgHeightMm;
+    imgHeightMm = maxImageHeight;
+    imgWidthMm = imgWidthMm * scale;
+  }
+
+  // Ensure space for image
+  ctx.y = ensureSpace(ctx, imgHeightMm + 4);
+
+  // Get alignment
+  const align = getImageAlignment(imgElement);
+
+  // Calculate X position based on alignment
+  let x: number;
+  switch (align) {
+    case "center":
+      x = padding + (contentWidth - imgWidthMm) / 2;
+      break;
+    case "right":
+      x = padding + contentWidth - imgWidthMm;
+      break;
+    case "left":
+    default:
+      x = padding;
+      break;
+  }
+
+  // Try to add image to PDF
+  try {
+    // Determine image format from src
+    let format: "JPEG" | "PNG" = "PNG";
+    if (src.toLowerCase().includes(".jpg") || src.toLowerCase().includes(".jpeg") || src.includes("data:image/jpeg")) {
+      format = "JPEG";
+    }
+
+    pdf.addImage(src, format, x, ctx.y, imgWidthMm, imgHeightMm);
+    ctx.y += imgHeightMm + 4; // Add spacing after image
+  } catch {
+    // If image loading fails (CORS, etc.), add a placeholder
+    pdf.setDrawColor(180);
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(x, ctx.y, imgWidthMm, imgHeightMm, "FD");
+
+    // Add placeholder text
+    pdf.setFontSize(FONT_SIZES.small);
+    pdf.setFont(ctx.fontFamily, "italic");
+    pdf.setTextColor(128);
+    const placeholderText = "[Image]";
+    const textWidth = pdf.getTextWidth(placeholderText);
+    pdf.text(placeholderText, x + (imgWidthMm - textWidth) / 2, ctx.y + imgHeightMm / 2);
+    pdf.setTextColor(0);
+
+    ctx.y += imgHeightMm + 4;
+  }
 };
 
 /**
@@ -264,7 +418,7 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
   // Handle page breaks
   if (element.classList.contains("page-break")) {
     ctx.pdf.addPage();
-    ctx.y = PADDING;
+    ctx.y = ctx.padding;
     return;
   }
 
@@ -354,8 +508,12 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
     case "hr":
       ctx.y = ensureSpace(ctx, 5);
       ctx.pdf.setDrawColor(200);
-      ctx.pdf.line(PADDING, ctx.y, PADDING + CONTENT_WIDTH, ctx.y);
+      ctx.pdf.line(ctx.padding, ctx.y, ctx.padding + ctx.contentWidth, ctx.y);
       ctx.y += 5;
+      break;
+
+    case "img":
+      renderImage(ctx, element as HTMLImageElement);
       break;
 
     case "div":
@@ -474,11 +632,13 @@ const sanitizeFilename = (title: string): string => {
  *
  * @param doc - The document metadata (used for filename)
  * @param documentElement - The DOM element containing the document content
+ * @param options - Optional PDF export settings (pageWidth, fontFamily)
  * @throws Error if not in a browser environment or if export fails
  */
 export const exportToPDF = async (
   doc: Document,
-  documentElement: HTMLElement
+  documentElement: HTMLElement,
+  options: PDFExportOptions = {}
 ): Promise<void> => {
   try {
     if (typeof globalThis === "undefined" || !globalThis.document) {
@@ -489,20 +649,38 @@ export const exportToPDF = async (
       throw new Error("No document content available to export.");
     }
 
-    // Create a new jsPDF instance
+    // Get page width configuration
+    const pageWidthOption = options.pageWidth || "medium";
+    const config = PAGE_WIDTH_CONFIG[pageWidthOption];
+    const pdfWidth = config.width;
+    const padding = config.padding;
+    const contentWidth = pdfWidth - 2 * padding;
+
+    // Get font family
+    const fontFamilyOption = options.fontFamily || "sans";
+    const fontFamily = FONT_FAMILY_MAP[fontFamilyOption];
+
+    // Determine page orientation based on width
+    const orientation = pdfWidth > 210 ? "landscape" : "portrait";
+
+    // Create a new jsPDF instance with custom page size
     const pdf = new jsPDF({
-      orientation: "portrait",
+      orientation,
       unit: "mm",
-      format: "a4",
+      format: pdfWidth <= 210 ? "a4" : [pdfWidth, PDF_HEIGHT],
     });
 
     // Set default font
-    pdf.setFont("helvetica", "normal");
+    pdf.setFont(fontFamily, "normal");
 
     // Initialize render context
     const ctx: RenderContext = {
       pdf,
-      y: PADDING,
+      y: padding,
+      pdfWidth,
+      contentWidth,
+      padding,
+      fontFamily,
     };
 
     // Process the document content

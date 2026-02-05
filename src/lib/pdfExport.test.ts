@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { exportToPDF } from "./pdfExport";
+import { exportToPDF, type PDFExportOptions } from "./pdfExport";
 
 import type { Document } from "@/types/document";
 
@@ -13,6 +13,9 @@ const getTextWidthMock = vi.fn().mockReturnValue(50);
 const setDrawColorMock = vi.fn();
 const lineMock = vi.fn();
 const rectMock = vi.fn();
+const addImageMock = vi.fn();
+const setFillColorMock = vi.fn();
+const setTextColorMock = vi.fn();
 
 vi.mock("jspdf", () => {
   class JsPdfMock {
@@ -25,6 +28,9 @@ vi.mock("jspdf", () => {
     setDrawColor = setDrawColorMock;
     line = lineMock;
     rect = rectMock;
+    addImage = addImageMock;
+    setFillColor = setFillColorMock;
+    setTextColor = setTextColorMock;
   }
 
   return {
@@ -45,6 +51,9 @@ describe("exportToPDF", () => {
     setDrawColorMock.mockClear();
     lineMock.mockClear();
     rectMock.mockClear();
+    addImageMock.mockClear();
+    setFillColorMock.mockClear();
+    setTextColorMock.mockClear();
   });
 
   afterEach(() => {
@@ -294,5 +303,202 @@ describe("exportToPDF", () => {
     // Verify borders were drawn for all cells (including empty ones)
     // rectMock should be called for each cell (6 cells total: 2 header + 2 + 2)
     expect(rectMock.mock.calls.length).toBe(6);
+  });
+
+  it("should use serif font when fontFamily option is serif", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Test content";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    const options: PDFExportOptions = { fontFamily: "serif" };
+    await exportToPDF(doc, container, options);
+
+    // Verify that times font was used (serif maps to times)
+    const fontCalls = setFontMock.mock.calls.map((call) => call[0]);
+    expect(fontCalls).toContain("times");
+  });
+
+  it("should use mono font when fontFamily option is mono", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Test content";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    const options: PDFExportOptions = { fontFamily: "mono" };
+    await exportToPDF(doc, container, options);
+
+    // Verify that courier font was used (mono maps to courier)
+    const fontCalls = setFontMock.mock.calls.map((call) => call[0]);
+    expect(fontCalls).toContain("courier");
+  });
+
+  it("should use helvetica font by default (sans)", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Test content";
+    container.appendChild(paragraph);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that helvetica font was used by default
+    const fontCalls = setFontMock.mock.calls.map((call) => call[0]);
+    expect(fontCalls).toContain("helvetica");
+  });
+
+  it("should handle images with data URLs", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const img = document.createElement("img");
+    // Small 1x1 transparent PNG as data URL
+    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.width = 100;
+    img.height = 100;
+    container.appendChild(img);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that addImage was called
+    expect(addImageMock).toHaveBeenCalled();
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it("should handle image with center alignment from parent style", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const wrapper = document.createElement("div");
+    wrapper.style.textAlign = "center";
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.width = 50;
+    img.height = 50;
+    wrapper.appendChild(img);
+    container.appendChild(wrapper);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that addImage was called
+    expect(addImageMock).toHaveBeenCalled();
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it("should handle image with right alignment from data-align attribute", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.setAttribute("data-align", "right");
+    img.width = 50;
+    img.height = 50;
+    container.appendChild(img);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that addImage was called
+    expect(addImageMock).toHaveBeenCalled();
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it("should render placeholder when image loading fails", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    // Make addImage throw an error to simulate image loading failure
+    addImageMock.mockImplementation(() => {
+      throw new Error("Image load failed");
+    });
+
+    container = document.createElement("div");
+    const img = document.createElement("img");
+    img.src = "https://example.com/nonexistent.jpg";
+    img.width = 100;
+    img.height = 100;
+    container.appendChild(img);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that a placeholder rectangle was drawn
+    expect(rectMock).toHaveBeenCalled();
+    // Verify that placeholder text was rendered
+    const textCalls = textMock.mock.calls.map((call) => call[0]);
+    expect(textCalls).toContain("[Image]");
+    expect(saveMock).toHaveBeenCalled();
+  });
+
+  it("should handle images inside image-wrapper divs", async () => {
+    const doc: Document = {
+      id: "doc-1",
+      title: "Test",
+      sections: [],
+      tagValues: {},
+    };
+
+    container = document.createElement("div");
+    const wrapper = document.createElement("div");
+    wrapper.className = "image-wrapper";
+    wrapper.style.textAlign = "center";
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.width = 200;
+    img.height = 150;
+    wrapper.appendChild(img);
+    container.appendChild(wrapper);
+    document.body.appendChild(container);
+
+    await exportToPDF(doc, container);
+
+    // Verify that addImage was called
+    expect(addImageMock).toHaveBeenCalled();
+    expect(saveMock).toHaveBeenCalled();
   });
 });

@@ -56,7 +56,7 @@ import {
   saveDocument,
   getSampleTemplates,
 } from "@/lib/documentStorage";
-import { exportToPDF } from "@/lib/pdfExport";
+import { exportToPDF, type PDFExportOptions } from "@/lib/pdfExport";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -531,7 +531,11 @@ export const DocumentEditor = () => {
     if (!documentContainerRef.current) return;
 
     try {
-      await exportToPDF(document, documentContainerRef.current);
+      const options: PDFExportOptions = {
+        pageWidth,
+        fontFamily,
+      };
+      await exportToPDF(document, documentContainerRef.current, options);
     } catch (error) {
       alert(
         error instanceof Error
@@ -539,7 +543,7 @@ export const DocumentEditor = () => {
           : "Failed to export PDF. Please try again."
       );
     }
-  }, [document]);
+  }, [document, pageWidth, fontFamily]);
 
   const renderNode = (
     node: TipTapNode,
