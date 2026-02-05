@@ -134,9 +134,12 @@ export const DocumentEditor = () => {
   };
 
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
-  const [draggedSectionOriginalIndex, setDraggedSectionOriginalIndex] = useState<number | null>(null);
-  const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(null);
-  const [tempSections, setTempSections] = useState<typeof document.sections | null>(null);
+  const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(
+    null
+  );
+  const [tempSections, setTempSections] = useState<
+    typeof document.sections | null
+  >(null);
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
@@ -303,9 +306,7 @@ export const DocumentEditor = () => {
   }, [document.sections.length, manageNewSectionTitle]);
 
   const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
-    const dragIndex = document.sections.findIndex((s) => s.id === sectionId);
     setDraggedSectionId(sectionId);
-    setDraggedSectionOriginalIndex(dragIndex);
     setTempSections(null);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -313,36 +314,40 @@ export const DocumentEditor = () => {
   const handleDragOver = (e: React.DragEvent, index: number): void => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    
+
     // Detect if cursor is in top or bottom half of the element
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
     const mouseY = e.clientY - rect.top;
     const isTopHalf = mouseY < rect.height / 2;
-    
+
     setDropPosition(isTopHalf ? "above" : "below");
-    
+
     // Live reordering preview
     if (draggedSectionId) {
-      const dragIndex = document.sections.findIndex((s) => s.id === draggedSectionId);
+      const dragIndex = document.sections.findIndex(
+        (s) => s.id === draggedSectionId
+      );
       if (dragIndex === -1) return;
-      
+
       let finalIndex = index;
       if (isTopHalf) {
         finalIndex = dragIndex < index ? index - 1 : index;
       } else {
         finalIndex = dragIndex < index ? index : index + 1;
       }
-      
+
       // Only update if position actually changes
       if (finalIndex !== dragIndex) {
         const newSections = [...document.sections];
         const [draggedSection] = newSections.splice(dragIndex, 1);
         newSections.splice(finalIndex, 0, draggedSection);
-        
+
         // Check if this is actually different from current tempSections
         const currentSections = tempSections || document.sections;
-        const isDifferent = !currentSections.every((s, i) => s.id === newSections[i]?.id);
-        
+        const isDifferent = !currentSections.every(
+          (s, i) => s.id === newSections[i]?.id
+        );
+
         if (isDifferent) {
           setTempSections(newSections);
         }
@@ -356,7 +361,9 @@ export const DocumentEditor = () => {
     e.preventDefault();
     if (!draggedSectionId || !dropPosition || !tempSections) return;
 
-    const dragIndex = document.sections.findIndex((s) => s.id === draggedSectionId);
+    const dragIndex = document.sections.findIndex(
+      (s) => s.id === draggedSectionId
+    );
     if (dragIndex === -1) {
       setDraggedSectionId(null);
       setDropPosition(null);
@@ -381,7 +388,6 @@ export const DocumentEditor = () => {
 
   const handleDragEnd = (): void => {
     setDraggedSectionId(null);
-    setDraggedSectionOriginalIndex(null);
     setDropPosition(null);
     setTempSections(null);
   };
@@ -1232,39 +1238,41 @@ export const DocumentEditor = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              {(tempSections || document.sections).map((section, sectionIndex) => (
-                <div
-                  key={section.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, section.id)}
-                  onDragOver={(e) => handleDragOver(e, sectionIndex)}
-                  onDrop={(e) => handleDrop(e)}
-                  onDragEnd={handleDragEnd}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
-                    "transition-all duration-200 ease-out",
-                    draggedSectionId === section.id && "opacity-40 scale-95"
-                  )}
-                >
-                  <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">
-                      {section.title}
-                    </div>
-                  </div>
-
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => handleRemoveSection(section.id)}
-                    aria-label="Remove section"
-                    title="Remove"
-                    className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
+              {(tempSections || document.sections).map(
+                (section, sectionIndex) => (
+                  <div
+                    key={section.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, section.id)}
+                    onDragOver={(e) => handleDragOver(e, sectionIndex)}
+                    onDrop={(e) => handleDrop(e)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
+                      "transition-all duration-200 ease-out",
+                      draggedSectionId === section.id && "opacity-40 scale-95"
+                    )}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ))}
+                    <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {section.title}
+                      </div>
+                    </div>
+
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveSection(section.id)}
+                      aria-label="Remove section"
+                      title="Remove"
+                      className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
