@@ -130,7 +130,7 @@ export const createTagHighlightExtension = (tags: TagItem[]) => {
               const decorations: Decoration[] = [];
 
               // Only apply decorations if document changed
-              if (!tr.docChanged && decorationSet.size > 0) {
+              if (!tr.docChanged) {
                 return decorationSet;
               }
 
