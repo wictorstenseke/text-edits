@@ -1,6 +1,5 @@
-import { mergeAttributes } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { NodeSelection } from "@tiptap/pm/state";
+import { mergeAttributes, type CommandProps } from "@tiptap/core";
+import { Plugin, PluginKey, NodeSelection } from "@tiptap/pm/state";
 import { ResizableImage } from "tiptap-extension-resizable-image";
 
 declare module "@tiptap/core" {
@@ -37,7 +36,7 @@ export const ImageResizeWithAlign = ResizableImage.extend({
 
   addProseMirrorPlugins() {
     const parentPlugins = this.parent?.() || [];
-    
+
     return [
       ...parentPlugins,
       new Plugin({
@@ -50,18 +49,21 @@ export const ImageResizeWithAlign = ResizableImage.extend({
                 const dom = view.nodeDOM(pos);
                 if (dom instanceof HTMLElement) {
                   const align = node.attrs.align || "left";
-                  
+
                   // Find the wrapper created by ResizableImage
-                  const wrapper = dom.closest("[data-node-view-wrapper]") || dom;
+                  const wrapper =
+                    dom.closest("[data-node-view-wrapper]") || dom;
                   if (wrapper instanceof HTMLElement) {
                     wrapper.setAttribute("data-align", align);
                     // Apply text-align directly for immediate visual feedback
                     wrapper.style.textAlign = align;
                     wrapper.style.display = "block";
                   }
-                  
+
                   // Also check for img tag directly and apply to its parent
-                  const img = dom.querySelector("img") || (dom.tagName === "IMG" ? dom : null);
+                  const img =
+                    dom.querySelector("img") ||
+                    (dom.tagName === "IMG" ? dom : null);
                   if (img && img.parentElement) {
                     img.parentElement.style.textAlign = align;
                   }
@@ -77,32 +79,41 @@ export const ImageResizeWithAlign = ResizableImage.extend({
           // Check if any transaction updated a resizableImage node's attributes (width/height change from resize)
           const hasImageUpdate = transactions.some((tr) => {
             let hasUpdate = false;
-            tr.docChanged && tr.steps.forEach((step: any) => {
-              if (step.jsonID === "setNodeMarkup" || step.jsonID === "replace") {
-                const nodePos = step.pos;
-                if (nodePos !== undefined) {
-                  const node = tr.doc.nodeAt(nodePos);
-                  if (node && node.type.name === "resizableImage") {
-                    hasUpdate = true;
+            if (tr.docChanged) {
+              tr.steps.forEach((step) => {
+                const typedStep = step as { jsonID?: string; pos?: number };
+                if (
+                  typedStep.jsonID === "setNodeMarkup" ||
+                  typedStep.jsonID === "replace"
+                ) {
+                  const nodePos = typedStep.pos;
+                  if (typeof nodePos === "number") {
+                    const node = tr.doc.nodeAt(nodePos);
+                    if (node && node.type.name === "resizableImage") {
+                      hasUpdate = true;
+                    }
                   }
                 }
-              }
-            });
+              });
+            }
             return hasUpdate;
           });
 
           // If an image was updated and selection changed, restore selection
-          if (hasImageUpdate && oldState.selection.from !== newState.selection.from) {
+          if (
+            hasImageUpdate &&
+            oldState.selection.from !== newState.selection.from
+          ) {
             const { from } = oldState.selection;
             const node = newState.doc.nodeAt(from);
-            
+
             if (node && node.type.name === "resizableImage") {
               const tr = newState.tr;
               tr.setSelection(NodeSelection.create(newState.doc, from));
               return tr;
             }
           }
-          
+
           return null;
         },
       }),
@@ -124,7 +135,8 @@ export const ImageResizeWithAlign = ResizableImage.extend({
             width: element.getAttribute("width"),
             height: element.getAttribute("height"),
             align: wrapper?.style.textAlign || "left",
-            "data-keep-ratio": element.getAttribute("data-keep-ratio") || "true",
+            "data-keep-ratio":
+              element.getAttribute("data-keep-ratio") || "true",
           };
         },
       },
@@ -140,7 +152,8 @@ export const ImageResizeWithAlign = ResizableImage.extend({
             width: element.getAttribute("width"),
             height: element.getAttribute("height"),
             align: element.getAttribute("data-align") || "left",
-            "data-keep-ratio": element.getAttribute("data-keep-ratio") || "true",
+            "data-keep-ratio":
+              element.getAttribute("data-keep-ratio") || "true",
           };
         },
       },
@@ -148,7 +161,8 @@ export const ImageResizeWithAlign = ResizableImage.extend({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const align = HTMLAttributes["data-align"] || HTMLAttributes.align || "left";
+    const align =
+      HTMLAttributes["data-align"] || HTMLAttributes.align || "left";
     delete HTMLAttributes["data-align"];
 
     return [
@@ -166,10 +180,10 @@ export const ImageResizeWithAlign = ResizableImage.extend({
       ...this.parent?.(),
       setImageAlign:
         (align: "left" | "center" | "right") =>
-        ({ state, chain }: { state: any; chain: any }) => {
+        ({ state, chain }: CommandProps) => {
           // Get current selection position
           const { from } = state.selection;
-          
+
           // Update attributes and maintain selection
           return chain()
             .updateAttributes(this.name, { align })
