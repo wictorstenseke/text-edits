@@ -12,13 +12,13 @@ import {
   Plus,
   Minus,
   Trash2,
-  ChevronUp,
-  ChevronDown,
   FileText,
   Tag as TagIcon,
   PlusCircle,
   ArrowUpFromLine,
   RotateCcw,
+  Type,
+  GripVertical,
 } from "lucide-react";
 
 import { InlineSectionEditor, type TagItem } from "@/components/editor";
@@ -32,6 +32,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -96,6 +105,37 @@ export const DocumentEditor = () => {
     "medium"
   );
   const [isTagPanelOpen, setIsTagPanelOpen] = useState(false);
+  const [fontFamily, setFontFamily] = useState<"sans" | "serif" | "mono">(
+    () => {
+      const saved = localStorage.getItem("documentFontFamily") as
+        | "sans"
+        | "serif"
+        | "mono"
+        | null;
+      return saved && ["sans", "serif", "mono"].includes(saved)
+        ? saved
+        : "sans";
+    }
+  );
+
+  const fontFamilyOptions = useMemo(
+    () => [
+      { value: "sans" as const, label: "Sans-serif" },
+      { value: "serif" as const, label: "Serif" },
+      { value: "mono" as const, label: "Monospace" },
+    ],
+    []
+  );
+
+  const handleFontFamilyChange = (value: string): void => {
+    const newFont = value as "sans" | "serif" | "mono";
+    setFontFamily(newFont);
+    localStorage.setItem("documentFontFamily", newFont);
+  };
+
+  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(null);
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
@@ -261,31 +301,76 @@ export const DocumentEditor = () => {
     setSelectedSectionId(newSection.id);
   }, [document.sections.length, manageNewSectionTitle]);
 
-  const handleReorderSection = (
-    sectionId: string,
-    direction: "up" | "down"
-  ) => {
-    const currentIndex = document.sections.findIndex((s) => s.id === sectionId);
-    if (currentIndex === -1) return;
+  const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
+    setDraggedSectionId(sectionId);
+    e.dataTransfer.effectAllowed = "move";
+  };
 
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= document.sections.length) return;
+  const handleDragOver = (e: React.DragEvent, index: number): void => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    
+    // Detect if cursor is in top or bottom half of the element
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const mouseY = e.clientY - rect.top;
+    const isTopHalf = mouseY < rect.height / 2;
+    
+    setDragOverIndex(index);
+    setDropPosition(isTopHalf ? "above" : "below");
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number): void => {
+    e.preventDefault();
+    if (!draggedSectionId || !dropPosition) return;
+
+    const dragIndex = document.sections.findIndex((s) => s.id === draggedSectionId);
+    if (dragIndex === -1) {
+      setDraggedSectionId(null);
+      setDragOverIndex(null);
+      setDropPosition(null);
+      return;
+    }
+
+    // Calculate final index based on drop position and drag direction
+    let finalIndex = dropIndex;
+    if (dropPosition === "below") {
+      finalIndex = dragIndex < dropIndex ? dropIndex : dropIndex + 1;
+    } else {
+      // dropPosition === "above"
+      finalIndex = dragIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    }
+
+    // Skip if no actual movement
+    if (finalIndex === dragIndex) {
+      setDraggedSectionId(null);
+      setDragOverIndex(null);
+      setDropPosition(null);
+      return;
+    }
 
     const newSections = [...document.sections];
-    [newSections[currentIndex], newSections[newIndex]] = [
-      newSections[newIndex],
-      newSections[currentIndex],
-    ];
+    const [draggedSection] = newSections.splice(dragIndex, 1);
+    newSections.splice(finalIndex, 0, draggedSection);
 
-    const reorderedSections = newSections.map((s, index) => ({
+    const reorderedSections = newSections.map((s, i) => ({
       ...s,
-      order: index,
+      order: i,
     }));
 
     setDocument((prev) => ({
       ...prev,
       sections: reorderedSections,
     }));
+
+    setDraggedSectionId(null);
+    setDragOverIndex(null);
+    setDropPosition(null);
+  };
+
+  const handleDragEnd = (): void => {
+    setDraggedSectionId(null);
+    setDragOverIndex(null);
+    setDropPosition(null);
   };
 
   const handleCreateFromTemplate = useCallback((template: Template) => {
@@ -468,10 +553,10 @@ export const DocumentEditor = () => {
         const level = (node.attrs?.level as number) || 1;
         const className =
           level === 1
-            ? "text-2xl font-bold mb-3"
+            ? "text-xl font-semibold mb-3"
             : level === 2
-              ? "text-xl font-bold mb-2"
-              : "text-lg font-semibold mb-2";
+              ? "text-lg font-semibold mb-2"
+              : "text-base font-semibold mb-2";
 
         if (level === 1) {
           return <h1 className={className}>{children}</h1>;
@@ -758,7 +843,7 @@ export const DocumentEditor = () => {
                 onChange={(e) =>
                   setDocument((prev) => ({ ...prev, title: e.target.value }))
                 }
-                className="text-lg font-semibold border-0 px-0 focus-visible:ring-0"
+                className="text-base font-semibold border-0 px-0 focus-visible:ring-0"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -795,6 +880,40 @@ export const DocumentEditor = () => {
                   <TooltipContent>Increase width</TooltipContent>
                 </Tooltip>
               </div>
+              <Separator orientation="vertical" className="mx-2 h-8" />
+              <Tooltip>
+                <DropdownMenu>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Change font style"
+                      >
+                        <Type className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Change font style</TooltipContent>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Font Style</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup
+                      value={fontFamily}
+                      onValueChange={handleFontFamilyChange}
+                    >
+                      {fontFamilyOptions.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </Tooltip>
               <Separator orientation="vertical" className="mx-2 h-8" />
               <div className="flex items-center gap-2">
                 <Tooltip>
@@ -912,7 +1031,7 @@ export const DocumentEditor = () => {
               pageWidth === "wide" && "max-w-6xl"
             )}
           >
-            <h1 className="text-3xl font-bold mb-6">{document.title}</h1>
+            <h1 className="text-3xl font-semibold mb-6">{document.title}</h1>
             {document.sections.map((section) => (
               <div
                 key={section.id}
@@ -957,17 +1076,30 @@ export const DocumentEditor = () => {
                       onSave={handleSaveInlineEdit}
                       onCancel={handleCancelInlineEdit}
                       className="mb-3"
+                      fontFamily={fontFamily}
                     />
                   </>
                 ) : (
                   <>
-                    <h2 className="text-xl font-semibold mb-3">
+                    <h2
+                      className={cn(
+                        "text-lg font-semibold mb-3",
+                        fontFamily === "serif" && "font-serif",
+                        fontFamily === "mono" && "font-mono"
+                      )}
+                    >
                       {section.title}
                     </h2>
                   </>
                 )}
                 {editingSectionId === section.id ? null : (
-                  <div className="prose prose-sm max-w-none">
+                  <div
+                    className={cn(
+                      "prose prose-sm max-w-none",
+                      fontFamily === "serif" && "prose-serif",
+                      fontFamily === "mono" && "prose-mono"
+                    )}
+                  >
                     {renderContent(section.content, document.tagValues)}
                     {selectedSectionId === section.id && !editingSectionId && (
                       <div className="mt-2 text-xs text-muted-foreground">
@@ -1039,6 +1171,16 @@ export const DocumentEditor = () => {
                   </div>
                 ))}
               </div>
+              {Object.keys(document.tagValues).length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setNewTagDialogOpen(true)}
+                  className="w-full mt-3"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Tag
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -1080,48 +1222,35 @@ export const DocumentEditor = () => {
               {document.sections.map((section, sectionIndex) => (
                 <div
                   key={section.id}
-                  className="flex items-center justify-between gap-2 rounded-md border px-2 py-1.5"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, section.id)}
+                  onDragOver={(e) => handleDragOver(e, sectionIndex)}
+                  onDrop={(e) => handleDrop(e, sectionIndex)}
+                  onDragEnd={handleDragEnd}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md border px-2 py-1.5 transition-all cursor-move",
+                    draggedSectionId === section.id && "opacity-50 bg-accent/20",
+                    dragOverIndex === sectionIndex && dropPosition === "above" && "border-t-4 border-primary",
+                    dragOverIndex === sectionIndex && dropPosition === "below" && "border-b-4 border-primary"
+                  )}
                 >
+                  <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">
                       {section.title}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => handleReorderSection(section.id, "up")}
-                      disabled={sectionIndex === 0}
-                      aria-label="Move section up"
-                      title="Move up"
-                      className="h-7 w-7"
-                    >
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => handleReorderSection(section.id, "down")}
-                      disabled={sectionIndex === document.sections.length - 1}
-                      aria-label="Move section down"
-                      title="Move down"
-                      className="h-7 w-7"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => handleRemoveSection(section.id)}
-                      aria-label="Remove section"
-                      title="Remove"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => handleRemoveSection(section.id)}
+                    aria-label="Remove section"
+                    title="Remove"
+                    className="h-7 w-7 text-destructive hover:text-destructive flex-shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               ))}
             </div>

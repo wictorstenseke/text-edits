@@ -61,6 +61,7 @@ interface InlineSectionEditorProps {
   onSave: (content: string, title?: string) => void;
   onCancel: () => void;
   className?: string;
+  fontFamily?: "sans" | "serif" | "mono";
 }
 
 const TABLE_PRESETS: { rows: number; cols: number; label: string }[] = [
@@ -104,6 +105,7 @@ export const InlineSectionEditor = ({
   onSave,
   onCancel,
   className,
+  fontFamily = "sans",
 }: InlineSectionEditorProps) => {
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [tableRows, setTableRows] = useState(3);
@@ -133,8 +135,11 @@ export const InlineSectionEditor = ({
     content: content ? JSON.parse(content) : "",
     editorProps: {
       attributes: {
-        class:
+        class: cn(
           "tiptap prose prose-sm max-w-none focus:outline-none min-h-[100px] p-2",
+          fontFamily === "serif" && "prose-serif",
+          fontFamily === "mono" && "prose-mono"
+        ),
       },
     },
     autofocus: true,
@@ -456,13 +461,24 @@ export const InlineSectionEditor = ({
           </div>
         </div>
       )}
-      <Input
-        value={editableTitle}
-        onChange={(e) => setEditableTitle(e.target.value)}
-        className="text-xl font-semibold mb-3 border-0 px-0 focus-visible:ring-0"
-        placeholder="Section title"
-        aria-label="Section title"
-      />
+      <div className="mb-4">
+        <Input
+          id="inline-section-title"
+          value={editableTitle}
+          onChange={(e) => setEditableTitle(e.target.value)}
+          className={cn(
+            "h-11 text-2xl font-semibold border-ring shadow-sm focus-visible:ring-ring focus-visible:ring-2",
+            fontFamily === "serif" && "font-serif",
+            fontFamily === "mono" && "font-mono"
+          )}
+          placeholder="Section title"
+          aria-label="Section title"
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Format tools do not affect this title; standard styling is always
+          applied.
+        </p>
+      </div>
       <EditorContent editor={editor} />
       <Dialog open={tableDialogOpen} onOpenChange={setTableDialogOpen}>
         <DialogContent className="sm:max-w-xs">

@@ -201,6 +201,9 @@
     @apply font-sans bg-background text-foreground antialiased;
     letter-spacing: var(--tracking-normal);
   }
+  strong {
+    font-weight: 600;
+  }
 }
 
 /* TipTap Editor Styles */
@@ -217,21 +220,25 @@
 }
 
 .tiptap h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   margin: 0.75rem 0 0.5rem;
 }
 
 .tiptap h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 600;
   margin: 0.5rem 0 0.5rem;
 }
 
 .tiptap h3 {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0.5rem 0 0.5rem;
+}
+
+.tiptap strong {
+  font-weight: 600;
 }
 
 .tiptap table {
@@ -258,7 +265,7 @@
 }
 
 .tiptap table th {
-  font-weight: bold;
+  font-weight: 600;
   text-align: left;
   background-color: oklch(0.97 0 0);
 }
@@ -325,4 +332,21 @@
 /* Financial Report Block in TipTap */
 .tiptap .financial-report-block {
   margin: 1rem 0;
+}
+
+/* Font family variants */
+.prose-serif {
+  font-family: var(--font-serif);
+}
+
+.prose-serif .tiptap {
+  font-family: var(--font-serif);
+}
+
+.prose-mono {
+  font-family: var(--font-mono);
+}
+
+.prose-mono .tiptap {
+  font-family: var(--font-mono);
 }
