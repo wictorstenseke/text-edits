@@ -57,6 +57,17 @@ import {
   getSampleTemplates,
 } from "@/lib/documentStorage";
 import { exportToPDF, type PDFExportOptions } from "@/lib/pdfExport";
+import {
+  addChildSection,
+  addParentSection,
+  buildSectionGroups,
+  getFirstSectionId,
+  isHierarchyDropAllowed,
+  removeSectionWithChildren,
+  reorderSectionsByDrag,
+  type SectionDragItem,
+  type SectionKind,
+} from "@/lib/sectionHierarchy";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -83,16 +94,22 @@ interface TipTapNode {
 export const DocumentEditor = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const documentContainerRef = useRef<HTMLDivElement>(null);
-  const [document, setDocument] = useState<Document>(loadDocument());
+  const [document, setDocument] = useState<Document>(() => loadDocument());
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
-    document.sections[0]?.id || null
+    getFirstSectionId(document.sections)
   );
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [newSectionDialogOpen, setNewSectionDialogOpen] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [manageSectionsDialogOpen, setManageSectionsDialogOpen] =
     useState(false);
-  const [manageNewSectionTitle, setManageNewSectionTitle] = useState("");
+  const [manageNewParentSectionTitle, setManageNewParentSectionTitle] =
+    useState("");
+  const [manageNewChildSectionTitle, setManageNewChildSectionTitle] =
+    useState("");
+  const [manageChildParentId, setManageChildParentId] = useState<string | null>(
+    null
+  );
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [templates] = useState<Template[]>(getSampleTemplates());
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -105,6 +122,8 @@ export const DocumentEditor = () => {
   const [pendingDeleteSection, setPendingDeleteSection] = useState<{
     id: string;
     title: string;
+    kind: SectionKind;
+    childCount?: number;
   } | null>(null);
   const [pageWidth, setPageWidth] = useState<"narrow" | "medium" | "wide">(
     "medium"
@@ -138,17 +157,29 @@ export const DocumentEditor = () => {
     localStorage.setItem("documentFontFamily", newFont);
   };
 
-  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [draggedSection, setDraggedSection] = useState<SectionDragItem | null>(
+    null
+  );
+  const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(
+    null
+  );
   const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(
     null
   );
-  const [tempSections, setTempSections] = useState<
-    typeof document.sections | null
-  >(null);
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
     []
+  );
+
+  const sectionGroups = useMemo(
+    () => buildSectionGroups(document.sections),
+    [document.sections]
+  );
+
+  const parentSections = useMemo(
+    () => sectionGroups.map((group) => group.parent),
+    [sectionGroups]
   );
 
   const pageWidthIndex = useMemo(
@@ -189,6 +220,39 @@ export const DocumentEditor = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [document]);
+
+  const sectionIdSet = useMemo(
+    () =>
+      new Set(
+        sectionGroups.flatMap((group) => [
+          group.parent.id,
+          ...group.children.map((child) => child.id),
+        ])
+      ),
+    [sectionGroups]
+  );
+
+  const effectiveSelectedSectionId = useMemo(() => {
+    if (selectedSectionId && sectionIdSet.has(selectedSectionId)) {
+      return selectedSectionId;
+    }
+    return getFirstSectionId(document.sections);
+  }, [document.sections, sectionIdSet, selectedSectionId]);
+
+  const effectiveManageChildParentId = useMemo(() => {
+    if (parentSections.length === 0) {
+      return null;
+    }
+
+    if (
+      manageChildParentId &&
+      parentSections.some((section) => section.id === manageChildParentId)
+    ) {
+      return manageChildParentId;
+    }
+
+    return parentSections[0].id;
+  }, [manageChildParentId, parentSections]);
 
   const handleSectionClick = (sectionId: string, scrollToSection = false) => {
     // If we're editing a different section, don't allow switching without saving
@@ -266,30 +330,25 @@ export const DocumentEditor = () => {
   const handleAddSection = () => {
     if (!newSectionTitle.trim()) return;
 
-    const newSection: Section = {
-      id: `section-${Date.now()}`,
-      title: newSectionTitle,
-      order: document.sections.length,
-      content: JSON.stringify({
-        type: "doc",
-        content: [{ type: "paragraph" }],
-      }),
-    };
+    const { sections, createdSection } = addParentSection(
+      document.sections,
+      newSectionTitle.trim()
+    );
 
     setDocument((prev) => ({
       ...prev,
-      sections: [...prev.sections, newSection],
+      sections,
     }));
 
     setNewSectionTitle("");
     setNewSectionDialogOpen(false);
-    setSelectedSectionId(newSection.id);
+    setSelectedSectionId(createdSection.id);
   };
 
   const handleResetDocument = useCallback(() => {
     const resetDocument = getSampleDocument();
     setDocument(resetDocument);
-    setSelectedSectionId(resetDocument.sections[0]?.id || null);
+    setSelectedSectionId(getFirstSectionId(resetDocument.sections));
     setEditingSectionId(null);
     setResetDialogOpen(false);
   }, [
@@ -301,63 +360,107 @@ export const DocumentEditor = () => {
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
-      const updatedSections = document.sections
-        .filter((s) => s.id !== sectionId)
-        .map((s, index) => ({ ...s, order: index }));
+      const updatedSections = removeSectionWithChildren(
+        document.sections,
+        sectionId
+      );
 
       setDocument((prev) => ({
         ...prev,
         sections: updatedSections,
       }));
 
-      if (selectedSectionId === sectionId) {
-        setSelectedSectionId(updatedSections[0]?.id || null);
+      if (
+        selectedSectionId &&
+        !updatedSections.some((section) => section.id === selectedSectionId)
+      ) {
+        setSelectedSectionId(getFirstSectionId(updatedSections));
       }
 
-      if (editingSectionId === sectionId) {
+      if (
+        editingSectionId &&
+        !updatedSections.some((section) => section.id === editingSectionId)
+      ) {
         setEditingSectionId(null);
       }
     },
     [document.sections, editingSectionId, selectedSectionId]
   );
 
-  const handleAddSectionFromManage = useCallback(() => {
-    if (!manageNewSectionTitle.trim()) return;
+  const handleAddParentSectionFromManage = useCallback(() => {
+    if (!manageNewParentSectionTitle.trim()) return;
 
-    const newSection: Section = {
-      id: `section-${Date.now()}`,
-      title: manageNewSectionTitle.trim(),
-      order: document.sections.length,
-      content: JSON.stringify({
-        type: "doc",
-        content: [{ type: "paragraph" }],
-      }),
-    };
+    const { sections, createdSection } = addParentSection(
+      document.sections,
+      manageNewParentSectionTitle.trim()
+    );
 
     setDocument((prev) => ({
       ...prev,
-      sections: [...prev.sections, newSection],
+      sections,
     }));
 
-    setManageNewSectionTitle("");
-    setSelectedSectionId(newSection.id);
+    setManageNewParentSectionTitle("");
+    setSelectedSectionId(createdSection.id);
   }, [
-    document.sections.length,
-    manageNewSectionTitle,
+    document.sections,
+    manageNewParentSectionTitle,
     setDocument,
-    setManageNewSectionTitle,
+    setManageNewParentSectionTitle,
     setSelectedSectionId,
   ]);
 
-  const handleDragStart = (e: React.DragEvent, sectionId: string): void => {
-    setDraggedSectionId(sectionId);
-    setTempSections(null);
+  const handleAddChildSectionFromManage = useCallback(() => {
+    if (!manageNewChildSectionTitle.trim() || !effectiveManageChildParentId) {
+      return;
+    }
+
+    const { sections, createdSection } = addChildSection(
+      document.sections,
+      effectiveManageChildParentId,
+      manageNewChildSectionTitle.trim()
+    );
+
+    if (!createdSection) return;
+
+    setDocument((prev) => ({
+      ...prev,
+      sections,
+    }));
+
+    setManageNewChildSectionTitle("");
+    setSelectedSectionId(createdSection.id);
+  }, [
+    document.sections,
+    effectiveManageChildParentId,
+    manageNewChildSectionTitle,
+    setDocument,
+    setManageNewChildSectionTitle,
+    setSelectedSectionId,
+  ]);
+
+  const handleDragStart = (
+    e: React.DragEvent,
+    dragItem: SectionDragItem
+  ): void => {
+    setDraggedSection(dragItem);
+    setDragOverSectionId(null);
+    setDropPosition(null);
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number): void => {
+  const handleDragOver = (
+    e: React.DragEvent,
+    target: SectionDragItem
+  ): void => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+
+    if (!draggedSection || !isHierarchyDropAllowed(draggedSection, target)) {
+      setDragOverSectionId(null);
+      setDropPosition(null);
+      return;
+    }
 
     // Detect if cursor is in top or bottom half of the element
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -365,75 +468,43 @@ export const DocumentEditor = () => {
     const isTopHalf = mouseY < rect.height / 2;
 
     setDropPosition(isTopHalf ? "above" : "below");
-
-    // Live reordering preview
-    if (draggedSectionId) {
-      const dragIndex = document.sections.findIndex(
-        (s) => s.id === draggedSectionId
-      );
-      if (dragIndex === -1) return;
-
-      let finalIndex = index;
-      if (isTopHalf) {
-        finalIndex = dragIndex < index ? index - 1 : index;
-      } else {
-        finalIndex = dragIndex < index ? index : index + 1;
-      }
-
-      // Only update if position actually changes
-      if (finalIndex !== dragIndex) {
-        const newSections = [...document.sections];
-        const [draggedSection] = newSections.splice(dragIndex, 1);
-        newSections.splice(finalIndex, 0, draggedSection);
-
-        // Check if this is actually different from current tempSections
-        const currentSections = tempSections || document.sections;
-        const isDifferent = !currentSections.every(
-          (s, i) => s.id === newSections[i]?.id
-        );
-
-        if (isDifferent) {
-          setTempSections(newSections);
-        }
-      } else if (tempSections) {
-        setTempSections(null);
-      }
-    }
+    setDragOverSectionId(target.sectionId);
   };
 
-  const handleDrop = (e: React.DragEvent): void => {
+  const handleDrop = (
+    e: React.DragEvent,
+    target: SectionDragItem
+  ): void => {
     e.preventDefault();
-    if (!draggedSectionId || !dropPosition || !tempSections) return;
-
-    const dragIndex = document.sections.findIndex(
-      (s) => s.id === draggedSectionId
-    );
-    if (dragIndex === -1) {
-      setDraggedSectionId(null);
-      setDropPosition(null);
-      setTempSections(null);
+    if (
+      !draggedSection ||
+      !dropPosition ||
+      !isHierarchyDropAllowed(draggedSection, target)
+    ) {
       return;
     }
 
-    const reorderedSections = tempSections.map((s, i) => ({
-      ...s,
-      order: i,
-    }));
+    const reorderedSections = reorderSectionsByDrag(
+      document.sections,
+      draggedSection,
+      target,
+      dropPosition
+    );
 
     setDocument((prev) => ({
       ...prev,
       sections: reorderedSections,
     }));
 
-    setDraggedSectionId(null);
+    setDraggedSection(null);
+    setDragOverSectionId(null);
     setDropPosition(null);
-    setTempSections(null);
   };
 
   const handleDragEnd = (): void => {
-    setDraggedSectionId(null);
+    setDraggedSection(null);
+    setDragOverSectionId(null);
     setDropPosition(null);
-    setTempSections(null);
   };
 
   const handleCreateFromTemplate = useCallback(
@@ -443,6 +514,7 @@ export const DocumentEditor = () => {
         id: `section-${timestamp}-${index}`,
         title: ts.title,
         order: index,
+        parentId: null,
         content:
           ts.content ||
           JSON.stringify({
@@ -458,7 +530,7 @@ export const DocumentEditor = () => {
         tagValues: {},
       });
 
-      setSelectedSectionId(newSections[0]?.id || null);
+      setSelectedSectionId(getFirstSectionId(newSections));
       setTemplateDialogOpen(false);
     },
     [setDocument, setSelectedSectionId, setTemplateDialogOpen]
@@ -949,6 +1021,89 @@ export const DocumentEditor = () => {
     }
   };
 
+  const renderSectionBlock = (
+    section: Section,
+    kind: SectionKind
+  ): React.ReactNode => {
+    const isParent = kind === "parent";
+    const isEditing = editingSectionId === section.id;
+    const isSelected = effectiveSelectedSectionId === section.id;
+
+    const headingClasses = cn(
+      isParent ? "text-2xl font-bold mb-3" : "text-lg font-semibold mb-3",
+      fontFamily === "serif" && "font-serif",
+      fontFamily === "mono" && "font-mono"
+    );
+
+    return (
+      <div
+        data-section-id={section.id}
+        className={cn(
+          "rounded-lg transition-all",
+          isParent ? "mb-6 p-5 border" : "mb-4 p-4 border",
+          isEditing
+            ? "ring-2 ring-primary bg-white border-primary/20"
+            : isSelected
+              ? "ring-2 ring-primary/50 bg-accent/40 border-primary/20 cursor-pointer"
+              : "hover:bg-accent/40 border-border/60 cursor-pointer"
+        )}
+        onClick={() => {
+          if (editingSectionId !== section.id) {
+            handleSectionClick(section.id);
+          }
+        }}
+        onDoubleClick={() => {
+          if (editingSectionId && editingSectionId !== section.id) {
+            setEditingSectionId(null);
+          }
+          if (editingSectionId !== section.id) {
+            handleStartEditing(section.id);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !editingSectionId) {
+            handleStartEditing(section.id);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+      >
+        {isEditing ? (
+          <InlineSectionEditor
+            content={section.content}
+            tags={tags}
+            title={section.title}
+            onSave={handleSaveInlineEdit}
+            onCancel={handleCancelInlineEdit}
+            className="mb-3"
+            fontFamily={fontFamily}
+          />
+        ) : isParent ? (
+          <h2 className={headingClasses}>{section.title}</h2>
+        ) : (
+          <h3 className={headingClasses}>{section.title}</h3>
+        )}
+
+        {!isEditing && (
+          <div
+            className={cn(
+              "prose prose-sm max-w-none",
+              fontFamily === "serif" && "prose-serif",
+              fontFamily === "mono" && "prose-mono"
+            )}
+          >
+            {renderContent(section.content, document.tagValues)}
+            {isSelected && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                Double-click to edit inline
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
@@ -1100,30 +1255,61 @@ export const DocumentEditor = () => {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-1">
-              {document.sections.map((section) => (
-                <div
-                  key={section.id}
-                  className={cn(
-                    "group rounded-lg p-2 cursor-pointer transition-colors border text-foreground",
-                    "hover:bg-accent/60 active:bg-accent/70",
-                    selectedSectionId === section.id
-                      ? "bg-primary/15 border-primary/40 text-foreground"
-                      : "border-transparent hover:border-accent/50"
+            <div className="space-y-2">
+              {sectionGroups.map((group) => (
+                <div key={group.parent.id} className="space-y-1">
+                  <div
+                    className={cn(
+                      "group rounded-lg p-2 cursor-pointer transition-colors border text-foreground",
+                      "hover:bg-accent/60 active:bg-accent/70",
+                      effectiveSelectedSectionId === group.parent.id
+                        ? "bg-primary/15 border-primary/40 text-foreground"
+                        : "border-transparent hover:border-accent/50"
+                    )}
+                    onClick={() => handleSectionClick(group.parent.id, true)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSectionClick(group.parent.id, true);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="block text-xs font-semibold leading-tight text-foreground truncate">
+                      {group.parent.title}
+                    </span>
+                  </div>
+
+                  {group.children.length > 0 && (
+                    <div className="ml-3 border-l border-border/70 pl-2 space-y-1">
+                      {group.children.map((child) => (
+                        <div
+                          key={child.id}
+                          className={cn(
+                            "group rounded-md p-2 cursor-pointer transition-colors border text-foreground",
+                            "hover:bg-accent/50 active:bg-accent/60",
+                            effectiveSelectedSectionId === child.id
+                              ? "bg-primary/10 border-primary/35 text-foreground"
+                              : "border-transparent hover:border-accent/50"
+                          )}
+                          onClick={() => handleSectionClick(child.id, true)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleSectionClick(child.id, true);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span className="block text-xs font-medium leading-tight text-foreground truncate">
+                            {child.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  onClick={() => handleSectionClick(section.id, true)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleSectionClick(section.id, true);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="block text-xs font-medium leading-tight text-foreground truncate">
-                    {section.title}
-                  </span>
                 </div>
               ))}
             </div>
@@ -1154,80 +1340,16 @@ export const DocumentEditor = () => {
             )}
           >
             <h1 className="text-3xl font-semibold mb-6">{document.title}</h1>
-            {document.sections.map((section) => (
-              <div
-                key={section.id}
-                data-section-id={section.id}
-                className={cn(
-                  "mb-8 p-4 rounded-lg transition-all",
-                  editingSectionId === section.id
-                    ? "ring-2 ring-primary bg-white"
-                    : selectedSectionId === section.id
-                      ? "ring-2 ring-primary/50 bg-accent/50 cursor-pointer"
-                      : "hover:bg-accent/50 cursor-pointer"
-                )}
-                onClick={() => {
-                  if (editingSectionId !== section.id) {
-                    handleSectionClick(section.id);
-                  }
-                }}
-                onDoubleClick={() => {
-                  // If another section is being edited, close it first
-                  if (editingSectionId && editingSectionId !== section.id) {
-                    setEditingSectionId(null);
-                  }
-                  // Then start editing the clicked section
-                  if (editingSectionId !== section.id) {
-                    handleStartEditing(section.id);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !editingSectionId) {
-                    handleStartEditing(section.id);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                {editingSectionId === section.id ? (
-                  <>
-                    <InlineSectionEditor
-                      content={section.content}
-                      tags={tags}
-                      title={section.title}
-                      onSave={handleSaveInlineEdit}
-                      onCancel={handleCancelInlineEdit}
-                      className="mb-3"
-                      fontFamily={fontFamily}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <h2
-                      className={cn(
-                        "text-lg font-semibold mb-3",
-                        fontFamily === "serif" && "font-serif",
-                        fontFamily === "mono" && "font-mono"
-                      )}
-                    >
-                      {section.title}
-                    </h2>
-                  </>
-                )}
-                {editingSectionId === section.id ? null : (
-                  <div
-                    className={cn(
-                      "prose prose-sm max-w-none",
-                      fontFamily === "serif" && "prose-serif",
-                      fontFamily === "mono" && "prose-mono"
-                    )}
-                  >
-                    {renderContent(section.content, document.tagValues)}
-                    {selectedSectionId === section.id && !editingSectionId && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Double-click to edit inline
+            {sectionGroups.map((group) => (
+              <div key={group.parent.id} className="mb-2">
+                {renderSectionBlock(group.parent, "parent")}
+                {group.children.length > 0 && (
+                  <div className="ml-6 mt-2 border-l border-border/60 pl-4">
+                    {group.children.map((child) => (
+                      <div key={child.id}>
+                        {renderSectionBlock(child, "child")}
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>
@@ -1317,49 +1439,132 @@ export const DocumentEditor = () => {
           <DialogHeader>
             <DialogTitle>Manage sections</DialogTitle>
             <DialogDescription>
-              Add, remove, and change the order of sections.
+              Add, remove, and change the order of top-level sections and
+              sub-sections.
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-2 space-y-4">
             <div className="flex items-end gap-2">
               <div className="flex-1">
-                <Label htmlFor="manage-section-title">New section title</Label>
+                <Label htmlFor="manage-parent-section-title">
+                  New top-level section
+                </Label>
                 <Input
-                  id="manage-section-title"
-                  value={manageNewSectionTitle}
-                  onChange={(e) => setManageNewSectionTitle(e.target.value)}
-                  placeholder="Enter section title"
+                  id="manage-parent-section-title"
+                  value={manageNewParentSectionTitle}
+                  onChange={(e) =>
+                    setManageNewParentSectionTitle(e.target.value)
+                  }
+                  placeholder="Enter top-level section title"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleAddSectionFromManage();
+                      handleAddParentSectionFromManage();
                     }
                   }}
                 />
               </div>
-              <Button onClick={handleAddSectionFromManage}>Add</Button>
+              <Button onClick={handleAddParentSectionFromManage}>
+                Add parent
+              </Button>
             </div>
 
-            <div className="flex flex-col gap-1">
-              {(tempSections || document.sections).map(
-                (section, sectionIndex) => (
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-2 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="manage-child-section-title">New sub-section</Label>
+                <Input
+                  id="manage-child-section-title"
+                  value={manageNewChildSectionTitle}
+                  onChange={(e) => setManageNewChildSectionTitle(e.target.value)}
+                  placeholder="Enter sub-section title"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddChildSectionFromManage();
+                    }
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manage-child-parent-select">Under parent</Label>
+                <select
+                  id="manage-child-parent-select"
+                  value={effectiveManageChildParentId ?? ""}
+                  onChange={(e) =>
+                    setManageChildParentId(e.target.value || null)
+                  }
+                  className="flex h-9 w-full min-w-40 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={parentSections.length === 0}
+                >
+                  {parentSections.length === 0 ? (
+                    <option value="">No parent sections yet</option>
+                  ) : (
+                    parentSections.map((section) => (
+                      <option key={section.id} value={section.id}>
+                        {section.title}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+              <Button
+                onClick={handleAddChildSectionFromManage}
+                disabled={
+                  parentSections.length === 0 ||
+                  !manageNewChildSectionTitle.trim() ||
+                  !effectiveManageChildParentId
+                }
+              >
+                Add sub-section
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {sectionGroups.map((group) => (
+                <div key={group.parent.id} className="space-y-1">
                   <div
-                    key={section.id}
                     draggable
-                    onDragStart={(e) => handleDragStart(e, section.id)}
-                    onDragOver={(e) => handleDragOver(e, sectionIndex)}
-                    onDrop={(e) => handleDrop(e)}
+                    onDragStart={(e) =>
+                      handleDragStart(e, {
+                        sectionId: group.parent.id,
+                        kind: "parent",
+                        parentId: null,
+                      })
+                    }
+                    onDragOver={(e) =>
+                      handleDragOver(e, {
+                        sectionId: group.parent.id,
+                        kind: "parent",
+                        parentId: null,
+                      })
+                    }
+                    onDrop={(e) =>
+                      handleDrop(e, {
+                        sectionId: group.parent.id,
+                        kind: "parent",
+                        parentId: null,
+                      })
+                    }
                     onDragEnd={handleDragEnd}
                     className={cn(
                       "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
                       "transition-all duration-200 ease-out",
-                      draggedSectionId === section.id && "opacity-40 scale-95"
+                      draggedSection?.sectionId === group.parent.id &&
+                        "opacity-40 scale-95",
+                      dragOverSectionId === group.parent.id &&
+                        dropPosition === "above" &&
+                        "border-t-2 border-t-primary",
+                      dragOverSectionId === group.parent.id &&
+                        dropPosition === "below" &&
+                        "border-b-2 border-b-primary"
                     )}
                   >
                     <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {section.title}
+                      <div className="truncate text-sm font-semibold">
+                        {group.parent.title}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                        Top-level section
                       </div>
                     </div>
 
@@ -1368,8 +1573,10 @@ export const DocumentEditor = () => {
                       variant="ghost"
                       onClick={() =>
                         setPendingDeleteSection({
-                          id: section.id,
-                          title: section.title,
+                          id: group.parent.id,
+                          title: group.parent.title,
+                          kind: "parent",
+                          childCount: group.children.length,
                         })
                       }
                       aria-label="Remove section"
@@ -1379,8 +1586,87 @@ export const DocumentEditor = () => {
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                )
-              )}
+
+                  {group.children.length > 0 && (
+                    <div className="ml-6 border-l border-border/70 pl-2 space-y-1">
+                      {group.children.map((child) => (
+                        <div
+                          key={child.id}
+                          draggable
+                          onDragStart={(e) =>
+                            handleDragStart(e, {
+                              sectionId: child.id,
+                              kind: "child",
+                              parentId: group.parent.id,
+                            })
+                          }
+                          onDragOver={(e) =>
+                            handleDragOver(e, {
+                              sectionId: child.id,
+                              kind: "child",
+                              parentId: group.parent.id,
+                            })
+                          }
+                          onDrop={(e) =>
+                            handleDrop(e, {
+                              sectionId: child.id,
+                              kind: "child",
+                              parentId: group.parent.id,
+                            })
+                          }
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
+                            "transition-all duration-200 ease-out",
+                            draggedSection?.sectionId === child.id &&
+                              "opacity-40 scale-95",
+                            dragOverSectionId === child.id &&
+                              dropPosition === "above" &&
+                              "border-t-2 border-t-primary",
+                            dragOverSectionId === child.id &&
+                              dropPosition === "below" &&
+                              "border-b-2 border-b-primary",
+                            draggedSection &&
+                              !isHierarchyDropAllowed(draggedSection, {
+                                sectionId: child.id,
+                                kind: "child",
+                                parentId: group.parent.id,
+                              }) &&
+                              "opacity-60"
+                          )}
+                        >
+                          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium">
+                              {child.title}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                              Sub-section
+                            </div>
+                          </div>
+
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            onClick={() =>
+                              setPendingDeleteSection({
+                                id: child.id,
+                                title: child.title,
+                                kind: "child",
+                              })
+                            }
+                            aria-label="Remove section"
+                            title="Remove"
+                            className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -1402,13 +1688,13 @@ export const DocumentEditor = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Section</DialogTitle>
+            <DialogTitle>Add New Top-Level Section</DialogTitle>
             <DialogDescription>
-              Enter a title for the new section.
+              Enter a title for the new top-level section.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="section-title">Section Title</Label>
+            <Label htmlFor="section-title">Top-level section title</Label>
             <Input
               id="section-title"
               value={newSectionTitle}
@@ -1428,7 +1714,7 @@ export const DocumentEditor = () => {
             >
               Cancel
             </Button>
-            <Button onClick={handleAddSection}>Add Section</Button>
+            <Button onClick={handleAddSection}>Add Parent Section</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1512,6 +1798,13 @@ export const DocumentEditor = () => {
               ) : (
                 "this section"
               )}
+              {pendingDeleteSection?.kind === "parent" &&
+              pendingDeleteSection.childCount &&
+              pendingDeleteSection.childCount > 0
+                ? ` and ${pendingDeleteSection.childCount} sub-section${
+                    pendingDeleteSection.childCount === 1 ? "" : "s"
+                  }`
+                : ""}
               . This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

@@ -29,6 +29,7 @@ export interface Section {
   id: string;
   title: string;
   order: number;
+  parentId: string | null;
   content: string; // JSON string from TipTap editor
 }
 

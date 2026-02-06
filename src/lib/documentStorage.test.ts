@@ -14,6 +14,9 @@ describe("getDefaultAnnualReportDocument", () => {
       OrgNumber: "556xxx-xxxx",
       ContactEmail: "info@acme.se",
     });
+    expect(doc.sections.every((section) => section.parentId === null)).toBe(
+      true
+    );
   });
 
   it("should include all required annual report sections in correct order", () => {
@@ -38,6 +41,14 @@ describe("getDefaultAnnualReportDocument", () => {
     
     doc.sections.forEach((section, index) => {
       expect(section.order).toBe(index);
+    });
+  });
+
+  it("should have top-level parentId values for all default sections", () => {
+    const doc = getDefaultAnnualReportDocument();
+
+    doc.sections.forEach((section) => {
+      expect(section.parentId).toBeNull();
     });
   });
 
@@ -144,6 +155,31 @@ describe("loadDocument", () => {
     
     expect(doc.id).toBe("custom-doc");
     expect(doc.title).toBe("Custom Document");
+  });
+
+  it("should migrate legacy sections that do not have parentId", () => {
+    const legacyDoc = {
+      id: "legacy-doc",
+      title: "Legacy Document",
+      sections: [
+        {
+          id: "legacy-1",
+          title: "Legacy Section",
+          order: 0,
+          content: JSON.stringify({
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          }),
+        },
+      ],
+      tagValues: {},
+    };
+    localStorage.setItem("document-editor-state", JSON.stringify(legacyDoc));
+
+    const doc = loadDocument();
+
+    expect(doc.sections).toHaveLength(1);
+    expect(doc.sections[0].parentId).toBeNull();
   });
 
   it("should return default document when localStorage has invalid data", () => {

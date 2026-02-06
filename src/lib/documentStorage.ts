@@ -1,4 +1,6 @@
-import type { Document, Template } from "@/types/document";
+import { EMPTY_SECTION_CONTENT, normalizeSections } from "@/lib/sectionHierarchy";
+
+import type { Document, Section, Template } from "@/types/document";
 
 const STORAGE_KEY = "document-editor-state";
 
@@ -10,6 +12,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "cover-page",
       title: "Cover / Title Page",
       order: 0,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -44,6 +47,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "ceo-letter",
       title: "Letter to Shareholders / CEO Statement",
       order: 1,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -145,6 +149,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "company-overview",
       title: "Company Overview",
       order: 2,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -254,6 +259,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "mda-section",
       title: "Management's Discussion & Analysis",
       order: 3,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -344,6 +350,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "highlights",
       title: "Highlights / Key Metrics",
       order: 4,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -448,6 +455,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "financial-statements",
       title: "Financial Statements",
       order: 5,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -792,6 +800,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "notes-section",
       title: "Notes / Explanations",
       order: 6,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -846,6 +855,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "outlook-section",
       title: "Outlook & Goals for Next Year",
       order: 7,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -996,6 +1006,7 @@ export const getDefaultAnnualReportDocument = (): Document => ({
       id: "appendices",
       title: "Appendices / Additional Info",
       order: 8,
+      parentId: null,
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -1140,8 +1151,13 @@ export const getDefaultAnnualReportDocument = (): Document => ({
   },
 });
 
-export const getSampleDocument = (): Document =>
-  getDefaultAnnualReportDocument();
+export const getSampleDocument = (): Document => {
+  const sample = getDefaultAnnualReportDocument();
+  return {
+    ...sample,
+    sections: normalizeSections(sample.sections),
+  };
+};
 
 export const getSampleTemplates = (): Template[] => [
   {
@@ -1179,9 +1195,53 @@ export const loadDocument = (): Document => {
         typeof parsed.id === "string" &&
         typeof parsed.title === "string" &&
         Array.isArray(parsed.sections) &&
-        typeof parsed.tagValues === "object"
+        typeof parsed.tagValues === "object" &&
+        parsed.tagValues !== null
       ) {
-        return parsed as Document;
+        const normalizedSections: Section[] = parsed.sections
+          .map((section: unknown, index: number) => {
+            if (!section || typeof section !== "object") {
+              return null;
+            }
+
+            const candidate = section as Partial<Section>;
+            if (
+              typeof candidate.id !== "string" ||
+              typeof candidate.title !== "string"
+            ) {
+              return null;
+            }
+
+            return {
+              id: candidate.id,
+              title: candidate.title,
+              order:
+                typeof candidate.order === "number" &&
+                Number.isFinite(candidate.order)
+                  ? candidate.order
+                  : index,
+              parentId:
+                typeof candidate.parentId === "string" &&
+                candidate.parentId.length > 0
+                  ? candidate.parentId
+                  : null,
+              content:
+                typeof candidate.content === "string" &&
+                candidate.content.length > 0
+                  ? candidate.content
+                  : EMPTY_SECTION_CONTENT,
+            };
+          })
+          .filter(
+            (section: Section | null): section is Section => section !== null
+          );
+
+        return {
+          id: parsed.id,
+          title: parsed.title,
+          sections: normalizeSections(normalizedSections),
+          tagValues: parsed.tagValues as Record<string, string>,
+        };
       }
     }
   } catch (error) {
