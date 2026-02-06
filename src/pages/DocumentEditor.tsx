@@ -160,12 +160,19 @@ export const DocumentEditor = () => {
   const [draggedSection, setDraggedSection] = useState<SectionDragItem | null>(
     null
   );
-  const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(
+  const [previewSections, setPreviewSections] = useState<Section[] | null>(
     null
   );
   const [dropPosition, setDropPosition] = useState<"above" | "below" | null>(
     null
   );
+  const dragHoverRef = useRef<{
+    targetId: string | null;
+    position: "above" | "below" | null;
+  }>({
+    targetId: null,
+    position: null,
+  });
 
   const pageWidthOptions = useMemo(
     () => ["narrow", "medium", "wide"] as const,
@@ -175,6 +182,11 @@ export const DocumentEditor = () => {
   const sectionGroups = useMemo(
     () => buildSectionGroups(document.sections),
     [document.sections]
+  );
+
+  const manageSectionGroups = useMemo(
+    () => buildSectionGroups(previewSections ?? document.sections),
+    [previewSections, document.sections]
   );
 
   const parentSections = useMemo(
@@ -444,8 +456,9 @@ export const DocumentEditor = () => {
     dragItem: SectionDragItem
   ): void => {
     setDraggedSection(dragItem);
-    setDragOverSectionId(null);
+    setPreviewSections(null);
     setDropPosition(null);
+    dragHoverRef.current = { targetId: null, position: null };
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -457,18 +470,71 @@ export const DocumentEditor = () => {
     e.dataTransfer.dropEffect = "move";
 
     if (!draggedSection || !isHierarchyDropAllowed(draggedSection, target)) {
-      setDragOverSectionId(null);
+      setPreviewSections(null);
       setDropPosition(null);
+      dragHoverRef.current = { targetId: null, position: null };
       return;
     }
 
-    // Detect if cursor is in top or bottom half of the element
+    const isSameOrder = (a: Section[], b: Section[]) =>
+      a.length === b.length &&
+      a.every((section, index) => section.id === b[index]?.id);
+
+    // Use hysteresis near the midpoint to avoid rapid above/below toggling.
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
     const mouseY = e.clientY - rect.top;
-    const isTopHalf = mouseY < rect.height / 2;
+    const upperThreshold = rect.height * 0.35;
+    const lowerThreshold = rect.height * 0.65;
+    let nextDropPosition: "above" | "below";
 
-    setDropPosition(isTopHalf ? "above" : "below");
-    setDragOverSectionId(target.sectionId);
+    if (mouseY <= upperThreshold) {
+      nextDropPosition = "above";
+    } else if (mouseY >= lowerThreshold) {
+      nextDropPosition = "below";
+    } else if (
+      dragHoverRef.current.targetId === target.sectionId &&
+      dragHoverRef.current.position
+    ) {
+      nextDropPosition = dragHoverRef.current.position;
+    } else {
+      nextDropPosition = mouseY < rect.height / 2 ? "above" : "below";
+    }
+
+    setDropPosition((prev) =>
+      prev === nextDropPosition ? prev : nextDropPosition
+    );
+
+    const currentVisualSections = previewSections ?? document.sections;
+    const nextPreviewSections = reorderSectionsByDrag(
+      currentVisualSections,
+      draggedSection,
+      target,
+      nextDropPosition
+    );
+
+    if (isSameOrder(nextPreviewSections, currentVisualSections)) {
+      dragHoverRef.current = {
+        targetId: target.sectionId,
+        position: nextDropPosition,
+      };
+      return;
+    }
+
+    if (isSameOrder(nextPreviewSections, document.sections)) {
+      if (previewSections !== null) {
+        setPreviewSections(null);
+      }
+    } else if (
+      previewSections === null ||
+      !isSameOrder(nextPreviewSections, previewSections)
+    ) {
+      setPreviewSections(nextPreviewSections);
+    }
+
+    dragHoverRef.current = {
+      targetId: target.sectionId,
+      position: nextDropPosition,
+    };
   };
 
   const handleDrop = (
@@ -481,15 +547,19 @@ export const DocumentEditor = () => {
       !dropPosition ||
       !isHierarchyDropAllowed(draggedSection, target)
     ) {
+      setPreviewSections(null);
+      dragHoverRef.current = { targetId: null, position: null };
       return;
     }
 
-    const reorderedSections = reorderSectionsByDrag(
-      document.sections,
-      draggedSection,
-      target,
-      dropPosition
-    );
+    const reorderedSections =
+      previewSections ??
+      reorderSectionsByDrag(
+        document.sections,
+        draggedSection,
+        target,
+        dropPosition
+      );
 
     setDocument((prev) => ({
       ...prev,
@@ -497,14 +567,16 @@ export const DocumentEditor = () => {
     }));
 
     setDraggedSection(null);
-    setDragOverSectionId(null);
+    setPreviewSections(null);
     setDropPosition(null);
+    dragHoverRef.current = { targetId: null, position: null };
   };
 
   const handleDragEnd = (): void => {
     setDraggedSection(null);
-    setDragOverSectionId(null);
+    setPreviewSections(null);
     setDropPosition(null);
+    dragHoverRef.current = { targetId: null, position: null };
   };
 
   const handleCreateFromTemplate = useCallback(
@@ -1519,7 +1591,7 @@ export const DocumentEditor = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              {sectionGroups.map((group) => (
+              {manageSectionGroups.map((group) => (
                 <div key={group.parent.id} className="space-y-1">
                   <div
                     draggable
@@ -1549,13 +1621,7 @@ export const DocumentEditor = () => {
                       "flex items-center gap-2 rounded-md border px-2 py-1.5 cursor-move",
                       "transition-all duration-200 ease-out",
                       draggedSection?.sectionId === group.parent.id &&
-                        "opacity-40 scale-95",
-                      dragOverSectionId === group.parent.id &&
-                        dropPosition === "above" &&
-                        "border-t-2 border-t-primary",
-                      dragOverSectionId === group.parent.id &&
-                        dropPosition === "below" &&
-                        "border-b-2 border-b-primary"
+                        "opacity-40 scale-95"
                     )}
                   >
                     <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -1620,12 +1686,6 @@ export const DocumentEditor = () => {
                             "transition-all duration-200 ease-out",
                             draggedSection?.sectionId === child.id &&
                               "opacity-40 scale-95",
-                            dragOverSectionId === child.id &&
-                              dropPosition === "above" &&
-                              "border-t-2 border-t-primary",
-                            dragOverSectionId === child.id &&
-                              dropPosition === "below" &&
-                              "border-b-2 border-b-primary",
                             draggedSection &&
                               !isHierarchyDropAllowed(draggedSection, {
                                 sectionId: child.id,
