@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components -- TipTap extension modules intentionally export non-component APIs alongside local node-view components. */
+
 import { Node, mergeAttributes, type CommandProps } from "@tiptap/core";
 import { ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
 

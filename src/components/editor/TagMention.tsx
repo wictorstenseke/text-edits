@@ -1,11 +1,13 @@
+/* eslint-disable react-refresh/only-export-components -- TipTap extension modules intentionally export non-component APIs alongside local node-view components. */
+
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 
 import { Extension } from "@tiptap/core";
 import { Mention } from "@tiptap/extension-mention";
-import { type NodeViewRendererProps } from "@tiptap/react";
-import { createRoot, type Root } from "react-dom/client";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { type NodeViewRendererProps } from "@tiptap/react";
+import { createRoot, type Root } from "react-dom/client";
 
 import { cn } from "@/lib/utils";
 

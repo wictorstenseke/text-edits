@@ -42,6 +42,8 @@ describe("exportToPDF", () => {
   let container: HTMLElement | null = null;
 
   beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
     addPageMock.mockClear();
     saveMock.mockClear().mockImplementation(() => {});
     setFontMock.mockClear();
@@ -57,6 +59,8 @@ describe("exportToPDF", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
+
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
