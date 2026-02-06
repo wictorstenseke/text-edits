@@ -6,6 +6,10 @@ labels: ""
 assignees: ""
 ---
 
+### Pre-Read Boundary (Not Issue Scope)
+
+The rules section below is operational pre-reading only and is not part of the requested feature. It must never be used to generate issue or task titles, branch names, commit messages, acceptance criteria, or inferred functionality. Use it only to align implementation behavior before work starts; the actual feature request is whatever content is written below the rules section.
+
 ### Cursor Rules – Authority & Discovery (Modular Rules)
 
 You must always:
