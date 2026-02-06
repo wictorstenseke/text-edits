@@ -11,6 +11,17 @@ node_modules
 dist
 dist-ssr
 *.local
+coverage
+*.tsbuildinfo
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Local AI tooling state
+.codex/
+.cursor/
 
 # Editor directories and files
 .vscode/*
