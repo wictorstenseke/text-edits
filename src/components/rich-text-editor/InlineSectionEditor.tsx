@@ -41,7 +41,7 @@ import {
   FinancialReportBlockExtension,
   PageBreakExtension,
   type TagItem,
-} from "@/components/editor";
+} from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
