@@ -70,6 +70,8 @@ export const DocumentDialogs = ({
   onConfirmRemoveSection,
   tagDialogOpen,
   onTagDialogOpenChange,
+  // @ts-expect-error - editingTagKey is intentionally unused but kept for API compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
   editingTagKey,
   tagValue,
   onTagValueChange,

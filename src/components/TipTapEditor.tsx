@@ -4,7 +4,6 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useTranslation } from "react-i18next";
 import {
   Bold,
   Italic,
@@ -25,6 +24,7 @@ import {
   FileSpreadsheet,
   SeparatorHorizontal,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   createTagMentionExtension,
@@ -380,8 +380,6 @@ export const TipTapEditor = ({
   tags = [],
   className,
 }: TipTapEditorProps) => {
-  const { t } = useTranslation();
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({

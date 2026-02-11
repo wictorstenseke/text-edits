@@ -18,6 +18,7 @@ A React-based document editor for writing structured reports with rich text, nes
 
 - Rich text editing (headings, lists, links, tables, page breaks, images)
 - Financial report block support in the editor
+- **Multi-language support** (English and Swedish) with language switcher
 - Section manager with:
   - add/remove parent sections
   - add/remove child sections
@@ -38,6 +39,7 @@ A React-based document editor for writing structured reports with rich text, nes
 - shadcn/ui + Radix UI primitives
 - TipTap editor
 - TanStack Query + React Query Devtools
+- **i18next + react-i18next** for internationalization
 - jsPDF for PDF export
 - Vitest + Testing Library + jsdom
 - ESLint + Prettier
@@ -106,7 +108,12 @@ Primary keys:
 
 - `document-editor-state` - full document payload
 - `documentFontFamily` - selected font family
+- `language` - selected language (en or sv)
 - `vite-ui-theme-mode` - theme mode
+
+## Internationalization
+
+The application supports English and Swedish. Users can switch languages using the language toggle button in the header. See [docs/i18n.md](docs/i18n.md) for details on adding new languages.
 
 ## CI and deployment
 

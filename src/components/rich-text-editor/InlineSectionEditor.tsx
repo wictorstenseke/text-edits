@@ -5,7 +5,6 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useTranslation } from "react-i18next";
 import {
   Bold,
   Italic,
@@ -34,6 +33,7 @@ import {
   AlignCenter,
   AlignRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "tiptap-extension-resizable-image/styles.css";
 
 import {
