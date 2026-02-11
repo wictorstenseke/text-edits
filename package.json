@@ -43,10 +43,12 @@
     "@tiptap/starter-kit": "^3.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "i18next": "^25.8.5",
     "jspdf": "^4.1.0",
     "lucide-react": "^0.561.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-i18next": "^16.5.4",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "tiptap-extension-resizable-image": "^2.1.0"

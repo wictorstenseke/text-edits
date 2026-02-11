@@ -1,0 +1,111 @@
+{
+  "header": {
+    "documentWidth": "Document width",
+    "changeFontStyle": "Change font style",
+    "resetDocument": "Reset document",
+    "exportPDF": "Export PDF",
+    "toggleTagPanel": "Show/Hide tag panel",
+    "toggleLanguage": "Toggle language"
+  },
+  "dialogs": {
+    "addSection": {
+      "title": "Add New Top-Level Section",
+      "description": "Create a new top-level section in your document",
+      "templateButton": "Create from Template",
+      "sectionTitle": "Section title",
+      "titlePlaceholder": "Enter section title",
+      "cancel": "Cancel",
+      "add": "Add"
+    },
+    "resetDocument": {
+      "title": "Reset document",
+      "description": "This will remove all sections and content. This action cannot be undone.",
+      "cancel": "Cancel",
+      "reset": "Reset"
+    },
+    "removeSection": {
+      "title": "Remove section",
+      "description": "Are you sure you want to remove this section and all its content? This action cannot be undone.",
+      "cancel": "Cancel",
+      "remove": "Remove"
+    },
+    "editTag": {
+      "title": "Edit Tag Value",
+      "description": "Update the value for this tag",
+      "tagValue": "Tag value",
+      "valuePlaceholder": "Enter tag value",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "addTag": {
+      "title": "Add New Tag",
+      "description": "Create a new tag that can be used throughout the document",
+      "tagName": "Tag name",
+      "namePlaceholder": "Enter tag name (e.g., CompanyName)",
+      "tagValue": "Tag value",
+      "valuePlaceholder": "Enter tag value",
+      "cancel": "Cancel",
+      "add": "Add Tag"
+    }
+  },
+  "sections": {
+    "title": "Sections",
+    "noSections": "No sections yet"
+  },
+  "manageSections": {
+    "title": "Manage sections",
+    "description": "Add, remove, and change the order of sections in your document",
+    "addParent": "Add Parent Section",
+    "addChild": "Add Child",
+    "delete": "Delete",
+    "close": "Close"
+  },
+  "tags": {
+    "title": "Tag Library",
+    "instruction": "Type @ in the editor to insert a tag",
+    "addNew": "Add new tag",
+    "delete": "Delete tag",
+    "noTags": "No tags yet",
+    "addButton": "Add Tag"
+  },
+  "editor": {
+    "save": "Save (Ctrl+S)",
+    "cancel": "Cancel (Esc)",
+    "sectionTitle": "Section title",
+    "addLink": "Add Link",
+    "enterUrl": "Enter URL",
+    "undo": "Undo",
+    "redo": "Redo",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strike": "Strike",
+    "code": "Code",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "bulletList": "Bullet List",
+    "orderedList": "Ordered List",
+    "blockquote": "Blockquote",
+    "codeBlock": "Code Block",
+    "horizontalRule": "Horizontal Rule",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "alignJustify": "Align Justify",
+    "insertTable": "Insert Table",
+    "addColumnBefore": "Add Column Before",
+    "addColumnAfter": "Add Column After",
+    "deleteColumn": "Delete Column",
+    "addRowBefore": "Add Row Before",
+    "addRowAfter": "Add Row After",
+    "deleteRow": "Delete Row",
+    "deleteTable": "Delete Table",
+    "mergeCells": "Merge Cells",
+    "splitCell": "Split Cell",
+    "toggleHeaderColumn": "Toggle Header Column",
+    "toggleHeaderRow": "Toggle Header Row",
+    "toggleHeaderCell": "Toggle Header Cell",
+    "insertImage": "Insert Image"
+  }
+}

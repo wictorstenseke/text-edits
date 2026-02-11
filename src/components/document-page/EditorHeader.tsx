@@ -1,5 +1,7 @@
 import { FileText, Minus, Plus, RotateCcw, ArrowUpFromLine, Tag as TagIcon, Type } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
+import { LanguageToggle } from "@/components/language-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -57,6 +59,8 @@ export const EditorHeader = ({
   isTagPanelOpen,
   onToggleTagPanel,
 }: EditorHeaderProps) => {
+  const { t } = useTranslation();
+
   return (
     <div className="border-b p-4 bg-background">
       <TooltipProvider>
@@ -71,7 +75,7 @@ export const EditorHeader = ({
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Document width</span>
+              <span className="text-sm text-muted-foreground">{t("header.documentWidth")}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -106,12 +110,12 @@ export const EditorHeader = ({
               <DropdownMenu>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label="Change font style">
+                    <Button variant="outline" size="icon" aria-label={t("header.changeFontStyle")}>
                       <Type className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent>Change font style</TooltipContent>
+                <TooltipContent>{t("header.changeFontStyle")}</TooltipContent>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Font Style</DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -133,12 +137,12 @@ export const EditorHeader = ({
                     onClick={onResetDocument}
                     variant="outline"
                     size="icon"
-                    aria-label="Reset document"
+                    aria-label={t("header.resetDocument")}
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Reset document</TooltipContent>
+                <TooltipContent>{t("header.resetDocument")}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -146,12 +150,12 @@ export const EditorHeader = ({
                     onClick={onExportPDF}
                     variant="outline"
                     size="icon"
-                    aria-label="Export PDF"
+                    aria-label={t("header.exportPDF")}
                   >
                     <ArrowUpFromLine className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Export PDF</TooltipContent>
+                <TooltipContent>{t("header.exportPDF")}</TooltipContent>
               </Tooltip>
             </div>
             <Separator orientation="vertical" className="mx-2 h-8" />
@@ -161,15 +165,17 @@ export const EditorHeader = ({
                   onClick={onToggleTagPanel}
                   variant={isTagPanelOpen ? "default" : "outline"}
                   size="icon"
-                  aria-label={isTagPanelOpen ? "Hide tag panel" : "Show tag panel"}
+                  aria-label={t("header.toggleTagPanel")}
                 >
                   <TagIcon className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isTagPanelOpen ? "Hide tag panel" : "Show tag panel"}
+                {t("header.toggleTagPanel")}
               </TooltipContent>
             </Tooltip>
+            <Separator orientation="vertical" className="mx-2 h-8" />
+            <LanguageToggle />
           </div>
         </div>
       </TooltipProvider>
