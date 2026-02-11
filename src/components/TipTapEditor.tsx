@@ -4,6 +4,7 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useTranslation } from "react-i18next";
 import {
   Bold,
   Italic,
@@ -98,6 +99,7 @@ const EditorMenuBar = ({
   editor: Editor | null;
   onInsertFinancialReport?: () => void;
 }) => {
+  const { t } = useTranslation();
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
@@ -108,7 +110,7 @@ const EditorMenuBar = ({
   }
 
   const addLink = () => {
-    const url = window.prompt("Enter URL:");
+    const url = window.prompt(t("editor.enterUrl"));
     if (url) {
       editor.chain().focus().setLink({ href: url }).run();
     }
@@ -136,21 +138,21 @@ const EditorMenuBar = ({
       <MenuButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         active={editor.isActive("heading", { level: 1 })}
-        title="Heading 1"
+        title={t("editor.heading1")}
       >
         <Heading1 className="h-4 w-4" />
       </MenuButton>
       <MenuButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         active={editor.isActive("heading", { level: 2 })}
-        title="Heading 2"
+        title={t("editor.heading2")}
       >
         <Heading2 className="h-4 w-4" />
       </MenuButton>
       <MenuButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         active={editor.isActive("heading", { level: 3 })}
-        title="Heading 3"
+        title={t("editor.heading3")}
       >
         <Heading3 className="h-4 w-4" />
       </MenuButton>
@@ -160,21 +162,21 @@ const EditorMenuBar = ({
       <MenuButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         active={editor.isActive("bold")}
-        title="Bold"
+        title={t("editor.bold")}
       >
         <Bold className="h-4 w-4" />
       </MenuButton>
       <MenuButton
         onClick={() => editor.chain().focus().toggleItalic().run()}
         active={editor.isActive("italic")}
-        title="Italic"
+        title={t("editor.italic")}
       >
         <Italic className="h-4 w-4" />
       </MenuButton>
       <MenuButton
         onClick={() => editor.chain().focus().toggleStrike().run()}
         active={editor.isActive("strike")}
-        title="Strikethrough"
+        title={t("editor.strike")}
       >
         <UnderlineIcon className="h-4 w-4" />
       </MenuButton>
@@ -186,7 +188,7 @@ const EditorMenuBar = ({
           editor.chain().focus().toggleList("bulletList", "listItem").run()
         }
         active={editor.isActive("bulletList")}
-        title="Bullet List"
+        title={t("editor.bulletList")}
       >
         <List className="h-4 w-4" />
       </MenuButton>
@@ -195,7 +197,7 @@ const EditorMenuBar = ({
           editor.chain().focus().toggleList("orderedList", "listItem").run()
         }
         active={editor.isActive("orderedList")}
-        title="Numbered List"
+        title={t("editor.orderedList")}
       >
         <ListOrdered className="h-4 w-4" />
       </MenuButton>
@@ -205,7 +207,7 @@ const EditorMenuBar = ({
       <MenuButton
         onClick={addLink}
         active={editor.isActive("link")}
-        title="Add Link"
+        title={t("editor.addLink")}
       >
         <Link2 className="h-4 w-4" />
       </MenuButton>
@@ -218,7 +220,7 @@ const EditorMenuBar = ({
             type="button"
             variant="ghost"
             size="icon-sm"
-            title="Insert Table"
+            title={t("editor.insertTable")}
             className="h-8 w-8"
           >
             <TableIcon className="h-4 w-4" />
@@ -292,14 +294,14 @@ const EditorMenuBar = ({
 
       <MenuButton
         onClick={insertFinancialReport}
-        title="Insert Financial Report"
+        title={t("editor.insertTable")}
       >
         <FileSpreadsheet className="h-4 w-4" />
       </MenuButton>
 
       <MenuButton
         onClick={() => editor.chain().focus().insertPageBreak().run()}
-        title="Insert Page Break"
+        title={t("editor.horizontalRule")}
       >
         <SeparatorHorizontal className="h-4 w-4" />
       </MenuButton>
@@ -309,14 +311,14 @@ const EditorMenuBar = ({
       <MenuButton
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
-        title="Undo"
+        title={t("editor.undo")}
       >
         <Undo className="h-4 w-4" />
       </MenuButton>
       <MenuButton
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
-        title="Redo"
+        title={t("editor.redo")}
       >
         <Redo className="h-4 w-4" />
       </MenuButton>
@@ -326,43 +328,43 @@ const EditorMenuBar = ({
           <Separator orientation="vertical" className="h-6 mx-1" />
           <MenuButton
             onClick={() => editor.chain().focus().addRowBefore().run()}
-            title="Add Row Above"
+            title={t("editor.addRowBefore")}
           >
             <Rows2 className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().addRowAfter().run()}
-            title="Add Row Below"
+            title={t("editor.addRowAfter")}
           >
             <Rows2 className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().deleteRow().run()}
-            title="Delete Row"
+            title={t("editor.deleteRow")}
           >
             <Minus className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().addColumnBefore().run()}
-            title="Add Column Before"
+            title={t("editor.addColumnBefore")}
           >
             <Columns2 className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().addColumnAfter().run()}
-            title="Add Column After"
+            title={t("editor.addColumnAfter")}
           >
             <Columns2 className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().deleteColumn().run()}
-            title="Delete Column"
+            title={t("editor.deleteColumn")}
           >
             <Minus className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().deleteTable().run()}
-            title="Delete Table"
+            title={t("editor.deleteTable")}
           >
             <Trash2 className="h-4 w-4" />
           </MenuButton>
@@ -378,6 +380,8 @@ export const TipTapEditor = ({
   tags = [],
   className,
 }: TipTapEditorProps) => {
+  const { t } = useTranslation();
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
