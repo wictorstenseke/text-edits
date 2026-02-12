@@ -33,6 +33,7 @@ import {
   AlignCenter,
   AlignRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "tiptap-extension-resizable-image/styles.css";
 
 import {
@@ -119,6 +120,7 @@ export const InlineSectionEditor = ({
   className,
   fontFamily = "sans",
 }: InlineSectionEditorProps) => {
+  const { t } = useTranslation();
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
@@ -614,10 +616,10 @@ export const InlineSectionEditor = ({
               )}
             </div>
             <div className="flex items-center gap-1">
-              <MenuButton onClick={handleSave} title="Save (Ctrl+S)">
+              <MenuButton onClick={handleSave} title={t("editor.save")}>
                 <Check className="h-4 w-4" />
               </MenuButton>
-              <MenuButton onClick={onCancel} title="Cancel (Esc)">
+              <MenuButton onClick={onCancel} title={t("editor.cancel")}>
                 <X className="h-4 w-4" />
               </MenuButton>
             </div>
@@ -634,8 +636,8 @@ export const InlineSectionEditor = ({
             fontFamily === "serif" && "font-serif",
             fontFamily === "mono" && "font-mono"
           )}
-          placeholder="Section title"
-          aria-label="Section title"
+          placeholder={t("editor.sectionTitle")}
+          aria-label={t("editor.sectionTitle")}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Format tools do not affect this title; standard styling is always
@@ -762,11 +764,11 @@ export const InlineSectionEditor = ({
       </Dialog>
 
       <div className="sr-only">
-        <Button onClick={handleSave} title="Save (Ctrl+S)">
-          Save
+        <Button onClick={handleSave} title={t("editor.save")}>
+          {t("editor.save")}
         </Button>
-        <Button onClick={onCancel} title="Cancel (Esc)">
-          Cancel
+        <Button onClick={onCancel} title={t("editor.cancel")}>
+          {t("editor.cancel")}
         </Button>
       </div>
     </div>

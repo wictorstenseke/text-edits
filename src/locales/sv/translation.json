@@ -1,0 +1,111 @@
+{
+  "header": {
+    "documentWidth": "Dokumentbredd",
+    "changeFontStyle": "Ändra typsnitt",
+    "resetDocument": "Återställ dokument",
+    "exportPDF": "Exportera PDF",
+    "toggleTagPanel": "Visa/Dölj taggpanel",
+    "toggleLanguage": "Växla språk"
+  },
+  "dialogs": {
+    "addSection": {
+      "title": "Lägg till ny toppnivåsektion",
+      "description": "Skapa en ny toppnivåsektion i ditt dokument",
+      "templateButton": "Skapa från mall",
+      "sectionTitle": "Sektionstitel",
+      "titlePlaceholder": "Ange sektionstitel",
+      "cancel": "Avbryt",
+      "add": "Lägg till"
+    },
+    "resetDocument": {
+      "title": "Återställ dokument",
+      "description": "Detta kommer att ta bort alla sektioner och innehåll. Denna åtgärd kan inte ångras.",
+      "cancel": "Avbryt",
+      "reset": "Återställ"
+    },
+    "removeSection": {
+      "title": "Ta bort sektion",
+      "description": "Är du säker på att du vill ta bort denna sektion och allt dess innehåll? Denna åtgärd kan inte ångras.",
+      "cancel": "Avbryt",
+      "remove": "Ta bort"
+    },
+    "editTag": {
+      "title": "Redigera taggvärde",
+      "description": "Uppdatera värdet för denna tagg",
+      "tagValue": "Taggvärde",
+      "valuePlaceholder": "Ange taggvärde",
+      "cancel": "Avbryt",
+      "save": "Spara"
+    },
+    "addTag": {
+      "title": "Lägg till ny tagg",
+      "description": "Skapa en ny tagg som kan användas i hela dokumentet",
+      "tagName": "Taggnamn",
+      "namePlaceholder": "Ange taggnamn (t.ex. Företagsnamn)",
+      "tagValue": "Taggvärde",
+      "valuePlaceholder": "Ange taggvärde",
+      "cancel": "Avbryt",
+      "add": "Lägg till tagg"
+    }
+  },
+  "sections": {
+    "title": "Sektioner",
+    "noSections": "Inga sektioner ännu"
+  },
+  "manageSections": {
+    "title": "Hantera sektioner",
+    "description": "Lägg till, ta bort och ändra ordningen på sektioner i ditt dokument",
+    "addParent": "Lägg till förälderssektion",
+    "addChild": "Lägg till undersektion",
+    "delete": "Ta bort",
+    "close": "Stäng"
+  },
+  "tags": {
+    "title": "Taggbibliotek",
+    "instruction": "Skriv @ i redigeraren för att infoga en tagg",
+    "addNew": "Lägg till ny tagg",
+    "delete": "Ta bort tagg",
+    "noTags": "Inga taggar ännu",
+    "addButton": "Lägg till tagg"
+  },
+  "editor": {
+    "save": "Spara (Ctrl+S)",
+    "cancel": "Avbryt (Esc)",
+    "sectionTitle": "Sektionstitel",
+    "addLink": "Lägg till länk",
+    "enterUrl": "Ange URL",
+    "undo": "Ångra",
+    "redo": "Gör om",
+    "bold": "Fet",
+    "italic": "Kursiv",
+    "underline": "Understruken",
+    "strike": "Genomstruken",
+    "code": "Kod",
+    "heading1": "Rubrik 1",
+    "heading2": "Rubrik 2",
+    "heading3": "Rubrik 3",
+    "bulletList": "Punktlista",
+    "orderedList": "Numrerad lista",
+    "blockquote": "Blockcitat",
+    "codeBlock": "Kodblock",
+    "horizontalRule": "Horisontell linje",
+    "alignLeft": "Vänsterjustera",
+    "alignCenter": "Centrera",
+    "alignRight": "Högerjustera",
+    "alignJustify": "Justera",
+    "insertTable": "Infoga tabell",
+    "addColumnBefore": "Lägg till kolumn före",
+    "addColumnAfter": "Lägg till kolumn efter",
+    "deleteColumn": "Ta bort kolumn",
+    "addRowBefore": "Lägg till rad före",
+    "addRowAfter": "Lägg till rad efter",
+    "deleteRow": "Ta bort rad",
+    "deleteTable": "Ta bort tabell",
+    "mergeCells": "Sammanfoga celler",
+    "splitCell": "Dela cell",
+    "toggleHeaderColumn": "Växla rubrikkolumn",
+    "toggleHeaderRow": "Växla rubrikrad",
+    "toggleHeaderCell": "Växla rubrikcell",
+    "insertImage": "Infoga bild"
+  }
+}

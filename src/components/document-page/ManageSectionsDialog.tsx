@@ -1,4 +1,5 @@
 import { GripVertical, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,14 +66,15 @@ export const ManageSectionsDialog = ({
   onDragEnd,
   onRequestDeleteSection,
 }: ManageSectionsDialogProps) => {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-xl overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]">
         <DialogHeader className="shrink-0 border-b bg-background px-6 py-4 pr-12">
-          <DialogTitle>Manage sections</DialogTitle>
+          <DialogTitle>{t("manageSections.title")}</DialogTitle>
           <DialogDescription>
-            Add, remove, and change the order of top-level sections and
-            sub-sections.
+            {t("manageSections.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -97,7 +99,7 @@ export const ManageSectionsDialog = ({
                   }}
                 />
               </div>
-              <Button onClick={onAddParentSection}>Add parent</Button>
+              <Button onClick={onAddParentSection}>{t("manageSections.addParent")}</Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-2 items-end">
@@ -147,7 +149,7 @@ export const ManageSectionsDialog = ({
                   !effectiveManageChildParentId
                 }
               >
-                Add sub-section
+                {t("manageSections.addChild")}
               </Button>
             </div>
             <div className="flex flex-col gap-2 pb-1">
@@ -293,7 +295,7 @@ export const ManageSectionsDialog = ({
 
         <DialogFooter className="shrink-0 border-t bg-muted/40 px-6 py-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t("manageSections.close")}
           </Button>
         </DialogFooter>
       </DialogContent>

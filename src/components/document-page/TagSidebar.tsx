@@ -1,4 +1,5 @@
 import { PlusCircle, Tag as TagIcon, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,8 @@ export const TagSidebar = ({
   onEditTag,
   onDeleteTag,
 }: TagSidebarProps) => {
+  const { t } = useTranslation();
+
   if (!isOpen) {
     return null;
   }
@@ -30,19 +33,19 @@ export const TagSidebar = ({
         <div className="flex items-center justify-between mb-3">
           <Label className="text-sm font-semibold flex items-center gap-2">
             <TagIcon className="h-4 w-4" />
-            Tag Library
+            {t("tags.title")}
           </Label>
           <Button
             size="icon-sm"
             variant="ghost"
             onClick={onOpenNewTagDialog}
-            title="Add new tag"
+            title={t("tags.addNew")}
           >
             <PlusCircle className="h-4 w-4" />
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Type @ in the editor to insert a tag
+          {t("tags.instruction")}
         </p>
         <div className="space-y-2">
           {entries.map(([key, value]) => (
@@ -69,7 +72,7 @@ export const TagSidebar = ({
                 variant="ghost"
                 onClick={() => onDeleteTag(key)}
                 className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                title="Delete tag"
+                title={t("tags.delete")}
               >
                 <Trash2 className="h-3 w-3" />
               </Button>
@@ -79,7 +82,7 @@ export const TagSidebar = ({
         {entries.length > 0 && (
           <Button variant="outline" onClick={onOpenNewTagDialog} className="w-full mt-3">
             <PlusCircle className="h-4 w-4 mr-2" />
-            Add Tag
+            {t("tags.addButton")}
           </Button>
         )}
       </div>

@@ -8,6 +8,7 @@ import { RouterProvider } from "@tanstack/react-router";
 
 import "./index.css";
 import { TooltipProvider } from "./components/ui/tooltip";
+import "./lib/i18n";
 import { queryClient } from "./lib/queryClient";
 import { router } from "./router";
 

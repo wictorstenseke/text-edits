@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -68,6 +70,8 @@ export const DocumentDialogs = ({
   onConfirmRemoveSection,
   tagDialogOpen,
   onTagDialogOpenChange,
+  // @ts-expect-error - editingTagKey is intentionally unused but kept for API compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
   editingTagKey,
   tagValue,
   onTagValueChange,
@@ -80,23 +84,25 @@ export const DocumentDialogs = ({
   onNewTagValueChange,
   onAddNewTag,
 }: DocumentDialogsProps) => {
+  const { t } = useTranslation();
+
   return (
     <>
       <Dialog open={newSectionDialogOpen} onOpenChange={onNewSectionDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Top-Level Section</DialogTitle>
+            <DialogTitle>{t("dialogs.addSection.title")}</DialogTitle>
             <DialogDescription>
-              Enter a title for the new top-level section.
+              {t("dialogs.addSection.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="section-title">Top-level section title</Label>
+            <Label htmlFor="section-title">{t("dialogs.addSection.sectionTitle")}</Label>
             <Input
               id="section-title"
               value={newSectionTitle}
               onChange={(e) => onNewSectionTitleChange(e.target.value)}
-              placeholder="Enter section title"
+              placeholder={t("dialogs.addSection.titlePlaceholder")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   onAddSection();
@@ -106,9 +112,9 @@ export const DocumentDialogs = ({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onNewSectionDialogOpenChange(false)}>
-              Cancel
+              {t("dialogs.addSection.cancel")}
             </Button>
-            <Button onClick={onAddSection}>Add Parent Section</Button>
+            <Button onClick={onAddSection}>{t("dialogs.addSection.add")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -116,7 +122,7 @@ export const DocumentDialogs = ({
       <Dialog open={templateDialogOpen} onOpenChange={onTemplateDialogOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create from Template</DialogTitle>
+            <DialogTitle>{t("dialogs.addSection.templateButton")}</DialogTitle>
             <DialogDescription>
               Choose a template to start your document.
             </DialogDescription>
@@ -152,17 +158,17 @@ export const DocumentDialogs = ({
       <Dialog open={resetDialogOpen} onOpenChange={onResetDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset document</DialogTitle>
+            <DialogTitle>{t("dialogs.resetDocument.title")}</DialogTitle>
             <DialogDescription>
-              This will reset all content to the initial state. This action cannot be undone.
+              {t("dialogs.resetDocument.description")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => onResetDialogOpenChange(false)}>
-              Cancel
+              {t("dialogs.resetDocument.cancel")}
             </Button>
             <Button variant="destructive" onClick={onResetDocument}>
-              Reset
+              {t("dialogs.resetDocument.reset")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -178,29 +184,14 @@ export const DocumentDialogs = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove section</DialogTitle>
+            <DialogTitle>{t("dialogs.removeSection.title")}</DialogTitle>
             <DialogDescription>
-              This will permanently remove{" "}
-              {pendingDeleteSection ? (
-                <span className="font-semibold">
-                  {pendingDeleteSection.title || "this section"}
-                </span>
-              ) : (
-                "this section"
-              )}
-              {pendingDeleteSection?.kind === "parent" &&
-              pendingDeleteSection.childCount &&
-              pendingDeleteSection.childCount > 0
-                ? ` and ${pendingDeleteSection.childCount} sub-section${
-                    pendingDeleteSection.childCount === 1 ? "" : "s"
-                  }`
-                : ""}
-              . This action cannot be undone.
+              {t("dialogs.removeSection.description")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => onPendingDeleteSectionChange(null)}>
-              Cancel
+              {t("dialogs.removeSection.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -211,7 +202,7 @@ export const DocumentDialogs = ({
                 onPendingDeleteSectionChange(null);
               }}
             >
-              Remove
+              {t("dialogs.removeSection.remove")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -220,18 +211,18 @@ export const DocumentDialogs = ({
       <Dialog open={tagDialogOpen} onOpenChange={onTagDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Tag Value</DialogTitle>
+            <DialogTitle>{t("dialogs.editTag.title")}</DialogTitle>
             <DialogDescription>
-              Update the value for <code className="font-mono">{editingTagKey}</code>
+              {t("dialogs.editTag.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="tag-value">Value</Label>
+            <Label htmlFor="tag-value">{t("dialogs.editTag.tagValue")}</Label>
             <Input
               id="tag-value"
               value={tagValue}
               onChange={(e) => onTagValueChange(e.target.value)}
-              placeholder="Enter tag value"
+              placeholder={t("dialogs.editTag.valuePlaceholder")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   onSaveTag();
@@ -241,9 +232,9 @@ export const DocumentDialogs = ({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onTagDialogOpenChange(false)}>
-              Cancel
+              {t("dialogs.editTag.cancel")}
             </Button>
-            <Button onClick={onSaveTag}>Save</Button>
+            <Button onClick={onSaveTag}>{t("dialogs.editTag.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -251,29 +242,29 @@ export const DocumentDialogs = ({
       <Dialog open={newTagDialogOpen} onOpenChange={onNewTagDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Tag</DialogTitle>
+            <DialogTitle>{t("dialogs.addTag.title")}</DialogTitle>
             <DialogDescription>
-              Create a new tag that can be inserted into your document.
+              {t("dialogs.addTag.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="new-tag-key">Tag Name</Label>
+              <Label htmlFor="new-tag-key">{t("dialogs.addTag.tagName")}</Label>
               <Input
                 id="new-tag-key"
                 value={newTagKey}
                 onChange={(e) => onNewTagKeyChange(e.target.value)}
-                placeholder="e.g., CompanyName"
+                placeholder={t("dialogs.addTag.namePlaceholder")}
                 className="font-mono"
               />
             </div>
             <div>
-              <Label htmlFor="new-tag-value">Value</Label>
+              <Label htmlFor="new-tag-value">{t("dialogs.addTag.tagValue")}</Label>
               <Input
                 id="new-tag-value"
                 value={newTagValue}
                 onChange={(e) => onNewTagValueChange(e.target.value)}
-                placeholder="e.g., Acme AB"
+                placeholder={t("dialogs.addTag.valuePlaceholder")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     onAddNewTag();
@@ -284,10 +275,10 @@ export const DocumentDialogs = ({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onNewTagDialogOpenChange(false)}>
-              Cancel
+              {t("dialogs.addTag.cancel")}
             </Button>
             <Button onClick={onAddNewTag} disabled={!newTagKey.trim()}>
-              Add Tag
+              {t("dialogs.addTag.add")}
             </Button>
           </DialogFooter>
         </DialogContent>
