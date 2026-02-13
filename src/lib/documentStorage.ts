@@ -1,10 +1,11 @@
+import i18n from "@/lib/i18n";
 import { EMPTY_SECTION_CONTENT, normalizeSections } from "@/lib/sectionHierarchy";
 
 import type { Document, Section, Template } from "@/types/document";
 
 const STORAGE_KEY = "document-editor-state";
 
-export const getDefaultAnnualReportDocument = (): Document => ({
+export const getEnglishAnnualReportDocument = (): Document => ({
   id: "annual-report-2025",
   title: "Annual Report 2025",
   sections: [
@@ -2291,6 +2292,13 @@ export const getSwedishAnnualReportDocument = (): Document => ({
     ContactEmail: "info@acme.se",
   },
 });
+
+export const getDefaultAnnualReportDocument = (language?: string): Document => {
+  const lang = language || i18n.language;
+  return lang === "sv"
+    ? getSwedishAnnualReportDocument()
+    : getEnglishAnnualReportDocument();
+};
 
 export const getSampleDocument = (): Document => {
   const sample = getDefaultAnnualReportDocument();
