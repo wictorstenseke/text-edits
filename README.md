@@ -2,6 +2,8 @@
 
 A React-based document editor for writing structured reports with rich text, nested sections, tags, and PDF export.
 
+This repository also serves as a testbed for **testing and evaluating different AI agent workflows**. The many collaborators reflect this dual purpose: alongside developing the Annual Report Editor, contributors use the project to experiment with and compare AI coding assistants and their workflows.
+
 ## AI assistant instructions
 
 The project uses a single canonical assistant rules file: [`AGENTS.md`](AGENTS.md).
