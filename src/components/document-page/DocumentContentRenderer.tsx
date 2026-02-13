@@ -7,11 +7,6 @@ import type {
   FinancialReportRow,
 } from "@/types/document";
 
-/** Legacy row format had accountNumber at top level */
-type LegacyFinancialReportRow = FinancialReportRow & {
-  accountNumber?: string;
-};
-
 interface TipTapNode {
   type: string;
   text?: string;
@@ -306,50 +301,35 @@ const renderNode = (
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
-                  // Migrate row data if needed
-                  const rowValues = { ...row.values };
-                  const legacyRow = row as LegacyFinancialReportRow;
-                  if (legacyRow.accountNumber !== undefined) {
-                    // Old structure - migrate
-                    if (leftColumns.length > 0) {
-                      rowValues[leftColumns[0].id] =
-                        legacyRow.accountNumber ??
-                        rowValues[leftColumns[0].id] ??
-                        "";
-                    }
-                  }
-
-                  return (
-                    <tr key={row.id} className="hover:bg-accent/30">
-                      {leftColumns.map((col) => (
-                        <td
-                          key={col.id}
-                          className={cn(
-                            "border-b px-3 py-2 text-sm",
-                            col.align === "left" ? "text-left" : "text-right"
-                          )}
-                        >
-                          {renderFormattedText(rowValues[col.id] || "")}
-                        </td>
-                      ))}
-                      {rightColumns.map((col, rightIndex) => (
-                        <td
-                          key={col.id}
-                          className={cn(
-                            "border-b text-sm font-semibold tabular-nums",
-                            "px-2 py-2",
-                            rightIndex === 0 && "border-l border-border/60",
-                            "whitespace-nowrap w-[1%] min-w-[10ch]",
-                            col.align === "left" ? "text-left" : "text-right"
-                          )}
-                        >
-                          {renderFormattedText(rowValues[col.id] || "")}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
+                {rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-accent/30">
+                    {leftColumns.map((col) => (
+                      <td
+                        key={col.id}
+                        className={cn(
+                          "border-b px-3 py-2 text-sm",
+                          col.align === "left" ? "text-left" : "text-right"
+                        )}
+                      >
+                        {renderFormattedText(row.values[col.id] ?? "")}
+                      </td>
+                    ))}
+                    {rightColumns.map((col, rightIndex) => (
+                      <td
+                        key={col.id}
+                        className={cn(
+                          "border-b text-sm font-semibold tabular-nums",
+                          "px-2 py-2",
+                          rightIndex === 0 && "border-l border-border/60",
+                          "whitespace-nowrap w-[1%] min-w-[10ch]",
+                          col.align === "left" ? "text-left" : "text-right"
+                        )}
+                      >
+                        {renderFormattedText(row.values[col.id] ?? "")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
                 {showTotals && rows.length > 0 && (
                   <tr className="bg-muted/30 font-semibold">
                     <td

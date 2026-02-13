@@ -146,10 +146,9 @@ describe("myUtilFunction", () => {
 ```tsx
 import { vi } from "vitest";
 
-vi.mock("@/lib/api", () => ({
-  postsApi: {
-    getPosts: vi.fn(),
-  },
+vi.mock("@/lib/documentStorage", () => ({
+  loadDocument: vi.fn(() => mockDocument),
+  saveDocument: vi.fn(),
 }));
 ```
 

@@ -1,0 +1,1149 @@
+import type { Document } from "@/types/document";
+
+
+export const getEnglishAnnualReportDocument = (): Document => ({
+  id: "annual-report-2025",
+  title: "Annual Report 2025",
+  sections: [
+    {
+      id: "cover-page",
+      title: "Cover / Title Page",
+      order: 0,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 1 },
+            content: [
+              {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 2 },
+            content: [{ type: "text", text: "Annual Report 2025" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Reporting Period: January 1, 2025 – December 31, 2025",
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "ceo-letter",
+      title: "Letter to Shareholders / CEO Statement",
+      order: 1,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "Dear Shareholders," }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "I am pleased to present our Annual Report for fiscal year 2025. This year has been marked by significant achievements and steady progress toward our strategic goals.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Key Achievements" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Revenue growth of 15% year-over-year",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Expansion into three new markets",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Launch of innovative product line",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Future Outlook" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Looking ahead, we remain committed to delivering value to our shareholders while investing in sustainable growth initiatives. Our vision is to become the industry leader by 2030.",
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "Sincerely," }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", marks: [{ type: "bold" }], text: "CEO Name" },
+              { type: "hardBreak" },
+              { type: "text", text: "Chief Executive Officer" },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "company-overview",
+      title: "Company Overview",
+      order: 2,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Business Description" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
+              {
+                type: "text",
+                text: " is a leading provider of innovative solutions in the technology sector. Founded in 2010, we have grown to serve customers in over 50 countries worldwide.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Markets & Strategy" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Our strategic focus includes expanding our market presence in North America, Europe, and Asia-Pacific regions. We continue to invest in research and development to maintain our competitive edge.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Key Products & Services" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Enterprise Platform",
+                      },
+                      {
+                        type: "text",
+                        text: " – Cloud-based business management solution",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Analytics Suite",
+                      },
+                      {
+                        type: "text",
+                        text: " – Data-driven insights and reporting tools",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Professional Services",
+                      },
+                      {
+                        type: "text",
+                        text: " – Implementation and consulting services",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "mda-section",
+      title: "Management's Discussion & Analysis",
+      order: 3,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Operational Results" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Fiscal year 2025 demonstrated strong operational performance. Revenue increased by 15% compared to the prior year, driven by growth in our core product lines and successful market expansion initiatives.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Challenges & Opportunities" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "While we faced challenges from increased competition and supply chain disruptions, we capitalized on opportunities in emerging markets. Our agile response to market conditions positioned us well for continued growth.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Key Decisions" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Strategic acquisition of TechCo Inc. to expand capabilities",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Investment of 50M SEK in R&D initiatives",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Implementation of sustainability program across operations",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "highlights",
+      title: "Highlights / Key Metrics",
+      order: 4,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Key performance indicators for fiscal year 2025:",
+              },
+            ],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Revenue: ",
+                      },
+                      { type: "text", text: "125,000,000 SEK (+15% YoY)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Net Profit: ",
+                      },
+                      { type: "text", text: "18,750,000 SEK (+12% YoY)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Gross Margin: ",
+                      },
+                      { type: "text", text: "42.5%" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Customer Base: ",
+                      },
+                      { type: "text", text: "2,500+ active customers" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Employee Count: ",
+                      },
+                      { type: "text", text: "450 full-time employees" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "financial-statements",
+      title: "Financial Statements",
+      order: 5,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Balance Sheet" }],
+          },
+          {
+            type: "financialReportBlock",
+            attrs: {
+              leftColumns: [
+                { id: "bs-account", label: "Account", align: "left" },
+              ],
+              rightColumns: [
+                { id: "bs-2025", label: "2025 (SEK)", align: "right" },
+                { id: "bs-2024", label: "2024 (SEK)", align: "right" },
+              ],
+              rows: [
+                {
+                  id: "bs-row-1",
+                  values: {
+                    "bs-account": "Assets",
+                    "bs-2025": "",
+                    "bs-2024": "",
+                  },
+                },
+                {
+                  id: "bs-row-2",
+                  values: {
+                    "bs-account": "  Current Assets",
+                    "bs-2025": "45,000,000",
+                    "bs-2024": "38,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-3",
+                  values: {
+                    "bs-account": "  Fixed Assets",
+                    "bs-2025": "80,000,000",
+                    "bs-2024": "72,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-4",
+                  values: {
+                    "bs-account": "Total Assets",
+                    "bs-2025": "125,000,000",
+                    "bs-2024": "110,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-5",
+                  values: { "bs-account": "", "bs-2025": "", "bs-2024": "" },
+                },
+                {
+                  id: "bs-row-6",
+                  values: {
+                    "bs-account": "Liabilities & Equity",
+                    "bs-2025": "",
+                    "bs-2024": "",
+                  },
+                },
+                {
+                  id: "bs-row-7",
+                  values: {
+                    "bs-account": "  Current Liabilities",
+                    "bs-2025": "25,000,000",
+                    "bs-2024": "22,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-8",
+                  values: {
+                    "bs-account": "  Long-term Debt",
+                    "bs-2025": "30,000,000",
+                    "bs-2024": "28,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-9",
+                  values: {
+                    "bs-account": "  Shareholders' Equity",
+                    "bs-2025": "70,000,000",
+                    "bs-2024": "60,000,000",
+                  },
+                },
+                {
+                  id: "bs-row-10",
+                  values: {
+                    "bs-account": "Total Liabilities & Equity",
+                    "bs-2025": "125,000,000",
+                    "bs-2024": "110,000,000",
+                  },
+                },
+              ],
+              showTotals: false,
+            },
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [
+              { type: "text", text: "Income Statement (Profit & Loss)" },
+            ],
+          },
+          {
+            type: "financialReportBlock",
+            attrs: {
+              leftColumns: [
+                { id: "is-account", label: "Account", align: "left" },
+              ],
+              rightColumns: [
+                { id: "is-2025", label: "2025 (SEK)", align: "right" },
+                { id: "is-2024", label: "2024 (SEK)", align: "right" },
+              ],
+              rows: [
+                {
+                  id: "is-row-1",
+                  values: {
+                    "is-account": "Revenue",
+                    "is-2025": "125,000,000",
+                    "is-2024": "108,700,000",
+                  },
+                },
+                {
+                  id: "is-row-2",
+                  values: {
+                    "is-account": "Cost of Goods Sold",
+                    "is-2025": "-71,875,000",
+                    "is-2024": "-65,220,000",
+                  },
+                },
+                {
+                  id: "is-row-3",
+                  values: {
+                    "is-account": "Gross Profit",
+                    "is-2025": "53,125,000",
+                    "is-2024": "43,480,000",
+                  },
+                },
+                {
+                  id: "is-row-4",
+                  values: {
+                    "is-account": "Operating Expenses",
+                    "is-2025": "-28,000,000",
+                    "is-2024": "-24,000,000",
+                  },
+                },
+                {
+                  id: "is-row-5",
+                  values: {
+                    "is-account": "Operating Income",
+                    "is-2025": "25,125,000",
+                    "is-2024": "19,480,000",
+                  },
+                },
+                {
+                  id: "is-row-6",
+                  values: {
+                    "is-account": "Interest Expense",
+                    "is-2025": "-1,500,000",
+                    "is-2024": "-1,200,000",
+                  },
+                },
+                {
+                  id: "is-row-7",
+                  values: {
+                    "is-account": "Income Before Tax",
+                    "is-2025": "23,625,000",
+                    "is-2024": "18,280,000",
+                  },
+                },
+                {
+                  id: "is-row-8",
+                  values: {
+                    "is-account": "Income Tax",
+                    "is-2025": "-4,875,000",
+                    "is-2024": "-3,560,000",
+                  },
+                },
+                {
+                  id: "is-row-9",
+                  values: {
+                    "is-account": "Net Income",
+                    "is-2025": "18,750,000",
+                    "is-2024": "14,720,000",
+                  },
+                },
+              ],
+              showTotals: false,
+            },
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Cash Flow Statement" }],
+          },
+          {
+            type: "financialReportBlock",
+            attrs: {
+              leftColumns: [
+                { id: "cf-account", label: "Account", align: "left" },
+              ],
+              rightColumns: [
+                { id: "cf-2025", label: "2025 (SEK)", align: "right" },
+                { id: "cf-2024", label: "2024 (SEK)", align: "right" },
+              ],
+              rows: [
+                {
+                  id: "cf-row-1",
+                  values: {
+                    "cf-account": "Operating Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-2",
+                  values: {
+                    "cf-account": "  Net Income",
+                    "cf-2025": "18,750,000",
+                    "cf-2024": "14,720,000",
+                  },
+                },
+                {
+                  id: "cf-row-3",
+                  values: {
+                    "cf-account": "  Depreciation",
+                    "cf-2025": "5,000,000",
+                    "cf-2024": "4,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-4",
+                  values: {
+                    "cf-account": "  Working Capital Changes",
+                    "cf-2025": "-2,000,000",
+                    "cf-2024": "-1,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-5",
+                  values: {
+                    "cf-account": "Net Cash from Operations",
+                    "cf-2025": "21,750,000",
+                    "cf-2024": "17,720,000",
+                  },
+                },
+                {
+                  id: "cf-row-6",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-7",
+                  values: {
+                    "cf-account": "Investing Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-8",
+                  values: {
+                    "cf-account": "  Capital Expenditures",
+                    "cf-2025": "-8,000,000",
+                    "cf-2024": "-6,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-9",
+                  values: {
+                    "cf-account": "  Acquisitions",
+                    "cf-2025": "-5,000,000",
+                    "cf-2024": "0",
+                  },
+                },
+                {
+                  id: "cf-row-10",
+                  values: {
+                    "cf-account": "Net Cash from Investing",
+                    "cf-2025": "-13,000,000",
+                    "cf-2024": "-6,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-11",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-12",
+                  values: {
+                    "cf-account": "Financing Activities",
+                    "cf-2025": "",
+                    "cf-2024": "",
+                  },
+                },
+                {
+                  id: "cf-row-13",
+                  values: {
+                    "cf-account": "  Debt Repayment",
+                    "cf-2025": "-2,000,000",
+                    "cf-2024": "-2,000,000",
+                  },
+                },
+                {
+                  id: "cf-row-14",
+                  values: {
+                    "cf-account": "  Dividends Paid",
+                    "cf-2025": "-4,000,000",
+                    "cf-2024": "-3,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-15",
+                  values: {
+                    "cf-account": "Net Cash from Financing",
+                    "cf-2025": "-6,000,000",
+                    "cf-2024": "-5,500,000",
+                  },
+                },
+                {
+                  id: "cf-row-16",
+                  values: { "cf-account": "", "cf-2025": "", "cf-2024": "" },
+                },
+                {
+                  id: "cf-row-17",
+                  values: {
+                    "cf-account": "Net Change in Cash",
+                    "cf-2025": "2,750,000",
+                    "cf-2024": "6,220,000",
+                  },
+                },
+              ],
+              showTotals: false,
+            },
+          },
+        ],
+      }),
+    },
+    {
+      id: "notes-section",
+      title: "Notes / Explanations",
+      order: 6,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Note 1: Accounting Policies" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "The financial statements have been prepared in accordance with Swedish Generally Accepted Accounting Principles (Swedish GAAP). Revenue is recognized when services are delivered or products are shipped to customers.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Note 2: Significant Events" }],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "During 2025, the company completed the acquisition of TechCo Inc. for 5,000,000 SEK, strengthening our position in the enterprise software market. This acquisition is expected to contribute an additional 10,000,000 SEK in revenue in fiscal year 2026.",
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [
+              { type: "text", text: "Note 3: Related Party Transactions" },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "There were no material related party transactions during the reporting period that would require separate disclosure.",
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "outlook-section",
+      title: "Outlook & Goals for Next Year",
+      order: 7,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Strategic Priorities" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Expand market presence in Asia-Pacific region",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Launch next-generation Enterprise Platform 3.0",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Achieve carbon neutrality in operations",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Enhance customer success programs",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Target Metrics for 2026" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Revenue Target: ",
+                      },
+                      { type: "text", text: "145,000,000 SEK (+16% growth)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Net Profit Margin: ",
+                      },
+                      { type: "text", text: "16% (up from 15%)" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Customer Growth: ",
+                      },
+                      { type: "text", text: "500+ new customers" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Employee Growth: ",
+                      },
+                      { type: "text", text: "Expand to 550 employees" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      id: "appendices",
+      title: "Appendices / Additional Info",
+      order: 8,
+      parentId: null,
+      content: JSON.stringify({
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [{ type: "text", text: "Appendix A: Board of Directors" }],
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Anna Svensson",
+                      },
+                      { type: "text", text: " – Chairperson" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Erik Johansson",
+                      },
+                      { type: "text", text: " – Board Member" },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "Maria Lindberg",
+                      },
+                      { type: "text", text: " – Board Member" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [
+              { type: "text", text: "Appendix B: Company Information" },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Registered Name: ",
+              },
+              {
+                type: "mention",
+                attrs: { id: "CompanyName", label: "Acme AB" },
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Organization Number: ",
+              },
+              {
+                type: "mention",
+                attrs: { id: "OrgNumber", label: "556xxx-xxxx" },
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                marks: [{ type: "bold" }],
+                text: "Registered Office: ",
+              },
+              { type: "text", text: "Stockholm, Sweden" },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", marks: [{ type: "bold" }], text: "Contact: " },
+              {
+                type: "mention",
+                attrs: { id: "ContactEmail", label: "info@acme.se" },
+              },
+            ],
+          },
+          {
+            type: "heading",
+            attrs: { level: 3 },
+            content: [
+              { type: "text", text: "Appendix C: Auditor's Statement" },
+            ],
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "This annual report has been audited by [Audit Firm Name]. The complete auditor's report is available upon request.",
+              },
+            ],
+          },
+        ],
+      }),
+    },
+  ],
+  tagValues: {
+    CompanyName: "Acme AB",
+    OrgNumber: "556xxx-xxxx",
+    ContactEmail: "info@acme.se",
+  },
+});

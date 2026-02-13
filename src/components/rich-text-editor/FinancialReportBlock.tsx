@@ -34,18 +34,9 @@ import type {
   FinancialReportRow,
 } from "@/types/document";
 
-/** Legacy row format had accountNumber at top level */
-type LegacyFinancialReportRow = FinancialReportRow & {
-  accountNumber?: string;
-};
-
 interface FinancialReportBlockAttrs {
-  leftColumns?: FinancialReportColumn[];
-  rightColumns?: FinancialReportColumn[];
-  // Legacy support
-  accountNumberColumn?: { label: string; align?: "left" | "right" };
-  accountNameColumn?: { label: string; align?: "left" | "right" };
-  columns?: FinancialReportColumn[];
+  leftColumns: FinancialReportColumn[];
+  rightColumns: FinancialReportColumn[];
   rows: FinancialReportRow[];
   showTotals: boolean;
 }
@@ -59,93 +50,26 @@ const FinancialReportNodeView = ({
 }: NodeViewProps) => {
   const attrs = node.attrs as FinancialReportBlockAttrs;
 
-  // Migration logic: convert old structure to new structure
-  const migrateAttrs = useCallback((attrs: FinancialReportBlockAttrs) => {
-    // If new structure exists, use it
-    const leftCols = attrs.leftColumns;
-    const rightCols = attrs.rightColumns;
-    if (leftCols && rightCols) {
-      return {
-        leftColumns: leftCols,
-        rightColumns: rightCols,
-        rows: attrs.rows.map((row) => {
-          // Ensure all column values exist
-          const allColIds = [
-            ...leftCols.map((c) => c.id),
-            ...rightCols.map((c) => c.id),
-          ];
-          const values = { ...row.values };
-          allColIds.forEach((colId) => {
-            if (!(colId in values)) {
-              values[colId] = "";
-            }
-          });
-          return { ...row, values };
-        }),
-        showTotals: attrs.showTotals,
-      };
-    }
-
-    // Migrate from old structure
-    const accountNumberColumn = attrs.accountNumberColumn || {
-      label: "Account #",
-      align: "left" as const,
-    };
-    const oldColumns = attrs.columns || [];
-
-    const leftColumns: FinancialReportColumn[] = [
-      {
-        id: "account",
-        label: accountNumberColumn.label,
-        align: accountNumberColumn.align || "left",
-      },
-    ];
-
-    const rightColumns: FinancialReportColumn[] =
-      oldColumns.length > 0
-        ? oldColumns
-        : [
-            {
-              id: "openingBalance",
-              label: "Opening Balance",
-              align: "right",
-            },
-            {
-              id: "closingBalance",
-              label: "Closing Balance",
-              align: "right",
-            },
-          ];
-
-    // Migrate row data
-    const migratedRows = attrs.rows.map((row) => {
-      const values: Record<string, string> = {};
-
-      // Add left column values (from accountNumber)
-      const legacyRow = row as LegacyFinancialReportRow;
-      values[leftColumns[0].id] =
-        legacyRow.accountNumber ?? row.values[leftColumns[0].id] ?? "";
-
-      // Add right column values
-      rightColumns.forEach((col) => {
-        values[col.id] = row.values[col.id] || "";
-      });
-
-      return {
-        id: row.id,
-        values,
-      };
+  // Ensure all column values exist for each row
+  const leftCols = attrs.leftColumns;
+  const rightCols = attrs.rightColumns;
+  const allColIds = [
+    ...leftCols.map((c) => c.id),
+    ...rightCols.map((c) => c.id),
+  ];
+  const normalizedRows = attrs.rows.map((row) => {
+    const values = { ...row.values };
+    allColIds.forEach((colId) => {
+      if (!(colId in values)) values[colId] = "";
     });
-
-    return {
-      leftColumns,
-      rightColumns,
-      rows: migratedRows,
-      showTotals: attrs.showTotals,
-    };
-  }, []);
-
-  const migrated = migrateAttrs(attrs);
+    return { ...row, values };
+  });
+  const migrated = {
+    leftColumns: leftCols,
+    rightColumns: rightCols,
+    rows: normalizedRows,
+    showTotals: attrs.showTotals,
+  };
   const { leftColumns, rightColumns, rows, showTotals } = migrated;
 
   const [focusedCell, setFocusedCell] = useState<{

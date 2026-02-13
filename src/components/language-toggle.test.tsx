@@ -9,13 +9,12 @@ import i18n from "@/lib/i18n";
 
 import { LanguageToggle } from "./language-toggle";
 
-function renderWithProviders(ui: ReactElement) {
-  return render(
+const renderWithProviders = (ui: ReactElement) =>
+  render(
     <TooltipProvider>
       {ui}
     </TooltipProvider>
   );
-}
 
 describe("LanguageToggle", () => {
   beforeEach(async () => {
