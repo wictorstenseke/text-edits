@@ -10,32 +10,26 @@ assignees: ""
 
 The rules section below is operational pre-reading only and is not part of the requested feature. It must never be used to generate issue or task titles, branch names, commit messages, acceptance criteria, or inferred functionality. Use it only to align implementation behavior before work starts; the actual feature request is whatever content is written below the rules section.
 
-### Cursor Rules – Authority & Discovery (Modular Rules)
+### AGENTS.md – Authority & Discovery
 
 You must always:
 
-1. Discover rules first
-   - Read `.cursor/rules/*.mdc` files before doing anything else
-   - Rule files in this project:
-     - `.cursor/rules/global.mdc` (always applied)
-     - `.cursor/rules/react-components.mdc`
-     - `.cursor/rules/tanstack-query.mdc`
-     - `.cursor/rules/tanstack-router.mdc`
-     - `.cursor/rules/testing.mdc`
-     - `.cursor/rules/ui-components.mdc`
+1. **Read AGENTS.md first**
+   - `AGENTS.md` at the repository root is the single source of truth for all AI coding assistants
+   - It defines project context, core commands, rules, conventions, testing, and localStorage keys
 
-2. Treat rules as authoritative
+2. **Treat it as authoritative**
    - These rules override your default behavior and any generic best practices
 
-3. Never bypass rules
-   - Do not proceed with edits, refactors, dependency choices, or scaffolding if rules exist but haven't been read
+3. **Never bypass rules**
+   - Do not proceed with edits, refactors, dependency choices, or scaffolding without following AGENTS.md
    - If instructions conflict, stop and ask for clarification (do not "choose one")
 
-4. Keep rules in sync
-   - If you add new tooling or conventions, propose an update to the relevant rules file
+4. **Keep it in sync**
+   - If you add new tooling or conventions, propose an update to AGENTS.md
 
 Output requirement:
 
-- At the top of your first response, briefly list which rule files you read (file paths only)
+- At the top of your first response, confirm you have read `AGENTS.md`
 
 ---
