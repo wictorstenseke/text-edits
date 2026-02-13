@@ -1,6 +1,6 @@
 # Performance Improvements Summary
 
-This document summarizes the performance optimizations implemented across the React application.
+This document summarizes performance optimizations implemented in the React application. Some components referenced below (e.g. QueryDemo, theme-selector) may have been removed or renamed as the project evolved into the Annual Report Editor. The principles and patterns described remain applicable.
 
 ## Overview
 

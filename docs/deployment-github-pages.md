@@ -2,6 +2,8 @@
 
 This guide explains how to deploy your Vite React application to GitHub Pages, including support for subdirectory deployments.
 
+> **Note:** This project uses a combined workflow: `.github/workflows/ci.yml` runs CI checks and deploys to GitHub Pages on push to `main`. The workflow includes the `build-pages` and `deploy-pages` jobs. For a new project, you may create a separate `deploy.yml` as shown below, or extend an existing CI workflow.
+
 ## Prerequisites
 
 - A GitHub repository for your project

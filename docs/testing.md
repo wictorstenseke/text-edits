@@ -33,6 +33,12 @@ npm run test:watch
 
 # Run tests with coverage report
 npm run test:coverage
+
+# Full CI pipeline (type-check, lint, tests) — see AGENTS.md
+npm run ci
+
+# Full check including production build
+npm run check:full
 ```
 
 ## Test File Organization
@@ -51,15 +57,17 @@ src/
 │   └── ui/
 │       ├── button.tsx
 │       └── button.test.tsx          # Component tests
-├── hooks/
-│   ├── usePosts.ts
-│   └── usePosts.test.tsx            # Hook tests
 ├── lib/
 │   ├── utils.ts
 │   └── utils.test.ts                # Utility function tests
+│   ├── documentStorage.ts
+│   └── documentStorage.test.ts
+│   ├── sectionHierarchy.ts
+│   └── sectionHierarchy.test.ts
+│   ├── pdfExport.ts
+│   └── pdfExport.test.ts
 ├── pages/
-│   ├── Example.tsx
-│   └── Example.test.tsx             # Page component tests
+│   └── DocumentEditor.tsx           # Main application page
 └── test/
     ├── setup.ts                     # Global test setup
     └── utils.tsx                    # Test utilities and helpers
@@ -115,31 +123,7 @@ it("fetches and displays data", async () => {
 });
 ```
 
-### 3. Testing Custom Hooks
-
-Test React hooks using `renderHook` from @testing-library/react:
-
-```tsx
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { createTestQueryClient } from "@/test/utils";
-
-import { useMyHook } from "./useMyHook";
-
-it("returns expected data", async () => {
-  const queryClient = createTestQueryClient();
-  const wrapper = ({ children }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-
-  const { result } = renderHook(() => useMyHook(), { wrapper });
-
-  await waitFor(() => expect(result.current.isSuccess).toBe(true));
-  expect(result.current.data).toEqual(expectedData);
-});
-```
-
-### 4. Testing Utility Functions
+### 3. Testing Utility Functions
 
 Pure utility functions are the simplest to test:
 
@@ -155,7 +139,7 @@ describe("myUtilFunction", () => {
 });
 ```
 
-### 5. Mocking
+### 4. Mocking
 
 #### Mocking Modules
 
@@ -200,6 +184,8 @@ it("works with queries", () => {
   // Test your component
 });
 ```
+
+> **Note:** See [`AGENTS.md`](../AGENTS.md) for testing rules (e.g. co-locate tests, run `npm run ci` before commit).
 
 ## Best Practices
 

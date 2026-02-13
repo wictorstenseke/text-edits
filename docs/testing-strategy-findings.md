@@ -82,24 +82,29 @@ src/
 │   └── ui/
 │       ├── button.tsx
 │       └── button.test.tsx          # Component tests
-├── hooks/
-│   ├── usePosts.ts
-│   └── usePosts.test.tsx            # Hook tests
+├── lib/
+│   ├── utils.ts
+│   ├── utils.test.ts
+│   ├── documentStorage.ts
+│   ├── documentStorage.test.ts
+│   ├── sectionHierarchy.ts
+│   ├── sectionHierarchy.test.ts
+│   ├── pdfExport.ts
+│   └── pdfExport.test.ts
 ├── pages/
-│   ├── Example.tsx
-│   └── Example.test.tsx             # Page tests
+│   └── DocumentEditor.tsx           # Main application page
 └── test/
     ├── setup.ts                     # Global setup
     └── utils.tsx                    # Test utilities
 ```
 
-**Convention**: Co-locate test files with the code they test using `.test.tsx` or `.test.ts` extension.
+**Convention**: Co-locate test files with the code they test using `.test.tsx` or `.test.ts` extension. See [`AGENTS.md`](../AGENTS.md) for project rules.
 
 ### Test Coverage Examples
 
 #### 1. UI Component Tests (`button.test.tsx`)
 
-- ✅ 7 tests covering:
+- ✅ Tests covering:
   - Rendering variants (default, destructive, outline, secondary, ghost)
   - Different sizes (sm, default, lg, icon)
   - Click events
@@ -107,32 +112,12 @@ src/
   - Custom className
   - asChild prop (Slot component)
 
-#### 2. Page Component Tests (`Example.test.tsx`)
+#### 2. Utility and Library Tests
 
-- ✅ 9 tests covering:
-  - Basic rendering
-  - Counter functionality (increment, decrement, reset)
-  - localStorage persistence
-  - Button variants display
-  - Navigation links
-  - BroadcastChannel communication (mocked)
-
-#### 3. React Query Hook Tests (`usePosts.test.tsx`)
-
-- ✅ 8 tests covering:
-  - usePostsQuery with and without pagination
-  - usePostQuery with enabled condition
-  - useCreatePostMutation with cache updates
-  - useUpdatePostMutation with optimistic updates
-  - useDeletePostMutation with cache removal
-  - Query key generation
-
-#### 4. Utility Function Tests (`utils.test.ts`)
-
-- ✅ 3 tests covering:
-  - Class name merging
-  - Conditional classes
-  - Tailwind class conflicts
+- ✅ `utils.test.ts` – Class name merging (`cn()`), conditional classes
+- ✅ `documentStorage.test.ts` – Document persistence, localStorage
+- ✅ `sectionHierarchy.test.ts` – Parent/child section logic
+- ✅ `pdfExport.test.ts` – PDF generation
 
 ### Test Utilities
 
@@ -195,13 +180,14 @@ beforeEach(() => {
 npm test              # Run all tests once
 npm run test:watch    # Run in watch mode (development)
 npm run test:coverage # Generate coverage report
+npm run ci            # Full CI pipeline (type-check, lint, tests)
+npm run check:full    # CI plus production build
 ```
 
 ### Current Test Results
 
-- **4 test files**
-- **27 tests passing**
-- **100% pass rate**
+- **5 test files** (button, utils, documentStorage, sectionHierarchy, pdfExport)
+- **50 tests** passing
 
 ## Documentation
 
@@ -288,15 +274,15 @@ Focus on testing:
 
 ## Conclusion
 
-The implemented testing infrastructure provides a solid foundation for maintaining code quality as the application grows. The setup is:
+The implemented testing infrastructure provides a solid foundation for maintaining code quality as the Annual Report Editor grows. The setup is:
 
 - ✅ **Modern**: Uses current best practices and tools
 - ✅ **Fast**: Vitest provides quick feedback
 - ✅ **Scalable**: Easy to add new tests
-- ✅ **Well-documented**: Comprehensive guide available
+- ✅ **Well-documented**: Comprehensive guide in `docs/testing.md`
 - ✅ **Production-ready**: Suitable for real-world applications
 
-The 27 example tests demonstrate patterns that can be applied throughout the codebase. Developers can follow these examples to write tests for new components, hooks, and pages.
+Co-located tests demonstrate patterns for components and library modules. See [`AGENTS.md`](../AGENTS.md) for development rules.
 
 ## Resources
 
