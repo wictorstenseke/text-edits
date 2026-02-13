@@ -60,6 +60,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { isValidHref } from "@/lib/urlValidation";
 import { cn } from "@/lib/utils";
 
 import { ImageResizeWithAlign } from "./ImageResizeWithAlign";
@@ -192,8 +193,8 @@ export const InlineSectionEditor = ({
 
   const addLink = () => {
     if (!editor) return;
-    const url = window.prompt("Enter URL:");
-    if (url) {
+    const url = window.prompt(t("editor.enterUrl"));
+    if (url && isValidHref(url)) {
       editor.chain().focus().setLink({ href: url }).run();
     }
   };
