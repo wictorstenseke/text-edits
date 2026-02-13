@@ -119,11 +119,22 @@ Primary keys:
 
 The application supports English and Swedish. Users can switch languages using the language toggle button in the header. See [docs/i18n.md](docs/i18n.md) for details on adding new languages.
 
+## Security
+
+Security review process and guidance:
+
+- [Security checklist](docs/security-checklist.md) – Tailored to React, Vite, TipTap
+- [Security review process](docs/security-review-process.md) – Findings, SLAs, escalation
+- [Security advisor guidance](docs/security-advisor-guidance.md) – Methodology, tone, templates
+
+Dependabot runs weekly for dependency updates.
+
 ## CI and deployment
 
 GitHub Actions (`.github/workflows/ci.yml`) runs:
 
 - install
+- `npm audit` (fails on high/critical vulnerabilities)
 - `npm run ci`
 - `npm run build`
 
