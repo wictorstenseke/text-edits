@@ -2,6 +2,10 @@
 
 A React-based document editor for writing structured reports with rich text, nested sections, tags, and PDF export.
 
+## AI assistant instructions
+
+The project uses a single canonical assistant rules file: [`AGENTS.md`](AGENTS.md).
+
 ## What the app does
 
 - Creates and edits long-form report documents.
