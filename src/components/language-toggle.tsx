@@ -1,4 +1,3 @@
-import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,10 @@ export const LanguageToggle = () => {
     localStorage.setItem("language", newLang);
   };
 
+  // Get current flag and next language info
+  const currentFlag = i18n.language === "en" ? "🇬🇧" : "🇸🇪";
+  const nextLang = i18n.language === "en" ? "SV" : "EN";
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -28,13 +31,15 @@ export const LanguageToggle = () => {
           onClick={toggleLanguage}
           aria-label={t("header.toggleLanguage")}
         >
-          <Languages className="h-5 w-5" />
+          <span className="text-2xl" role="img" aria-label={`Current language: ${i18n.language === "en" ? "English" : "Swedish"}`}>
+            {currentFlag}
+          </span>
           <span className="sr-only">{t("header.toggleLanguage")}</span>
         </Button>
       </TooltipTrigger>
       <TooltipContent>
         <p>
-          {t("header.toggleLanguage")} ({i18n.language === "en" ? "SV" : "EN"})
+          {t("header.toggleLanguage")} ({nextLang})
         </p>
       </TooltipContent>
     </Tooltip>

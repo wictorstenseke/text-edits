@@ -4,7 +4,7 @@ import { getDefaultAnnualReportDocument, getSampleDocument, loadDocument, saveDo
 
 describe("getDefaultAnnualReportDocument", () => {
   it("should return a document with the correct structure", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     
     expect(doc.id).toBe("annual-report-2025");
     expect(doc.title).toBe("Annual Report 2025");
@@ -19,8 +19,8 @@ describe("getDefaultAnnualReportDocument", () => {
     );
   });
 
-  it("should include all required annual report sections in correct order", () => {
-    const doc = getDefaultAnnualReportDocument();
+  it("should include all required annual report sections in correct order for English", () => {
+    const doc = getDefaultAnnualReportDocument("en");
     const sectionTitles = doc.sections.map(s => s.title);
     
     expect(sectionTitles).toEqual([
@@ -36,8 +36,25 @@ describe("getDefaultAnnualReportDocument", () => {
     ]);
   });
 
+  it("should include all required annual report sections in correct order for Swedish", () => {
+    const doc = getDefaultAnnualReportDocument("sv");
+    const sectionTitles = doc.sections.map(s => s.title);
+    
+    expect(sectionTitles).toEqual([
+      "Framsida / Titelsida",
+      "Brev till aktieägarna / VD:s uttalande",
+      "Företagsöversikt",
+      "Ledningens diskussion & analys",
+      "Höjdpunkter / Nyckeltal",
+      "Finansiella rapporter",
+      "Noter / Förklaringar",
+      "Utsikter & mål för nästa år",
+      "Bilagor / Ytterligare information",
+    ]);
+  });
+
   it("should have valid order values for all sections", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     
     doc.sections.forEach((section, index) => {
       expect(section.order).toBe(index);
@@ -45,7 +62,7 @@ describe("getDefaultAnnualReportDocument", () => {
   });
 
   it("should have top-level parentId values for all default sections", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
 
     doc.sections.forEach((section) => {
       expect(section.parentId).toBeNull();
@@ -53,7 +70,7 @@ describe("getDefaultAnnualReportDocument", () => {
   });
 
   it("should have unique section IDs", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     const sectionIds = doc.sections.map(s => s.id);
     const uniqueIds = new Set(sectionIds);
     
@@ -61,7 +78,7 @@ describe("getDefaultAnnualReportDocument", () => {
   });
 
   it("should have valid JSON content for all sections", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     
     doc.sections.forEach(section => {
       expect(() => JSON.parse(section.content)).not.toThrow();
@@ -72,7 +89,7 @@ describe("getDefaultAnnualReportDocument", () => {
   });
 
   it("should include financialReportBlock in Financial Statements section", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     const financialSection = doc.sections.find(s => s.title === "Financial Statements");
     
     expect(financialSection).toBeDefined();
@@ -87,7 +104,7 @@ describe("getDefaultAnnualReportDocument", () => {
   });
 
   it("should have properly structured financial report blocks", () => {
-    const doc = getDefaultAnnualReportDocument();
+    const doc = getDefaultAnnualReportDocument("en");
     const financialSection = doc.sections.find(s => s.title === "Financial Statements");
     const content = JSON.parse(financialSection!.content);
     
