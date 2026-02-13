@@ -1,4 +1,12 @@
-import { FileText, Minus, Plus, RotateCcw, ArrowUpFromLine, Tag as TagIcon, Type } from "lucide-react";
+import {
+  FileText,
+  Minus,
+  Plus,
+  RotateCcw,
+  ArrowUpFromLine,
+  Tag as TagIcon,
+  Type,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { LanguageToggle } from "@/components/language-toggle";
@@ -75,7 +83,9 @@ export const EditorHeader = ({
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{t("header.documentWidth")}</span>
+              <span className="text-sm text-muted-foreground">
+                {t("header.documentWidth")}
+              </span>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -110,7 +120,11 @@ export const EditorHeader = ({
               <DropdownMenu>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label={t("header.changeFontStyle")}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label={t("header.changeFontStyle")}
+                    >
                       <Type className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -119,9 +133,15 @@ export const EditorHeader = ({
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Font Style</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={fontFamily} onValueChange={onFontFamilyChange}>
+                  <DropdownMenuRadioGroup
+                    value={fontFamily}
+                    onValueChange={onFontFamilyChange}
+                  >
                     {fontFamilyOptions.map((option) => (
-                      <DropdownMenuRadioItem key={option.value} value={option.value}>
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
+                      >
                         {option.label}
                       </DropdownMenuRadioItem>
                     ))}
@@ -170,9 +190,7 @@ export const EditorHeader = ({
                   <TagIcon className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                {t("header.toggleTagPanel")}
-              </TooltipContent>
+              <TooltipContent>{t("header.toggleTagPanel")}</TooltipContent>
             </Tooltip>
             <Separator orientation="vertical" className="mx-2 h-8" />
             <LanguageToggle />

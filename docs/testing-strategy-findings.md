@@ -11,14 +11,16 @@ This document provides findings and recommendations for establishing comprehensi
 After evaluating various options, the following stack was selected:
 
 **✅ Vitest** - Test Runner
+
 - **Why**: Native Vite integration, significantly faster than Jest
-- **Benefits**: 
+- **Benefits**:
   - Zero configuration needed (uses existing Vite config)
   - Compatible with Jest API (easy migration path)
   - Fast HMR for tests during development
   - Built-in coverage with v8
 
 **✅ @testing-library/react** - Component Testing
+
 - **Why**: Industry standard, encourages best practices
 - **Benefits**:
   - Tests components from user perspective
@@ -27,13 +29,15 @@ After evaluating various options, the following stack was selected:
   - Excellent documentation and community support
 
 **✅ @testing-library/jest-dom** - Custom Matchers
+
 - **Why**: Semantic DOM assertions
-- **Benefits**: 
+- **Benefits**:
   - Readable test assertions (e.g., `toBeInTheDocument()`)
   - Better error messages
   - Covers common DOM testing scenarios
 
 **✅ @testing-library/user-event** - User Interactions
+
 - **Why**: Realistic user interaction simulation
 - **Benefits**:
   - More accurate than fireEvent
@@ -41,6 +45,7 @@ After evaluating various options, the following stack was selected:
   - Handles edge cases automatically
 
 **✅ jsdom** - DOM Environment
+
 - **Why**: Lightweight, fast DOM implementation
 - **Benefits**:
   - No browser needed for tests
@@ -50,16 +55,19 @@ After evaluating various options, the following stack was selected:
 ### Alternatives Considered
 
 **Jest** - Not selected because:
+
 - Requires additional configuration for Vite
 - Slower than Vitest
 - Vitest provides better DX with Vite
 
 **Cypress/Playwright for Component Testing** - Not selected because:
+
 - Heavier setup required
 - Better suited for E2E testing
 - Vitest + Testing Library is sufficient for unit/component tests
 
 **Enzyme** - Not selected because:
+
 - Not recommended for React 18+
 - Encourages testing implementation details
 - Testing Library is the modern standard
@@ -90,6 +98,7 @@ src/
 ### Test Coverage Examples
 
 #### 1. UI Component Tests (`button.test.tsx`)
+
 - ✅ 7 tests covering:
   - Rendering variants (default, destructive, outline, secondary, ghost)
   - Different sizes (sm, default, lg, icon)
@@ -99,6 +108,7 @@ src/
   - asChild prop (Slot component)
 
 #### 2. Page Component Tests (`Example.test.tsx`)
+
 - ✅ 9 tests covering:
   - Basic rendering
   - Counter functionality (increment, decrement, reset)
@@ -108,6 +118,7 @@ src/
   - BroadcastChannel communication (mocked)
 
 #### 3. React Query Hook Tests (`usePosts.test.tsx`)
+
 - ✅ 8 tests covering:
   - usePostsQuery with and without pagination
   - usePostQuery with enabled condition
@@ -117,6 +128,7 @@ src/
   - Query key generation
 
 #### 4. Utility Function Tests (`utils.test.ts`)
+
 - ✅ 3 tests covering:
   - Class name merging
   - Conditional classes
@@ -134,20 +146,26 @@ These utilities make testing components with React Query straightforward and con
 ## Best Practices Established
 
 ### 1. Query by Accessibility
+
 Tests use semantic queries that reflect user interaction:
+
 ```tsx
-screen.getByRole("button", { name: /submit/i })
+screen.getByRole("button", { name: /submit/i });
 ```
 
 ### 2. User Event Simulation
+
 Tests use `@testing-library/user-event` for realistic interactions:
+
 ```tsx
 const user = userEvent.setup();
 await user.click(button);
 ```
 
 ### 3. Async Testing
+
 Tests properly handle asynchronous operations:
+
 ```tsx
 await waitFor(() => {
   expect(screen.getByText("Loaded")).toBeInTheDocument();
@@ -155,7 +173,9 @@ await waitFor(() => {
 ```
 
 ### 4. Test Isolation
+
 Tests are independent with proper cleanup:
+
 ```tsx
 beforeEach(() => {
   vi.clearAllMocks();
@@ -164,6 +184,7 @@ beforeEach(() => {
 ```
 
 ### 5. Mocking Strategy
+
 - Mock external APIs and browser APIs
 - Avoid mocking internal implementation
 - Use vi.mock() for module mocking
@@ -177,6 +198,7 @@ npm run test:coverage # Generate coverage report
 ```
 
 ### Current Test Results
+
 - **4 test files**
 - **27 tests passing**
 - **100% pass rate**
@@ -184,6 +206,7 @@ npm run test:coverage # Generate coverage report
 ## Documentation
 
 ### Created Documentation
+
 1. **`docs/testing.md`** - Comprehensive testing guide (160+ lines)
    - Testing stack overview
    - Test file organization
@@ -256,6 +279,7 @@ Based on the current codebase, recommended coverage targets:
 - **Lines**: 80%+
 
 Focus on testing:
+
 1. UI components with user interactions
 2. Data fetching and mutations
 3. Business logic and utilities
@@ -283,4 +307,4 @@ The 27 example tests demonstrate patterns that can be applied throughout the cod
 
 ---
 
-*This testing strategy was implemented and validated with 27 passing tests across UI components, page components, React Query hooks, and utility functions.*
+_This testing strategy was implemented and validated with 27 passing tests across UI components, page components, React Query hooks, and utility functions._

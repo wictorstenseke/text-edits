@@ -2,7 +2,10 @@ import { Fragment, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-import type { FinancialReportColumn, FinancialReportRow } from "@/types/document";
+import type {
+  FinancialReportColumn,
+  FinancialReportRow,
+} from "@/types/document";
 
 /** Legacy row format had accountNumber at top level */
 type LegacyFinancialReportRow = FinancialReportRow & {
@@ -134,7 +137,9 @@ const renderNode = (
     case "bulletList":
       return <ul className="list-disc list-outside pl-6 mb-2">{children}</ul>;
     case "orderedList":
-      return <ol className="list-decimal list-outside pl-6 mb-2">{children}</ol>;
+      return (
+        <ol className="list-decimal list-outside pl-6 mb-2">{children}</ol>
+      );
     case "listItem":
       return <li>{children}</li>;
     case "hardBreak":
@@ -238,7 +243,8 @@ const renderNode = (
           const token = match[0];
           const isBold = token.startsWith("**") || token.startsWith("__");
           const isStrike = token.startsWith("~~");
-          const inner = isBold || isStrike ? token.slice(2, -2) : token.slice(1, -1);
+          const inner =
+            isBold || isStrike ? token.slice(2, -2) : token.slice(1, -1);
 
           if (isStrike) {
             parts.push(
@@ -308,7 +314,9 @@ const renderNode = (
                     // Old structure - migrate
                     if (leftColumns.length > 0) {
                       rowValues[leftColumns[0].id] =
-                        legacyRow.accountNumber ?? rowValues[leftColumns[0].id] ?? "";
+                        legacyRow.accountNumber ??
+                        rowValues[leftColumns[0].id] ??
+                        "";
                     }
                   }
 

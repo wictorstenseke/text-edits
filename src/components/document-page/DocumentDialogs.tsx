@@ -88,7 +88,10 @@ export const DocumentDialogs = ({
 
   return (
     <>
-      <Dialog open={newSectionDialogOpen} onOpenChange={onNewSectionDialogOpenChange}>
+      <Dialog
+        open={newSectionDialogOpen}
+        onOpenChange={onNewSectionDialogOpenChange}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("dialogs.addSection.title")}</DialogTitle>
@@ -97,7 +100,9 @@ export const DocumentDialogs = ({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="section-title">{t("dialogs.addSection.sectionTitle")}</Label>
+            <Label htmlFor="section-title">
+              {t("dialogs.addSection.sectionTitle")}
+            </Label>
             <Input
               id="section-title"
               value={newSectionTitle}
@@ -111,15 +116,23 @@ export const DocumentDialogs = ({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onNewSectionDialogOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onNewSectionDialogOpenChange(false)}
+            >
               {t("dialogs.addSection.cancel")}
             </Button>
-            <Button onClick={onAddSection}>{t("dialogs.addSection.add")}</Button>
+            <Button onClick={onAddSection}>
+              {t("dialogs.addSection.add")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={templateDialogOpen} onOpenChange={onTemplateDialogOpenChange}>
+      <Dialog
+        open={templateDialogOpen}
+        onOpenChange={onTemplateDialogOpenChange}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("dialogs.addSection.templateButton")}</DialogTitle>
@@ -146,7 +159,10 @@ export const DocumentDialogs = ({
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground">
-                    Sections: {template.sections.map((section) => section.title).join(", ")}
+                    Sections:{" "}
+                    {template.sections
+                      .map((section) => section.title)
+                      .join(", ")}
                   </div>
                 </CardContent>
               </Card>
@@ -164,7 +180,10 @@ export const DocumentDialogs = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onResetDialogOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onResetDialogOpenChange(false)}
+            >
               {t("dialogs.resetDocument.cancel")}
             </Button>
             <Button variant="destructive" onClick={onResetDocument}>
@@ -190,7 +209,10 @@ export const DocumentDialogs = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onPendingDeleteSectionChange(null)}>
+            <Button
+              variant="outline"
+              onClick={() => onPendingDeleteSectionChange(null)}
+            >
               {t("dialogs.removeSection.cancel")}
             </Button>
             <Button
@@ -231,7 +253,10 @@ export const DocumentDialogs = ({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onTagDialogOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onTagDialogOpenChange(false)}
+            >
               {t("dialogs.editTag.cancel")}
             </Button>
             <Button onClick={onSaveTag}>{t("dialogs.editTag.save")}</Button>
@@ -259,7 +284,9 @@ export const DocumentDialogs = ({
               />
             </div>
             <div>
-              <Label htmlFor="new-tag-value">{t("dialogs.addTag.tagValue")}</Label>
+              <Label htmlFor="new-tag-value">
+                {t("dialogs.addTag.tagValue")}
+              </Label>
               <Input
                 id="new-tag-value"
                 value={newTagValue}
@@ -274,7 +301,10 @@ export const DocumentDialogs = ({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onNewTagDialogOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onNewTagDialogOpenChange(false)}
+            >
               {t("dialogs.addTag.cancel")}
             </Button>
             <Button onClick={onAddNewTag} disabled={!newTagKey.trim()}>

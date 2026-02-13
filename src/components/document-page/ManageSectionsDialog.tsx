@@ -13,7 +13,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { isHierarchyDropAllowed, type SectionDragItem, type SectionKind, type SectionGroup } from "@/lib/sectionHierarchy";
+import {
+  isHierarchyDropAllowed,
+  type SectionDragItem,
+  type SectionKind,
+  type SectionGroup,
+} from "@/lib/sectionHierarchy";
 import { cn } from "@/lib/utils";
 
 import type { Section } from "@/types/document";
@@ -99,12 +104,16 @@ export const ManageSectionsDialog = ({
                   }}
                 />
               </div>
-              <Button onClick={onAddParentSection}>{t("manageSections.addParent")}</Button>
+              <Button onClick={onAddParentSection}>
+                {t("manageSections.addParent")}
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px_auto] gap-2 items-end">
               <div className="space-y-2">
-                <Label htmlFor="manage-child-section-title">New sub-section</Label>
+                <Label htmlFor="manage-child-section-title">
+                  New sub-section
+                </Label>
                 <Input
                   id="manage-child-section-title"
                   value={manageNewChildSectionTitle}

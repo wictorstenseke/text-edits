@@ -212,7 +212,7 @@ describe("exportToPDF", () => {
     // Empty paragraph
     const p3 = document.createElement("p");
     p3.textContent = "Third paragraph";
-    
+
     container.appendChild(p1);
     container.appendChild(p2);
     container.appendChild(p3);
@@ -263,7 +263,7 @@ describe("exportToPDF", () => {
     container = document.createElement("div");
     const table = document.createElement("table");
     const tbody = document.createElement("tbody");
-    
+
     // Header row
     const headerRow = document.createElement("tr");
     const th1 = document.createElement("th");
@@ -273,7 +273,7 @@ describe("exportToPDF", () => {
     headerRow.appendChild(th1);
     headerRow.appendChild(th2);
     tbody.appendChild(headerRow);
-    
+
     // Data row with one empty cell
     const dataRow1 = document.createElement("tr");
     const td1 = document.createElement("td");
@@ -283,7 +283,7 @@ describe("exportToPDF", () => {
     dataRow1.appendChild(td1);
     dataRow1.appendChild(td2);
     tbody.appendChild(dataRow1);
-    
+
     // Completely empty row
     const dataRow2 = document.createElement("tr");
     const td3 = document.createElement("td");
@@ -291,7 +291,7 @@ describe("exportToPDF", () => {
     dataRow2.appendChild(td3);
     dataRow2.appendChild(td4);
     tbody.appendChild(dataRow2);
-    
+
     table.appendChild(tbody);
     container.appendChild(table);
     document.body.appendChild(container);
@@ -303,7 +303,7 @@ describe("exportToPDF", () => {
     expect(textCalls).toContain("Column 1");
     expect(textCalls).toContain("Column 2");
     expect(textCalls).toContain("Value 1");
-    
+
     // Verify borders were drawn for all cells (including empty ones)
     // rectMock should be called for each cell (6 cells total: 2 header + 2 + 2)
     expect(rectMock.mock.calls.length).toBe(6);
@@ -385,7 +385,8 @@ describe("exportToPDF", () => {
     container = document.createElement("div");
     const img = document.createElement("img");
     // Small 1x1 transparent PNG as data URL
-    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.src =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     img.width = 100;
     img.height = 100;
     container.appendChild(img);
@@ -410,7 +411,8 @@ describe("exportToPDF", () => {
     const wrapper = document.createElement("div");
     wrapper.style.textAlign = "center";
     const img = document.createElement("img");
-    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.src =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     img.width = 50;
     img.height = 50;
     wrapper.appendChild(img);
@@ -434,7 +436,8 @@ describe("exportToPDF", () => {
 
     container = document.createElement("div");
     const img = document.createElement("img");
-    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.src =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     img.setAttribute("data-align", "right");
     img.width = 50;
     img.height = 50;
@@ -492,7 +495,8 @@ describe("exportToPDF", () => {
     wrapper.className = "image-wrapper";
     wrapper.style.textAlign = "center";
     const img = document.createElement("img");
-    img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    img.src =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     img.width = 200;
     img.height = 150;
     wrapper.appendChild(img);

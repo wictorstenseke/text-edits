@@ -1,5 +1,8 @@
 import i18n from "@/lib/i18n";
-import { EMPTY_SECTION_CONTENT, normalizeSections } from "@/lib/sectionHierarchy";
+import {
+  EMPTY_SECTION_CONTENT,
+  normalizeSections,
+} from "@/lib/sectionHierarchy";
 
 import type { Document, Section, Template } from "@/types/document";
 
@@ -1981,9 +1984,7 @@ export const getSwedishAnnualReportDocument = (): Document => ({
           {
             type: "heading",
             attrs: { level: 3 },
-            content: [
-              { type: "text", text: "Not 3: Närståendetransaktioner" },
-            ],
+            content: [{ type: "text", text: "Not 3: Närståendetransaktioner" }],
           },
           {
             type: "paragraph",

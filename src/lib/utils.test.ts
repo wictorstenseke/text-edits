@@ -19,4 +19,3 @@ describe("cn utility", () => {
     expect(result).toBe("py-1 px-4");
   });
 });
-

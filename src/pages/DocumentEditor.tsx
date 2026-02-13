@@ -1,10 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import {
   DocumentContentRenderer,
@@ -38,11 +32,7 @@ import {
   type SectionKind,
 } from "@/lib/sectionHierarchy";
 
-import type {
-  Document,
-  Section,
-  Template,
-} from "@/types/document";
+import type { Document, Section, Template } from "@/types/document";
 
 export const DocumentEditor = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -79,12 +69,10 @@ export const DocumentEditor = () => {
   );
   const [isTagPanelOpen, setIsTagPanelOpen] = useState(false);
   const [fontFamily, setFontFamily] = useState<FontFamily>(() => {
-    const saved = localStorage.getItem("documentFontFamily") as
-      | FontFamily
-      | null;
-    return saved && ["sans", "serif", "mono"].includes(saved)
-      ? saved
-      : "sans";
+    const saved = localStorage.getItem(
+      "documentFontFamily"
+    ) as FontFamily | null;
+    return saved && ["sans", "serif", "mono"].includes(saved) ? saved : "sans";
   });
 
   const fontFamilyOptions = useMemo(
@@ -482,10 +470,7 @@ export const DocumentEditor = () => {
     };
   };
 
-  const handleDrop = (
-    e: React.DragEvent,
-    target: SectionDragItem
-  ): void => {
+  const handleDrop = (e: React.DragEvent, target: SectionDragItem): void => {
     e.preventDefault();
     if (
       !draggedSection ||
@@ -653,9 +638,7 @@ export const DocumentEditor = () => {
     <div className="h-screen flex flex-col">
       <EditorHeader
         title={document.title}
-        onTitleChange={(title) =>
-          setDocument((prev) => ({ ...prev, title }))
-        }
+        onTitleChange={(title) => setDocument((prev) => ({ ...prev, title }))}
         pageWidthIndex={pageWidthIndex}
         pageWidthOptionCount={pageWidthOptions.length}
         onDecreasePageWidth={handleDecreasePageWidth}

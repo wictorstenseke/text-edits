@@ -1,6 +1,9 @@
 import { type ReactNode } from "react";
 
-import { InlineSectionEditor, type TagItem } from "@/components/rich-text-editor";
+import {
+  InlineSectionEditor,
+  type TagItem,
+} from "@/components/rich-text-editor";
 import { cn } from "@/lib/utils";
 
 import type { FontFamily } from "@/components/document-page/EditorHeader";

@@ -22,7 +22,7 @@ const makeSection = (
   title,
   order,
   parentId,
-  content: "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}",
+  content: '{"type":"doc","content":[{"type":"paragraph"}]}',
 });
 
 describe("normalizeSections", () => {
@@ -145,7 +145,12 @@ describe("drag rules and reorder", () => {
       "above"
     );
 
-    expect(updated.map((section) => section.id)).toEqual(["p2", "c2", "p1", "c1"]);
+    expect(updated.map((section) => section.id)).toEqual([
+      "p2",
+      "c2",
+      "p1",
+      "c1",
+    ]);
   });
 
   it("reorders child sections within the same parent", () => {

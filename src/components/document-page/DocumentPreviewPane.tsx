@@ -26,16 +26,16 @@ export const DocumentPreviewPane = ({
   // This provides an approximate view of how content will paginate in PDF
   const pagesWithContent = useMemo(() => {
     const pages: Array<{ pageNumber: number; content: ReactNode }> = [];
-    
+
     // Split sections across multiple pages for better preview
     // Grouping strategy: ~3-4 sections per page for reasonable pagination
     const sectionsPerPage = 3;
     let currentPage = 1;
     let sectionsInCurrentPage: SectionGroup[] = [];
-    
+
     sectionGroups.forEach((group, index) => {
       sectionsInCurrentPage.push(group);
-      
+
       // Start a new page after every N sections or on the last section
       if (
         sectionsInCurrentPage.length >= sectionsPerPage ||
@@ -46,14 +46,18 @@ export const DocumentPreviewPane = ({
           pageNumber: currentPage,
           content: (
             <>
-              {isFirstPage && <h1 className="text-3xl font-semibold mb-6">{title}</h1>}
+              {isFirstPage && (
+                <h1 className="text-3xl font-semibold mb-6">{title}</h1>
+              )}
               {sectionsInCurrentPage.map((grp) => (
                 <div key={grp.parent.id} className="mb-2">
                   {renderSectionBlock(grp.parent, "parent")}
                   {grp.children.length > 0 && (
                     <div className="ml-6 mt-2 border-l border-border/60 pl-4">
                       {grp.children.map((child) => (
-                        <div key={child.id}>{renderSectionBlock(child, "child")}</div>
+                        <div key={child.id}>
+                          {renderSectionBlock(child, "child")}
+                        </div>
                       ))}
                     </div>
                   )}
@@ -62,17 +66,20 @@ export const DocumentPreviewPane = ({
             </>
           ),
         });
-        
+
         sectionsInCurrentPage = [];
         currentPage++;
       }
     });
-    
+
     return pages;
   }, [title, sectionGroups, renderSectionBlock]);
 
   return (
-    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-muted/50">
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto bg-muted/50"
+    >
       <div ref={documentContainerRef} className="py-8">
         {pagesWithContent.map((page) => (
           <PageContainer

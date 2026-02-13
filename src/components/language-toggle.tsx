@@ -31,7 +31,11 @@ export const LanguageToggle = () => {
           onClick={toggleLanguage}
           aria-label={t("header.toggleLanguage")}
         >
-          <span className="text-2xl" role="img" aria-label={`Current language: ${i18n.language === "en" ? "English" : "Swedish"}`}>
+          <span
+            className="text-2xl"
+            role="img"
+            aria-label={`Current language: ${i18n.language === "en" ? "English" : "Swedish"}`}
+          >
             {currentFlag}
           </span>
           <span className="sr-only">{t("header.toggleLanguage")}</span>

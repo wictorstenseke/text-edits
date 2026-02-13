@@ -81,16 +81,18 @@ import { Button } from "./button";
 describe("Button", () => {
   it("renders with correct text", () => {
     render(<Button>Click me</Button>);
-    expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /click me/i })
+    ).toBeInTheDocument();
   });
 
   it("handles click events", async () => {
     const handleClick = vi.fn();
     const user = userEvent.setup();
-    
+
     render(<Button onClick={handleClick}>Click me</Button>);
     await user.click(screen.getByRole("button"));
-    
+
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 });
@@ -106,7 +108,7 @@ import { MyComponent } from "./MyComponent";
 
 it("fetches and displays data", async () => {
   renderWithQueryClient(<MyComponent />);
-  
+
   await waitFor(() => {
     expect(screen.getByText("Data loaded")).toBeInTheDocument();
   });
@@ -127,13 +129,11 @@ import { useMyHook } from "./useMyHook";
 it("returns expected data", async () => {
   const queryClient = createTestQueryClient();
   const wrapper = ({ children }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
   const { result } = renderHook(() => useMyHook(), { wrapper });
-  
+
   await waitFor(() => expect(result.current.isSuccess).toBe(true));
   expect(result.current.data).toEqual(expectedData);
 });
@@ -209,13 +209,14 @@ Prefer queries that reflect how users interact with your app:
 
 ```tsx
 // ✅ Good - queries by role and accessible name
-screen.getByRole("button", { name: /submit/i })
+screen.getByRole("button", { name: /submit/i });
 
 // ❌ Avoid - queries by test IDs or implementation details
-screen.getByTestId("submit-button")
+screen.getByTestId("submit-button");
 ```
 
 Query priority:
+
 1. `getByRole` - Most accessible
 2. `getByLabelText` - Form elements
 3. `getByPlaceholderText` - Form elements
@@ -309,13 +310,13 @@ Focus on testing critical paths and business logic rather than achieving 100% co
 it("submits form with valid data", async () => {
   const user = userEvent.setup();
   const handleSubmit = vi.fn();
-  
+
   render(<MyForm onSubmit={handleSubmit} />);
-  
+
   await user.type(screen.getByLabelText(/name/i), "John Doe");
   await user.type(screen.getByLabelText(/email/i), "john@example.com");
   await user.click(screen.getByRole("button", { name: /submit/i }));
-  
+
   expect(handleSubmit).toHaveBeenCalledWith({
     name: "John Doe",
     email: "john@example.com",
@@ -333,7 +334,7 @@ it("shows loading state while fetching", () => {
 
 it("shows data after loading", async () => {
   render(<MyComponent />);
-  
+
   await waitFor(() => {
     expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     expect(screen.getByText(/data/i)).toBeInTheDocument();
@@ -346,9 +347,9 @@ it("shows data after loading", async () => {
 ```tsx
 it("displays error message on failure", async () => {
   vi.mocked(api.getData).mockRejectedValue(new Error("Failed"));
-  
+
   render(<MyComponent />);
-  
+
   await waitFor(() => {
     expect(screen.getByText(/error/i)).toBeInTheDocument();
   });

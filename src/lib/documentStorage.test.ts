@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { getDefaultAnnualReportDocument, getSampleDocument, loadDocument, saveDocument } from "./documentStorage";
+import {
+  getDefaultAnnualReportDocument,
+  getSampleDocument,
+  loadDocument,
+  saveDocument,
+} from "./documentStorage";
 
 describe("getDefaultAnnualReportDocument", () => {
   it("should return a document with the correct structure", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    
+
     expect(doc.id).toBe("annual-report-2025");
     expect(doc.title).toBe("Annual Report 2025");
     expect(doc.sections).toHaveLength(9);
@@ -21,8 +26,8 @@ describe("getDefaultAnnualReportDocument", () => {
 
   it("should include all required annual report sections in correct order for English", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    const sectionTitles = doc.sections.map(s => s.title);
-    
+    const sectionTitles = doc.sections.map((s) => s.title);
+
     expect(sectionTitles).toEqual([
       "Cover / Title Page",
       "Letter to Shareholders / CEO Statement",
@@ -38,8 +43,8 @@ describe("getDefaultAnnualReportDocument", () => {
 
   it("should include all required annual report sections in correct order for Swedish", () => {
     const doc = getDefaultAnnualReportDocument("sv");
-    const sectionTitles = doc.sections.map(s => s.title);
-    
+    const sectionTitles = doc.sections.map((s) => s.title);
+
     expect(sectionTitles).toEqual([
       "Framsida / Titelsida",
       "Brev till aktieägarna / VD:s uttalande",
@@ -55,7 +60,7 @@ describe("getDefaultAnnualReportDocument", () => {
 
   it("should have valid order values for all sections", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    
+
     doc.sections.forEach((section, index) => {
       expect(section.order).toBe(index);
     });
@@ -71,16 +76,16 @@ describe("getDefaultAnnualReportDocument", () => {
 
   it("should have unique section IDs", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    const sectionIds = doc.sections.map(s => s.id);
+    const sectionIds = doc.sections.map((s) => s.id);
     const uniqueIds = new Set(sectionIds);
-    
+
     expect(uniqueIds.size).toBe(sectionIds.length);
   });
 
   it("should have valid JSON content for all sections", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    
-    doc.sections.forEach(section => {
+
+    doc.sections.forEach((section) => {
       expect(() => JSON.parse(section.content)).not.toThrow();
       const content = JSON.parse(section.content);
       expect(content.type).toBe("doc");
@@ -90,44 +95,50 @@ describe("getDefaultAnnualReportDocument", () => {
 
   it("should include financialReportBlock in Financial Statements section", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    const financialSection = doc.sections.find(s => s.title === "Financial Statements");
-    
+    const financialSection = doc.sections.find(
+      (s) => s.title === "Financial Statements"
+    );
+
     expect(financialSection).toBeDefined();
     const content = JSON.parse(financialSection!.content);
-    
+
     const financialBlocks = content.content.filter(
       (node: { type: string }) => node.type === "financialReportBlock"
     );
-    
+
     // Should have Balance Sheet, Income Statement, and Cash Flow Statement blocks
     expect(financialBlocks).toHaveLength(3);
   });
 
   it("should have properly structured financial report blocks", () => {
     const doc = getDefaultAnnualReportDocument("en");
-    const financialSection = doc.sections.find(s => s.title === "Financial Statements");
+    const financialSection = doc.sections.find(
+      (s) => s.title === "Financial Statements"
+    );
     const content = JSON.parse(financialSection!.content);
-    
+
     const financialBlocks = content.content.filter(
       (node: { type: string }) => node.type === "financialReportBlock"
     );
-    
-    financialBlocks.forEach((block: { 
-      attrs: { 
-        leftColumns: unknown[];
-        rightColumns: unknown[];
-        rows: unknown[];
-        showTotals: boolean;
-      } 
-    }) => {
-      expect(block.attrs).toHaveProperty("leftColumns");
-      expect(block.attrs).toHaveProperty("rightColumns");
-      expect(block.attrs).toHaveProperty("rows");
-      expect(block.attrs).toHaveProperty("showTotals");
-      expect(Array.isArray(block.attrs.leftColumns)).toBe(true);
-      expect(Array.isArray(block.attrs.rightColumns)).toBe(true);
-      expect(Array.isArray(block.attrs.rows)).toBe(true);
-    });
+
+    financialBlocks.forEach(
+      (block: {
+        attrs: {
+          leftColumns: unknown[];
+          rightColumns: unknown[];
+          rows: unknown[];
+          showTotals: boolean;
+        };
+      }) => {
+        expect(block.attrs).toHaveProperty("leftColumns");
+        expect(block.attrs).toHaveProperty("rightColumns");
+        expect(block.attrs).toHaveProperty("rows");
+        expect(block.attrs).toHaveProperty("showTotals");
+        expect(Array.isArray(block.attrs.leftColumns)).toBe(true);
+        expect(Array.isArray(block.attrs.rightColumns)).toBe(true);
+        expect(Array.isArray(block.attrs.rows)).toBe(true);
+      }
+    );
   });
 });
 
@@ -135,7 +146,7 @@ describe("getSampleDocument", () => {
   it("should return the annual report document", () => {
     const sample = getSampleDocument();
     const annualReport = getDefaultAnnualReportDocument();
-    
+
     expect(sample.id).toBe(annualReport.id);
     expect(sample.title).toBe(annualReport.title);
     expect(sample.sections.length).toBe(annualReport.sections.length);
@@ -154,7 +165,7 @@ describe("loadDocument", () => {
   it("should return the default annual report when localStorage is empty", () => {
     const doc = loadDocument();
     const defaultDoc = getDefaultAnnualReportDocument();
-    
+
     expect(doc.id).toBe(defaultDoc.id);
     expect(doc.title).toBe(defaultDoc.title);
   });
@@ -167,9 +178,9 @@ describe("loadDocument", () => {
       tagValues: {},
     };
     localStorage.setItem("document-editor-state", JSON.stringify(customDoc));
-    
+
     const doc = loadDocument();
-    
+
     expect(doc.id).toBe("custom-doc");
     expect(doc.title).toBe("Custom Document");
   });
@@ -201,15 +212,15 @@ describe("loadDocument", () => {
 
   it("should return default document when localStorage has invalid data", () => {
     localStorage.setItem("document-editor-state", "invalid-json");
-    
+
     // Mock console.error to suppress expected error
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    
+
     const doc = loadDocument();
     const defaultDoc = getDefaultAnnualReportDocument();
-    
+
     expect(doc.id).toBe(defaultDoc.id);
-    
+
     consoleSpy.mockRestore();
   });
 });
@@ -230,9 +241,9 @@ describe("saveDocument", () => {
       sections: [],
       tagValues: {},
     };
-    
+
     saveDocument(doc);
-    
+
     const stored = localStorage.getItem("document-editor-state");
     expect(stored).toBeTruthy();
     expect(JSON.parse(stored!)).toEqual(doc);

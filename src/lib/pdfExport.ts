@@ -21,10 +21,13 @@ const PDF_HEIGHT = 297;
 
 /** Page width configurations in mm (converted from px at 96dpi) */
 type PageWidthOption = "narrow" | "medium" | "wide";
-const PAGE_WIDTH_CONFIG: Record<PageWidthOption, { width: number; padding: number }> = {
+const PAGE_WIDTH_CONFIG: Record<
+  PageWidthOption,
+  { width: number; padding: number }
+> = {
   narrow: { width: 210, padding: 15 }, // A4 portrait, 178mm content
   medium: { width: 260, padding: 12 }, // ~237mm content
-  wide: { width: 330, padding: 12 },   // ~305mm content
+  wide: { width: 330, padding: 12 }, // ~305mm content
 };
 
 /** Font family mapping from document to jsPDF */
@@ -115,7 +118,7 @@ const getParagraphLines = (element: HTMLElement): string[] => {
       currentLine += node.textContent || "";
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      
+
       // Skip hidden elements
       if (el.style.display === "none" || el.hidden) {
         return;
@@ -133,7 +136,7 @@ const getParagraphLines = (element: HTMLElement): string[] => {
   };
 
   Array.from(element.childNodes).forEach(processNode);
-  
+
   // Push the last line
   lines.push(currentLine);
 
@@ -286,12 +289,15 @@ const renderTable = (ctx: RenderContext, tableElement: HTMLElement): void => {
 const PX_TO_MM = 0.264583;
 
 /** Max height for images to fit on a page */
-const getMaxImageHeight = (padding: number): number => PDF_HEIGHT - 2 * padding - 10;
+const getMaxImageHeight = (padding: number): number =>
+  PDF_HEIGHT - 2 * padding - 10;
 
 /**
  * Gets the alignment from an image element or its parent wrapper.
  */
-const getImageAlignment = (imgElement: HTMLImageElement): "left" | "center" | "right" => {
+const getImageAlignment = (
+  imgElement: HTMLImageElement
+): "left" | "center" | "right" => {
   // Check data-align attribute on the image
   const dataAlign = imgElement.getAttribute("data-align");
   if (dataAlign === "center" || dataAlign === "right" || dataAlign === "left") {
@@ -309,7 +315,11 @@ const getImageAlignment = (imgElement: HTMLImageElement): "left" | "center" | "r
 
     // Check for data-align on parent
     const parentDataAlign = parent.getAttribute("data-align");
-    if (parentDataAlign === "center" || parentDataAlign === "right" || parentDataAlign === "left") {
+    if (
+      parentDataAlign === "center" ||
+      parentDataAlign === "right" ||
+      parentDataAlign === "left"
+    ) {
       return parentDataAlign;
     }
 
@@ -324,7 +334,10 @@ const getImageAlignment = (imgElement: HTMLImageElement): "left" | "center" | "r
 /**
  * Renders an image to PDF.
  */
-const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => {
+const renderImage = (
+  ctx: RenderContext,
+  imgElement: HTMLImageElement
+): void => {
   const src = imgElement.getAttribute("src");
   if (!src) return;
 
@@ -334,13 +347,13 @@ const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => 
   // Get image dimensions - prioritize attributes, then DOM properties, then defaults
   const widthAttr = imgElement.getAttribute("width");
   const heightAttr = imgElement.getAttribute("height");
-  
-  const imgWidthPx = widthAttr 
-    ? parseInt(widthAttr, 10) 
-    : (imgElement.width || imgElement.naturalWidth || DEFAULT_IMAGE_WIDTH_PX);
-  const imgHeightPx = heightAttr 
-    ? parseInt(heightAttr, 10) 
-    : (imgElement.height || imgElement.naturalHeight || DEFAULT_IMAGE_HEIGHT_PX);
+
+  const imgWidthPx = widthAttr
+    ? parseInt(widthAttr, 10)
+    : imgElement.width || imgElement.naturalWidth || DEFAULT_IMAGE_WIDTH_PX;
+  const imgHeightPx = heightAttr
+    ? parseInt(heightAttr, 10)
+    : imgElement.height || imgElement.naturalHeight || DEFAULT_IMAGE_HEIGHT_PX;
 
   // Convert to mm
   let imgWidthMm = imgWidthPx * PX_TO_MM;
@@ -386,7 +399,11 @@ const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => 
     // Determine image format from src (use lowercase for consistent matching)
     const srcLower = src.toLowerCase();
     let format: "JPEG" | "PNG" = "PNG";
-    if (srcLower.includes(".jpg") || srcLower.includes(".jpeg") || srcLower.includes("data:image/jpeg")) {
+    if (
+      srcLower.includes(".jpg") ||
+      srcLower.includes(".jpeg") ||
+      srcLower.includes("data:image/jpeg")
+    ) {
       format = "JPEG";
     }
 
@@ -404,7 +421,11 @@ const renderImage = (ctx: RenderContext, imgElement: HTMLImageElement): void => 
     pdf.setTextColor(128);
     const placeholderText = "[Image]";
     const textWidth = pdf.getTextWidth(placeholderText);
-    pdf.text(placeholderText, x + (imgWidthMm - textWidth) / 2, ctx.y + imgHeightMm / 2);
+    pdf.text(
+      placeholderText,
+      x + (imgWidthMm - textWidth) / 2,
+      ctx.y + imgHeightMm / 2
+    );
     pdf.setTextColor(0);
 
     ctx.y += imgHeightMm + 4;
@@ -454,10 +475,10 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
     case "p": {
       const lines = getParagraphLines(element);
       const bodyLineHeight = FONT_SIZES.body * LINE_HEIGHT * 0.352778; // pt to mm
-      
+
       // If the paragraph has no content or only empty lines, treat as blank lines
       const hasContent = lines.some((line) => line.trim().length > 0);
-      
+
       if (!hasContent) {
         // Empty paragraph: render as full-height blank lines
         // Note: lines.length includes the implicit line after the last <br>,
@@ -474,7 +495,7 @@ const processElement = (ctx: RenderContext, element: HTMLElement): void => {
         // Paragraph with content: render each line separately
         for (const line of lines) {
           const normalizedLine = line.replace(/\s+/g, " ").trim();
-          
+
           if (normalizedLine) {
             // Non-empty line: render with text wrapping
             renderTextBlock(ctx, normalizedLine, FONT_SIZES.body);

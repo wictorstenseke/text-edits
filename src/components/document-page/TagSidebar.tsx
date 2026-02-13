@@ -65,7 +65,9 @@ export const TagSidebar = ({
                 tabIndex={0}
               >
                 <div className="text-xs font-mono font-semibold">{key}</div>
-                <div className="text-xs text-muted-foreground truncate">{value}</div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {value}
+                </div>
               </div>
               <Button
                 size="icon-sm"
@@ -80,7 +82,11 @@ export const TagSidebar = ({
           ))}
         </div>
         {entries.length > 0 && (
-          <Button variant="outline" onClick={onOpenNewTagDialog} className="w-full mt-3">
+          <Button
+            variant="outline"
+            onClick={onOpenNewTagDialog}
+            className="w-full mt-3"
+          >
             <PlusCircle className="h-4 w-4 mr-2" />
             {t("tags.addButton")}
           </Button>

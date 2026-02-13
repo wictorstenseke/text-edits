@@ -28,7 +28,11 @@ export const SectionNavigationSidebar = ({
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">{t("sections.title")}</h2>
-          <Button size="icon-sm" variant="ghost" onClick={onOpenNewSectionDialog}>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={onOpenNewSectionDialog}
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -91,7 +95,11 @@ export const SectionNavigationSidebar = ({
           ))}
         </div>
         <div className="pt-3">
-          <Button variant="outline" className="w-full" onClick={onOpenManageSectionsDialog}>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onOpenManageSectionsDialog}
+          >
             {t("manageSections.title")}
           </Button>
         </div>
