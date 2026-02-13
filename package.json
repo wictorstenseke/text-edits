@@ -54,7 +54,7 @@
     "tiptap-extension-resizable-image": "^2.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "@tanstack/router-cli": "^1.141.2",
     "@tanstack/router-vite-plugin": "^1.141.2",
     "@testing-library/jest-dom": "^6.9.1",
