@@ -3,6 +3,7 @@ import {
   EMPTY_SECTION_CONTENT,
   normalizeSections,
 } from "@/lib/sectionHierarchy";
+import { sanitizeTagValues } from "@/lib/tagValidation";
 
 import type { Document, Section, Template } from "@/types/document";
 
@@ -2390,7 +2391,7 @@ export const loadDocument = (): Document => {
           id: parsed.id,
           title: parsed.title,
           sections: normalizeSections(normalizedSections),
-          tagValues: parsed.tagValues as Record<string, string>,
+          tagValues: sanitizeTagValues(parsed.tagValues as Record<string, string>),
         };
       }
     }
@@ -2402,7 +2403,11 @@ export const loadDocument = (): Document => {
 
 export const saveDocument = (document: Document): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(document));
+    const sanitized = {
+      ...document,
+      tagValues: sanitizeTagValues(document.tagValues),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
   } catch (error) {
     console.error("Error saving document:", error);
   }

@@ -184,7 +184,11 @@ describe("exportToPDF", () => {
 
     container = document.createElement("div");
     const paragraph = document.createElement("p");
-    paragraph.innerHTML = "Line 1<br>Line 2<br>Line 3";
+    paragraph.appendChild(document.createTextNode("Line 1"));
+    paragraph.appendChild(document.createElement("br"));
+    paragraph.appendChild(document.createTextNode("Line 2"));
+    paragraph.appendChild(document.createElement("br"));
+    paragraph.appendChild(document.createTextNode("Line 3"));
     container.appendChild(paragraph);
     document.body.appendChild(container);
 
@@ -240,7 +244,10 @@ describe("exportToPDF", () => {
 
     container = document.createElement("div");
     const paragraph = document.createElement("p");
-    paragraph.innerHTML = "Line 1<br><br>Line 3";
+    paragraph.appendChild(document.createTextNode("Line 1"));
+    paragraph.appendChild(document.createElement("br"));
+    paragraph.appendChild(document.createElement("br"));
+    paragraph.appendChild(document.createTextNode("Line 3"));
     container.appendChild(paragraph);
     document.body.appendChild(container);
 

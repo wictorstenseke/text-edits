@@ -49,6 +49,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { isValidHref } from "@/lib/urlValidation";
 import { cn } from "@/lib/utils";
 
 interface TipTapEditorProps {
@@ -111,7 +112,7 @@ const EditorMenuBar = ({
 
   const addLink = () => {
     const url = window.prompt(t("editor.enterUrl"));
-    if (url) {
+    if (url && isValidHref(url)) {
       editor.chain().focus().setLink({ href: url }).run();
     }
   };

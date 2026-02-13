@@ -31,6 +31,7 @@ import {
   type SectionDragItem,
   type SectionKind,
 } from "@/lib/sectionHierarchy";
+import { sanitizeTagValue } from "@/lib/tagValidation";
 
 import type { Document, Section, Template } from "@/types/document";
 
@@ -551,7 +552,7 @@ export const DocumentEditor = () => {
       ...prev,
       tagValues: {
         ...prev.tagValues,
-        [editingTagKey]: tagValue,
+        [editingTagKey]: sanitizeTagValue(tagValue),
       },
     }));
 
@@ -567,7 +568,7 @@ export const DocumentEditor = () => {
       ...prev,
       tagValues: {
         ...prev.tagValues,
-        [newTagKey]: newTagValue,
+        [newTagKey.trim()]: sanitizeTagValue(newTagValue),
       },
     }));
 
