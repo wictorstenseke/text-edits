@@ -1,0 +1,46 @@
+# When a PR is merged, close the linked issue if the branch name contains an issue number.
+# This is a fallback when "Closes #N" is not in the PR description.
+# Primary method: add "Closes #N" to the PR description (see PULL_REQUEST_TEMPLATE.md).
+name: Close linked issue on merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close-issue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Extract issue number and close
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const headRef = context.payload.pull_request.head.ref;
+            // Match issue number from branch name (e.g. cursor/readme-ai-agents-621b -> 621)
+            const match = headRef.match(/-(\d{2,})[a-z]*$/i) || headRef.match(/(?:^|[-/])(\d{2,})(?=[-/]|$)/);
+            const issueNumber = match ? parseInt(match[1], 10) : null;
+            const prNumber = context.payload.pull_request.number;
+
+            if (!issueNumber || issueNumber === prNumber) {
+              console.log('No issue number found in branch or same as PR number, skipping.');
+              return;
+            }
+
+            try {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'closed'
+              });
+              console.log(`Closed issue #${issueNumber}`);
+            } catch (err) {
+              if (err.status === 404) {
+                console.log(`Issue #${issueNumber} not found, skipping.`);
+              } else {
+                throw err;
+              }
+            }
