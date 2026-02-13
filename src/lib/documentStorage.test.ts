@@ -6,6 +6,11 @@ import {
   loadDocument,
   saveDocument,
 } from "./documentStorage";
+import {
+  addChildSection,
+  addParentSection,
+  removeSectionWithChildren,
+} from "./sectionHierarchy";
 
 describe("getDefaultAnnualReportDocument", () => {
   it("should return a document with the correct structure", () => {
@@ -247,5 +252,141 @@ describe("saveDocument", () => {
     const stored = localStorage.getItem("document-editor-state");
     expect(stored).toBeTruthy();
     expect(JSON.parse(stored!)).toEqual(doc);
+  });
+});
+
+describe("document persistence round-trip integrity", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  it("should preserve document after load → edit → save → reload", () => {
+    const initial = loadDocument();
+    expect(initial.sections.length).toBeGreaterThan(0);
+
+    const { sections: afterAdd } = addParentSection(
+      initial.sections,
+      "New Section"
+    );
+    const editedDoc = {
+      ...initial,
+      title: "Edited Title",
+      sections: afterAdd,
+      tagValues: {
+        ...initial.tagValues,
+        CompanyName: "Edited Company Name",
+      },
+    };
+
+    saveDocument(editedDoc);
+    const reloaded = loadDocument();
+
+    expect(reloaded.id).toBe(editedDoc.id);
+    expect(reloaded.title).toBe("Edited Title");
+    expect(reloaded.tagValues.CompanyName).toBe("Edited Company Name");
+    expect(reloaded.sections.length).toBe(editedDoc.sections.length);
+    expect(reloaded.sections.some((s) => s.title === "New Section")).toBe(true);
+  });
+
+  it("should preserve document after add child section, change tags, remove section, save, reload", () => {
+    const initial = loadDocument();
+    const firstSectionId = initial.sections[0].id;
+
+    const { sections: withChild } = addChildSection(
+      initial.sections,
+      firstSectionId,
+      "Child Section"
+    );
+    const withRemoved = removeSectionWithChildren(withChild, firstSectionId);
+    const editedDoc = {
+      ...initial,
+      sections: withRemoved,
+      tagValues: {
+        CompanyName: "Test Corp",
+        OrgNumber: "123456-7890",
+        ContactEmail: "contact@test.se",
+      },
+    };
+
+    saveDocument(editedDoc);
+    const reloaded = loadDocument();
+
+    expect(reloaded.tagValues).toEqual(editedDoc.tagValues);
+    expect(reloaded.sections.length).toBe(withRemoved.length);
+  });
+
+  it("should migrate legacy sections without parentId and preserve after round-trip", () => {
+    const legacyDoc = {
+      id: "legacy-round-trip",
+      title: "Legacy Document",
+      sections: [
+        {
+          id: "s1",
+          title: "Section 1",
+          order: 0,
+          content: JSON.stringify({
+            type: "doc",
+            content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }],
+          }),
+        },
+      ],
+      tagValues: { CompanyName: "Legacy Co" },
+    };
+    localStorage.setItem("document-editor-state", JSON.stringify(legacyDoc));
+
+    const loaded = loadDocument();
+    expect(loaded.sections[0].parentId).toBeNull();
+
+    saveDocument(loaded);
+    const reloaded = loadDocument();
+    expect(reloaded.sections[0].parentId).toBeNull();
+    expect(reloaded.tagValues.CompanyName).toBe("Legacy Co");
+  });
+
+  it("should fall back to default document when storage has invalid JSON", () => {
+    localStorage.setItem("document-editor-state", "not valid json {{{");
+
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const doc = loadDocument();
+    const defaultDoc = getDefaultAnnualReportDocument();
+
+    expect(doc.id).toBe(defaultDoc.id);
+    expect(doc.sections.length).toBe(defaultDoc.sections.length);
+
+    consoleSpy.mockRestore();
+  });
+});
+
+describe("i18n for default document and language persistence", () => {
+  it("should return correct section titles for en locale", () => {
+    const doc = getDefaultAnnualReportDocument("en");
+    expect(doc.sections[0].title).toBe("Cover / Title Page");
+    expect(doc.sections).toHaveLength(9);
+  });
+
+  it("should return correct section titles for sv locale", () => {
+    const doc = getDefaultAnnualReportDocument("sv");
+    expect(doc.sections[0].title).toBe("Framsida / Titelsida");
+    expect(doc.sections).toHaveLength(9);
+  });
+
+  it("should return English document when locale is unknown", () => {
+    const doc = getDefaultAnnualReportDocument("de");
+    const enDoc = getDefaultAnnualReportDocument("en");
+    expect(doc.sections[0].title).toBe(enDoc.sections[0].title);
+  });
+
+  it("should load default document with Swedish sections when language is sv and storage is empty", async () => {
+    const { default: i18n } = await import("./i18n");
+    localStorage.clear();
+    await i18n.changeLanguage("sv");
+
+    const doc = loadDocument();
+    expect(doc.sections[0].title).toBe("Framsida / Titelsida");
   });
 });
