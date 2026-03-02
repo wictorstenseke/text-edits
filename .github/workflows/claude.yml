@@ -32,6 +32,8 @@ jobs:
         uses: anthropics/claude-code-action@v1.0.51
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Pin model to avoid AJV SDK crash with default claude-sonnet-4-5-20250929 (see anthropics/claude-code-action#965)
+          claude_args: '--model claude-sonnet-4-6-default'
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
