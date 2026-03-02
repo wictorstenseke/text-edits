@@ -7,8 +7,6 @@ on:
     types: [created]
   issues:
     types: [opened, assigned]
-  pull_request:
-    types: [opened]
 
 jobs:
   claude:
@@ -28,3 +26,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
+          prompt: |
+            When you have completed the requested changes, create a pull request.
+            The PR description must include "Closes #<issue_number>" so the issue
+            is automatically closed when the PR is merged.
