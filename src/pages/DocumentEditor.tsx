@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import {
   DocumentContentRenderer,
-  DocumentDialogs,
   DocumentPreviewPane,
   DocumentSectionBlock,
   EditorHeader,
@@ -12,6 +11,12 @@ import {
   type DeleteSectionRequest,
   type FontFamily,
 } from "@/components/document-page";
+import { DeleteSectionDialog } from "@/components/document-page/dialogs/DeleteSectionDialog";
+import { EditTagDialog } from "@/components/document-page/dialogs/EditTagDialog";
+import { NewSectionDialog } from "@/components/document-page/dialogs/NewSectionDialog";
+import { NewTagDialog } from "@/components/document-page/dialogs/NewTagDialog";
+import { ResetDialog } from "@/components/document-page/dialogs/ResetDialog";
+import { TemplateDialog } from "@/components/document-page/dialogs/TemplateDialog";
 import { type TagItem } from "@/components/rich-text-editor";
 import {
   getSampleDocument,
@@ -698,35 +703,44 @@ export const DocumentEditor = () => {
         onDragEnd={handleDragEnd}
         onRequestDeleteSection={setPendingDeleteSection}
       />
-      <DocumentDialogs
-        newSectionDialogOpen={newSectionDialogOpen}
-        onNewSectionDialogOpenChange={setNewSectionDialogOpen}
-        newSectionTitle={newSectionTitle}
-        onNewSectionTitleChange={setNewSectionTitle}
-        onAddSection={handleAddSection}
-        templateDialogOpen={templateDialogOpen}
-        onTemplateDialogOpenChange={setTemplateDialogOpen}
+      <NewSectionDialog
+        open={newSectionDialogOpen}
+        onOpenChange={setNewSectionDialogOpen}
+        title={newSectionTitle}
+        onTitleChange={setNewSectionTitle}
+        onAdd={handleAddSection}
+      />
+      <TemplateDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
         templates={templates}
         onCreateFromTemplate={handleCreateFromTemplate}
-        resetDialogOpen={resetDialogOpen}
-        onResetDialogOpenChange={setResetDialogOpen}
-        onResetDocument={handleResetDocument}
-        pendingDeleteSection={pendingDeleteSection}
-        onPendingDeleteSectionChange={setPendingDeleteSection}
-        onConfirmRemoveSection={handleRemoveSection}
-        tagDialogOpen={tagDialogOpen}
-        onTagDialogOpenChange={setTagDialogOpen}
-        editingTagKey={editingTagKey}
-        tagValue={tagValue}
-        onTagValueChange={setTagValue}
-        onSaveTag={handleSaveTag}
-        newTagDialogOpen={newTagDialogOpen}
-        onNewTagDialogOpenChange={setNewTagDialogOpen}
-        newTagKey={newTagKey}
-        onNewTagKeyChange={setNewTagKey}
-        newTagValue={newTagValue}
-        onNewTagValueChange={setNewTagValue}
-        onAddNewTag={handleAddNewTag}
+      />
+      <ResetDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        onReset={handleResetDocument}
+      />
+      <DeleteSectionDialog
+        pendingSection={pendingDeleteSection}
+        onClose={() => setPendingDeleteSection(null)}
+        onConfirm={handleRemoveSection}
+      />
+      <EditTagDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        value={tagValue}
+        onValueChange={setTagValue}
+        onSave={handleSaveTag}
+      />
+      <NewTagDialog
+        open={newTagDialogOpen}
+        onOpenChange={setNewTagDialogOpen}
+        tagKey={newTagKey}
+        tagValue={newTagValue}
+        onKeyChange={setNewTagKey}
+        onValueChange={setNewTagValue}
+        onAdd={handleAddNewTag}
       />
     </div>
   );

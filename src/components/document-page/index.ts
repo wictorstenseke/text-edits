@@ -3,7 +3,6 @@ export { SectionNavigationSidebar } from "./SectionNavigationSidebar";
 export { DocumentSectionBlock } from "./DocumentSectionBlock";
 export { DocumentPreviewPane } from "./DocumentPreviewPane";
 export { DocumentContentRenderer } from "./DocumentContentRenderer";
-export { DocumentDialogs } from "./DocumentDialogs";
 export { TagSidebar } from "./TagSidebar";
 export { PageContainer } from "./PageContainer";
 export {
