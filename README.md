@@ -55,19 +55,32 @@ The project uses a single canonical assistant rules file: [`AGENTS.md`](AGENTS.m
 ```text
 src/
   components/
-    editor/                  # TipTap extensions and inline section editor
-    ui/                      # UI primitives
+    document-page/           # Main editor page components (header, sidebar, dialogs, etc.)
+    rich-text-editor/        # TipTap extensions (financial report, images, page breaks, tags)
+    ui/                      # shadcn/ui primitives
     TipTapEditor.tsx
   pages/
     DocumentEditor.tsx       # Main application page
   lib/
-    documentStorage.ts       # localStorage persistence + sample document
+    documentStorage/         # localStorage persistence + sample documents (en/sv)
     sectionHierarchy.ts      # parent/child section logic
     pdfExport.ts             # PDF generation
+    migrateFinancialReport.ts
+    tagValidation.ts
+    urlValidation.ts
     queryClient.ts
+    i18n.ts
+    utils.ts
+  locales/
+    en/translation.json
+    sv/translation.json
   routes/
     __root.tsx
     index.tsx                # mounts DocumentEditor at '/'
+  router.tsx
+  test/
+    setup.ts
+    utils.tsx
   types/
     document.ts
 ```
@@ -133,12 +146,14 @@ Dependabot runs weekly for dependency updates.
 
 ## CI and deployment
 
-GitHub Actions (`.github/workflows/ci.yml`) runs:
+GitHub Actions workflows:
 
-- install
-- `npm audit` (fails on high/critical vulnerabilities)
-- `npm run ci`
-- `npm run build`
+- **`ci.yml`** – runs on every push and PR:
+  - install
+  - `npm audit` (fails on high/critical vulnerabilities)
+  - `npm run ci`
+  - `npm run build`
+  - On pushes to `main`, builds and deploys `dist/` to GitHub Pages (with `BASE_PATH` set for the repository subpath)
 
-On pushes to `main`, it also builds and deploys `dist/` to GitHub Pages.
-The workflow sets `BASE_PATH` so the app works under a repository subpath.
+- **`claude.yml`** – Claude Code AI assistant triggered by `@claude` mentions in issues and PRs
+- **`claude-code-review.yml`** – Claude Code automated code review on pull requests
